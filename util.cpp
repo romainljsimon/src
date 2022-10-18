@@ -45,6 +45,16 @@ std::vector<double> vectorNormalization(std::vector<double> vec)
 	return divideVectorByScalar(vec, mean);
 }
 
+std::vector<double> vectorSum(std::vector<double> vec1, std::vector<double> vec2)
+{
+	int vecSize{ static_cast<int>(vec1.size()) };
+	for (int i = 0; i < vecSize; i++)
+	{
+		vec1[i] += vec2[i];
+	}
+	return vec1;
+}
+
 double getMaxVector(std::vector<double> vec)
 {
 	double max = vec[0];

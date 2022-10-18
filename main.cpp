@@ -21,19 +21,21 @@
 
 int main()
 {
-
-	posRad initPosRad = readXYZ("input/input1/random.xyz");
+	std::string number;
+	std::cout << "Number of the simulation: ";
+	std::cin >> number;
+	posRad initPosRad = readXYZ("/home/rsimon/eclipse-workspace/swapMC/input/inputt4/randomt4v1.xyz");
     //Opening the file
-	initPosRad.radVector = vectorNormalization(initPosRad.radVector); // We define the lengthscale of the system as the mean of <sigma>
+	initPosRad.radVector = vectorNormalization(initPosRad.radVector);     // We define the lengthscale of the system as <sigma>
 	initPosRad.radVector = divideVectorByScalar(initPosRad.radVector, 2);
 	double rc { 2.5 };
-	double temp { 1. };
+	double temp { 4. };
 	double density { 1. };
 	double rbox{ 0.3 };
 	double lengthCube {pow (static_cast<double>(initPosRad.radVector.size()) / density, 1./3) };
 	initPosRad.posMatrix = rescaleMatrix(initPosRad.posMatrix, lengthCube);
 	//std::cout << squareDistancePairTest();
 	//randomGeneratorTest();
-    mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rbox);
+    mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rbox, number);
 	return 0;
 }

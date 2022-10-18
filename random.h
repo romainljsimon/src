@@ -10,5 +10,6 @@
 
 double randomDoubleGenerator(double min, double max);
 int randomIntGenerator(int min, int max);
+std::vector<double> randomVectorDoubleGenerator(int vectorSize, double min, double max);
 
 #endif /* RANDOM_H_ */

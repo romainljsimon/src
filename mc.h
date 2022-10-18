@@ -8,7 +8,7 @@
 #ifndef MC_H_
 #define MC_H_
 
-void mcTotal(std::vector<std::vector<double>> positionArray,  std::vector<double> radiusArray, double rc, double lengthCube, double temp, double rbox);
+void mcTotal(std::vector<std::vector<double>> positionArray,  std::vector<double> radiusArray, double rc, double lengthCube, double temp, double rbox, std::string number);
 
 
 

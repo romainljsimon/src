@@ -13,11 +13,18 @@
 #include "random.h"
 #include "energy.h"
 #include "readSaveFile.h"
+#include "util.h"
 
 struct enePos
 {
 	double ene;
 	std::vector<std::vector<double>> posMatrix;
+};
+
+struct indexPosParticle
+{
+	int index;
+	std::vector<double> posParticle;
 };
 
 bool metropolis(double newEnergy, double energy, double temp)
@@ -41,40 +48,40 @@ bool metropolis(double newEnergy, double energy, double temp)
 	}
 }
 
-double periodicBC(double position, double lengthCube)
+std::vector<double> periodicBC(std::vector<double> positionParticle, double lengthCube)
 /*
  *This function is an implementation of the periodic Boundary conditions.
  *If a particle gets out of the simulation box from one of the sides, it gets back in the box from the opposite side.
  */
 {
+	int positionParticleSize { static_cast<int>(positionParticle.size()) };
+	for (int i = 0; i < positionParticleSize; i++)
+	{
+		if (positionParticle[i]< 0)
+			positionParticle[i] += lengthCube;
 
-	if (position < 0)
-		position += lengthCube;
-
-	else if (position > lengthCube)
-		position -= lengthCube;
-
-	return position;
+		else if (positionParticle[i] > lengthCube)
+			positionParticle[i] -= lengthCube;
+	}
+	return positionParticle;
 }
 
-std::vector<std::vector <double>> mcTranslation(std::vector<std::vector<double>>& positionArray, double rbox, double lengthCube)
+indexPosParticle mcTranslation(std::vector<std::vector<double>>& positionArray, double rbox, double lengthCube)
 {
 	/*
 	 *This function chooses a particle randomly and translates it randomly inside of box of size rbox.
 	 */
+	indexPosParticle translation;
+
 	int i {randomIntGenerator(0, positionArray.size()-1)};
+	translation.index = i;
 
-	std::vector<std::vector <double>> newPositionArray (positionArray);
-
-	double newPositionX = newPositionArray[i][0] + randomDoubleGenerator(-rbox, rbox);
-	double newPositionY = newPositionArray[i][1] + randomDoubleGenerator(-rbox, rbox);
-	double newPositionZ = newPositionArray[i][2] + randomDoubleGenerator(-rbox, rbox);
-
-	newPositionArray[i][0] = periodicBC(newPositionX, lengthCube);
-	newPositionArray[i][1] = periodicBC(newPositionY, lengthCube);
-	newPositionArray[i][2] = periodicBC(newPositionZ, lengthCube);
-
-	return newPositionArray;
+	std::vector<double> positionParticle ( positionArray[i] );
+	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -rbox, rbox) );
+	positionParticle = vectorSum (positionParticle, randomVector);
+	positionParticle = periodicBC(positionParticle, lengthCube);
+	translation.posParticle = positionParticle;
+	return translation;
 
 }
 
@@ -83,21 +90,23 @@ enePos mcMove(enePos ep, std::vector<double> radiusArray, double rc, double leng
 	/*
 	 *This function implements a Monte Carlo move: translation of a random particle, calculation of the energy of the new system and then acceptation or not of the move.
 	 */
-	std::vector<std::vector <double>> newPositionArray ( mcTranslation(ep.posMatrix, rbox, lengthCube));
-	double newEnergy {energySystem(newPositionArray, radiusArray, rc, lengthCube)};
-	bool acceptMove {metropolis (newEnergy, ep.ene, temp)};
+	indexPosParticle translation ( mcTranslation(ep.posMatrix, rbox, lengthCube) );
+	double oldEnergyParticle { energyParticle(translation.index, ep.posMatrix[translation.index], ep.posMatrix, radiusArray, rc, lengthCube) };
+	double newEnergyParticle { energyParticle(translation.index, translation.posParticle, ep.posMatrix, radiusArray, rc, lengthCube)};
+	double newEnergy {ep.ene - oldEnergyParticle + newEnergyParticle};
+	bool acceptMove { metropolis (newEnergy, ep.ene, temp) };
 
 	if (acceptMove)
 	{
 		ep.ene = newEnergy;
-		ep.posMatrix = newPositionArray;
+		ep.posMatrix[translation.index] = translation.posParticle;
 	}
 
 	return ep;
 }
 
 
-void mcTotal(std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double rc, double lengthCube, double temp, double rbox)
+void mcTotal(std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double rc, double lengthCube, double temp, double rbox, std::string number)
 
 /* This function is the core of  Monte Carlo program. It iterates over a certain amount of steps that the user can choose.
  * At each step a Monte Carlo move is made. For now the Monte Carlo move is a translation.
@@ -109,13 +118,13 @@ void mcTotal(std::vector<std::vector<double>> positionArray, std::vector<double>
 	enePos ep;
 	ep.ene = energy;
 	ep.posMatrix = positionArray;
-	std::string prename {"output/outXYZ/n300rho1t1v2/position"};
+	std::string prename {"/home/rsimon/Documents/output/outXYZ"+number+"/position"};
 	std::string extname {".xyz"};
 
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 250000; i++)
 	{
 		ep = mcMove(ep, radiusArray, rc, lengthCube, temp, rbox);
 		saveInXYZ(ep.posMatrix,  radiusArray, prename + std::to_string(i) + extname );
-		saveEnergyTXT(ep.ene, "output/outE/n300rho1t1v2.txt");
+		saveEnergyTXT(ep.ene, "/home/rsimon/eclipse-workspace/swapMC/output/outE/quicktest"+number+".txt");
 	}
 }
