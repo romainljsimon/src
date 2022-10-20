@@ -72,19 +72,61 @@ double energySystem(std::vector<std::vector<double>> positionArray, std::vector<
 }
 
 
-double energyParticle(int indexParticle, std::vector<double> positionParticle, std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double rc, double lengthCube)
+double energyParticle(int indexParticle, std::vector<double> positionParticle, std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray, double rc, double lengthCube)
 {
 	double energy { 0. };
 	double particleRadius = radiusArray[indexParticle];
-	int positionArraySize { static_cast<int>(positionArray.size()) };
+	int neighborIListSize { static_cast<int>(neighborIList.size()) };
 
-	for (int i = 0; i < positionArraySize; i++)
+	for (int i = 0; i < neighborIListSize; i++)
 	{
-		if (i != indexParticle)
-		{
-			double distance { sqrt (squareDistancePair (positionParticle, positionArray[i], lengthCube))};
-        	energy += ljPotential(distance, 2 * particleRadius, 2 * radiusArray[i], rc);
-		}
+		int realIndex = neighborIList[i];
+		if (realIndex == indexParticle)
+			std::cout << "PROBLEM";
+
+		double distance { sqrt (squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)) };
+
+		if (distance > 2.9)
+        	std::cout << "PROBLEM";
+
+		energy += ljPotential(distance, 2 * particleRadius, 2 * radiusArray[realIndex], rc);
 	}
 	return energy;
 }
+
+
+
+std::vector<std::vector<int>> createNeighborList(std::vector<std::vector<double>> positionArray, double skin, double lengthCube)
+{
+	int positionArraySize { static_cast<int>(positionArray.size()) };
+	std::vector<std::vector<int>> neighborList( positionArraySize );
+	double squareSkin {pow(skin, 2)};
+
+	for (int i = 0; i < positionArraySize - 1; i++)
+	{
+		std::vector<double> positionParticle = positionArray[i];
+
+		for (int j = i + 1; j < positionArraySize; j++)
+		{
+			if (squareDistancePair (positionParticle, positionArray[j], lengthCube) < squareSkin)
+			{
+				neighborList[i].push_back(j);
+				neighborList[j].push_back(i);
+			}
+
+		}
+	}
+	return neighborList;
+}
+
+
+
+
+
+
+
+
+
+
+
+

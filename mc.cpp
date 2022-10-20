@@ -79,25 +79,26 @@ indexPosParticle mcTranslation(std::vector<std::vector<double>>& positionArray, 
 	std::vector<double> positionParticle ( positionArray[i] );
 	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -rbox, rbox) );
 	positionParticle = vectorSum (positionParticle, randomVector);
-	positionParticle = periodicBC(positionParticle, lengthCube);
+	positionParticle = periodicBC (positionParticle, lengthCube);
 	translation.posParticle = positionParticle;
 	return translation;
 
 }
 
-enePos mcMove(enePos ep, std::vector<double> radiusArray, double rc, double lengthCube, double temp, double rbox)
+enePos mcMove(enePos ep, std::vector<double> radiusArray, std::vector<std::vector<int>> neighborList, double rc, double lengthCube, double temp, double rbox)
 {
 	/*
 	 *This function implements a Monte Carlo move: translation of a random particle, calculation of the energy of the new system and then acceptation or not of the move.
 	 */
 	indexPosParticle translation ( mcTranslation(ep.posMatrix, rbox, lengthCube) );
-	double oldEnergyParticle { energyParticle(translation.index, ep.posMatrix[translation.index], ep.posMatrix, radiusArray, rc, lengthCube) };
-	double newEnergyParticle { energyParticle(translation.index, translation.posParticle, ep.posMatrix, radiusArray, rc, lengthCube)};
-	double newEnergy {ep.ene - oldEnergyParticle + newEnergyParticle};
-	bool acceptMove { metropolis (newEnergy, ep.ene, temp) };
+	std::vector<int> neighborIList = neighborList[translation.index];
+	double oldEnergyParticle { energyParticle(translation.index, ep.posMatrix[translation.index], ep.posMatrix, neighborIList, radiusArray, rc, lengthCube) };
+	double newEnergyParticle { energyParticle(translation.index, translation.posParticle, ep.posMatrix, neighborIList, radiusArray, rc, lengthCube) };
+	bool acceptMove { metropolis (newEnergyParticle, oldEnergyParticle, temp) };
 
 	if (acceptMove)
 	{
+		double newEnergy {ep.ene - oldEnergyParticle + newEnergyParticle};
 		ep.ene = newEnergy;
 		ep.posMatrix[translation.index] = translation.posParticle;
 	}
@@ -114,17 +115,31 @@ void mcTotal(std::vector<std::vector<double>> positionArray, std::vector<double>
   */
 
 {
+
 	double energy {energySystem(positionArray, radiusArray, rc, lengthCube)};
+
+	std::vector<std::vector<int>> neighborList ( createNeighborList(positionArray, 2.9, lengthCube) );
+
 	enePos ep;
 	ep.ene = energy;
 	ep.posMatrix = positionArray;
-	std::string prename {"/home/rsimon/Documents/output/outXYZ"+number+"/position"};
+	std::string prename {"/home/rsimon/Documents/output/outXYZ/n600t2rho1,2/position"};
 	std::string extname {".xyz"};
 
-	for (int i = 0; i < 250000; i++)
+	for (int i = 0; i < 100000; i++)
 	{
-		ep = mcMove(ep, radiusArray, rc, lengthCube, temp, rbox);
-		saveInXYZ(ep.posMatrix,  radiusArray, prename + std::to_string(i) + extname );
-		saveEnergyTXT(ep.ene, "/home/rsimon/eclipse-workspace/swapMC/output/outE/quicktest"+number+".txt");
+		ep = mcMove(ep, radiusArray, neighborList, rc, lengthCube, temp, rbox);
+
+		if ((i % 600) == 0)
+		{
+			neighborList = createNeighborList(positionArray, 2.9 , lengthCube);
+		}
+		if (i > 490000)
+		{
+			//saveInXYZ(ep.posMatrix,  radiusArray, prename + std::to_string(i) + extname );
+		}
+
+		saveEnergyTXT(ep.ene, "/home/rsimon/eclipse-workspace/swapMC/output/outE/quicktest.txt");
+
 	}
 }
