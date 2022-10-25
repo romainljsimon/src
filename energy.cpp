@@ -40,7 +40,7 @@ double squareDistancePair(std::vector<double> positionA,  std::vector<double> po
 	{
 		double diff { positionA[i] - positionB[i] };
 
-		if (diff > (halfLengthCube))
+		if (diff > halfLengthCube)
 			diff -= lengthCube;
 
 		else if (diff < - halfLengthCube)
@@ -72,7 +72,7 @@ double energySystem(std::vector<std::vector<double>> positionArray, std::vector<
 }
 
 
-double energyParticle(int indexParticle, std::vector<double> positionParticle, std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray, double rc, double lengthCube)
+double energyParticle(int wu, int indexParticle, std::vector<double> positionParticle, std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray, double rc, double lengthCube)
 {
 	double energy { 0. };
 	double particleRadius = radiusArray[indexParticle];
@@ -81,14 +81,13 @@ double energyParticle(int indexParticle, std::vector<double> positionParticle, s
 	for (int i = 0; i < neighborIListSize; i++)
 	{
 		int realIndex = neighborIList[i];
-		if (realIndex == indexParticle)
-			std::cout << "PROBLEM";
 
 		double distance { sqrt (squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)) };
 
-		if (distance > 2.9)
-        	std::cout << "PROBLEM";
-
+		if ((distance > 3.5) && wu==1)
+		{
+        	std::cout << "PROBLEMhjbbl" << distance << "\n";
+		}
 		energy += ljPotential(distance, 2 * particleRadius, 2 * radiusArray[realIndex], rc);
 	}
 	return energy;
@@ -108,15 +107,19 @@ std::vector<std::vector<int>> createNeighborList(std::vector<std::vector<double>
 
 		for (int j = i + 1; j < positionArraySize; j++)
 		{
+
+//			neighborList[i].push_back(j);
+//			neighborList[j].push_back(i);
+
 			if (squareDistancePair (positionParticle, positionArray[j], lengthCube) < squareSkin)
 			{
 				neighborList[i].push_back(j);
 				neighborList[j].push_back(i);
 			}
+		}
 
 		}
-	}
-	return neighborList;
+return neighborList;
 }
 
 

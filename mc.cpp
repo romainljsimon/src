@@ -44,7 +44,6 @@ bool metropolis(double newEnergy, double energy, double temp)
 		double randomDouble { randomDoubleGenerator(0., 1.) } ;
 		double threshold { exp((energy - newEnergy) / temp) }; // we consider k=1
 		return threshold > randomDouble;
-
 	}
 }
 
@@ -73,7 +72,7 @@ indexPosParticle mcTranslation(std::vector<std::vector<double>>& positionArray, 
 	 */
 	indexPosParticle translation;
 
-	int i {randomIntGenerator(0, positionArray.size()-1)};
+	int i { randomIntGenerator(0, positionArray.size()-1) };
 	translation.index = i;
 
 	std::vector<double> positionParticle ( positionArray[i] );
@@ -92,8 +91,8 @@ enePos mcMove(enePos ep, std::vector<double> radiusArray, std::vector<std::vecto
 	 */
 	indexPosParticle translation ( mcTranslation(ep.posMatrix, rbox, lengthCube) );
 	std::vector<int> neighborIList = neighborList[translation.index];
-	double oldEnergyParticle { energyParticle(translation.index, ep.posMatrix[translation.index], ep.posMatrix, neighborIList, radiusArray, rc, lengthCube) };
-	double newEnergyParticle { energyParticle(translation.index, translation.posParticle, ep.posMatrix, neighborIList, radiusArray, rc, lengthCube) };
+	double oldEnergyParticle { energyParticle(1, translation.index, ep.posMatrix[translation.index], ep.posMatrix, neighborIList, radiusArray, rc, lengthCube) };
+	double newEnergyParticle { energyParticle(0, translation.index, translation.posParticle, ep.posMatrix, neighborIList, radiusArray, rc, lengthCube) };
 	bool acceptMove { metropolis (newEnergyParticle, oldEnergyParticle, temp) };
 
 	if (acceptMove)
@@ -118,7 +117,7 @@ void mcTotal(std::vector<std::vector<double>> positionArray, std::vector<double>
 
 	double energy {energySystem(positionArray, radiusArray, rc, lengthCube)};
 
-	std::vector<std::vector<int>> neighborList ( createNeighborList(positionArray, 2.9, lengthCube) );
+	std::vector<std::vector<int>> neighborList ( createNeighborList(positionArray, 3., lengthCube) );
 
 	enePos ep;
 	ep.ene = energy;
@@ -128,18 +127,18 @@ void mcTotal(std::vector<std::vector<double>> positionArray, std::vector<double>
 
 	for (int i = 0; i < 100000; i++)
 	{
+		std::cout << i <<"\n";
 		ep = mcMove(ep, radiusArray, neighborList, rc, lengthCube, temp, rbox);
-
-		if ((i % 600) == 0)
+		if ((i % 30) == 0)
 		{
-			neighborList = createNeighborList(positionArray, 2.9 , lengthCube);
+			neighborList = createNeighborList(ep.posMatrix, 3., lengthCube);
 		}
 		if (i > 490000)
 		{
 			//saveInXYZ(ep.posMatrix,  radiusArray, prename + std::to_string(i) + extname );
 		}
 
-		saveEnergyTXT(ep.ene, "/home/rsimon/eclipse-workspace/swapMC/output/outE/quicktest.txt");
+		saveEnergyTXT(ep.ene, "/Users/romainsimon/eclipse-workspace/swapMC/output/outE/quicktest.txt");
 
 	}
 }

@@ -31,7 +31,6 @@ posRad readXYZ(std::string path)
 
 	for (int r = 0; r < row; r++) //Outer loop for rows
 	{
-		std::cout << '\n';
 		for (int c = 0; c < col; c++) //inner loop for columns
 		{
 			if (c == 0)
