@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include "util.h"
 
 double ljPotential(double distance, double sigmaA, double sigmaB, double rc)
 /*
@@ -72,7 +73,9 @@ double energySystem(std::vector<std::vector<double>> positionArray, std::vector<
 }
 
 
-double energyParticle(int wu, int indexParticle, std::vector<double> positionParticle, std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray, double rc, double lengthCube)
+double energyParticle(int wu, int indexParticle, std::vector<double> positionParticle,
+		std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray,
+		double rc, double rskin, double lengthCube)
 {
 	double energy { 0. };
 	double particleRadius = radiusArray[indexParticle];
@@ -81,13 +84,13 @@ double energyParticle(int wu, int indexParticle, std::vector<double> positionPar
 	for (int i = 0; i < neighborIListSize; i++)
 	{
 		int realIndex = neighborIList[i];
-
 		double distance { sqrt (squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)) };
 
-		if ((distance > 3.5) && wu==1)
+		if (realIndex == indexParticle)
 		{
-        	std::cout << "PROBLEMhjbbl" << distance << "\n";
+			continue;
 		}
+
 		energy += ljPotential(distance, 2 * particleRadius, 2 * radiusArray[realIndex], rc);
 	}
 	return energy;
@@ -108,9 +111,6 @@ std::vector<std::vector<int>> createNeighborList(std::vector<std::vector<double>
 		for (int j = i + 1; j < positionArraySize; j++)
 		{
 
-//			neighborList[i].push_back(j);
-//			neighborList[j].push_back(i);
-
 			if (squareDistancePair (positionParticle, positionArray[j], lengthCube) < squareSkin)
 			{
 				neighborList[i].push_back(j);
@@ -124,7 +124,30 @@ return neighborList;
 
 
 
-
+//
+//bool changeList(std::vector<double> positionDouble, double skin, double lengthCube)
+//{
+//	int positionArraySize { static_cast<int>(positionArray.size()) };
+//	int cellListSize {static_cast<int>(lengthCube / skin)};
+//	std::vector<std::vector<std::vector<std::vector<int>>>> cellList (cellListSize, std::vector<std::vector<std::vector<int>>>
+//            														 (cellListSize, std::vector<std::vector<int>>
+//            														 (cellListSize, std::vector<int>
+//                                                                     )));
+//	std::vector<std::vector <int>> particleIndexCell(positionArraySize, std::vector<int>(3));
+//
+//
+//	for (int i = 0; i < positionArraySize - 1; i++)
+//	{
+//		std::vector<double> positionParticle = positionArray[i];
+//		std::vector<int> boxIndex static_cast<int>(divideVectorByScalar(positionParticle, skin));
+//		cellList[boxIndex[0]][boxIndex[1]][boxIndex[2]].push_back(i);
+//		particleIndexCell[i] = boxIndex;
+//
+//
+//		}
+//	return cellList;
+//}
+//
 
 
 

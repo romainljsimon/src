@@ -7,6 +7,25 @@
 
 #include <vector>
 
+//Boundary conditions
+
+std::vector<double> periodicBC(std::vector<double> positionParticle, double lengthCube)
+/*
+ *This function is an implementation of the periodic Boundary conditions.
+ *If a particle gets out of the simulation box from one of the sides, it gets back in the box from the opposite side.
+ */
+{
+	int positionParticleSize { static_cast<int>(positionParticle.size()) };
+	for (int i = 0; i < positionParticleSize; i++)
+	{
+		if (positionParticle[i]< 0)
+			positionParticle[i] += lengthCube;
+
+		else if (positionParticle[i] > lengthCube)
+			positionParticle[i] -= lengthCube;
+	}
+	return positionParticle;
+}
 
 // Vector Operators
 

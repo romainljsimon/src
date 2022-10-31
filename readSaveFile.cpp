@@ -11,7 +11,36 @@
 #include <string>
 #include "readSaveFile.h"
 
+inputVar readInput(std::string path)
+{
+	inputVar initVar;
+	std::string null;
+	std::ifstream infile(path);
 
+	if (!infile.is_open())
+		std::cout << "Error opening file" ;
+
+	infile >> initVar.temp;
+	infile >> null;
+	infile >> null;
+	infile >> initVar.density;
+	infile >> null;
+	infile >> null;
+	infile >> initVar.rc;
+	infile >> null;
+	infile >> null;
+	infile >> initVar.rskin;
+	infile >> null;
+	infile >> null;
+	infile >> initVar.rbox;
+	infile >> null;
+	infile >> null;
+	infile >> initVar.neighUpdate;
+	infile >> null;
+	infile >> null;
+	infile >> initVar.numberIteration;
+	return initVar;
+}
 posRad readXYZ(std::string path)
 {
 	std::ifstream infile(path);
