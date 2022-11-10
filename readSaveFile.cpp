@@ -20,6 +20,12 @@ inputVar readInput(std::string path)
 	if (!infile.is_open())
 		std::cout << "Error opening file" ;
 
+	infile >> initVar.simulationMol;
+	infile >> null;
+	infile >> null;
+	infile >> initVar.neighborMethod;
+	infile >> null;
+	infile >> null;
 	infile >> initVar.temp;
 	infile >> null;
 	infile >> null;
@@ -38,10 +44,26 @@ inputVar readInput(std::string path)
 	infile >> initVar.neighUpdate;
 	infile >> null;
 	infile >> null;
-	infile >> initVar.numberIteration;
+	infile >> initVar.timeSteps;
+	infile >> null;
+	infile >> null;
+
+	if (initVar.simulationMol == "polymer")
+	{
+		infile >> initVar.r0;
+		infile >> null;
+		infile >> null;
+		infile >> initVar.feneK;
+	}
+
+	else
+	{
+		initVar.r0 = 0;
+		initVar.feneK = 0;
+	}
 	return initVar;
 }
-posRad readXYZ(std::string path)
+posRad readXYZ(std::string path, std::string simulationMol)
 {
 	std::ifstream infile(path);
 
@@ -50,10 +72,11 @@ posRad readXYZ(std::string path)
 
 	int row{};
 	infile >> row;
-    int col = 4;
-
+	int col { 5 };
     std::vector<std::vector <double>> positionArray(row, std::vector<double>(3));
-    std::vector<double> radiusArray(row);
+    std::vector<double> radiusArray (row);
+    std::vector<int> moleculeType (row , 1);
+
 
 
 	//Defining the loop for getting input from the file
@@ -64,12 +87,16 @@ posRad readXYZ(std::string path)
 		{
 			if (c == 0)
 			{
+				infile >> moleculeType[r];
+			}
+			else if (c == 1)
+			{
 				infile >> radiusArray[r];
 			}
 
 			else
 			{
-				infile >> positionArray[r][c-1]; //Take input from file and put into positionArray
+				infile >> positionArray[r][c - (col - 3)]; //Take input from file and put into positionArray
 			}
     	}
 
@@ -79,12 +106,40 @@ posRad readXYZ(std::string path)
 	posRad initPosRad;
 	initPosRad.radVector = radiusArray;
 	initPosRad.posMatrix = positionArray;
+	initPosRad.moleculeType = moleculeType;
 	return initPosRad;
 }
 
+std::vector<std::vector<int>> readBondsTXT(std::string path)
+{
+	std::ifstream infile(path);
+
+	if (!infile.is_open())
+		std::cout << "Error opening file";
 
 
-void saveInXYZ(std::vector<std::vector<double>>& positionArray, std::vector<double> radiusArray, std::string path)
+	int row{};
+	infile >> row;
+	int col{2};
+	std::vector<std::vector <int>> bondsMatrix(row, std::vector<int>(2));
+
+	for (int r = 0; r < row; r++) //Outer loop for rows
+	{
+		for (int c = 0; c < col; c++) //inner loop for columns
+		{
+			infile >> bondsMatrix[r][c]; //Take input from file and put into bondsMatrix
+
+    	}
+
+	}
+
+	infile.close();
+
+	return bondsMatrix;
+}
+
+void saveInXYZ(std::vector<std::vector<double>>& positionArray, std::vector<double> radiusArray,
+			   std::vector<int> moleculeType, std::string path)
 {
 
 	/*
@@ -111,6 +166,8 @@ void saveInXYZ(std::vector<std::vector<double>>& positionArray, std::vector<doub
 			}
 			else if (j==0)
 			{
+				fout << moleculeType[it];
+				fout << " ";
 				fout << radiusArray[it];
 				fout << " ";
 				fout << i;

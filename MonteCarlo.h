@@ -20,33 +20,38 @@ private:
 	double m_energy {};
 	int m_nParticles {};
 	std::vector<std::vector <int>> m_particleIndexCell {};
-	bool m_acceptMove {};
-	int m_indexTranslation {};
-	std::vector<double> m_positionParticleTranslation;
+	std::vector<std::vector<int>> m_bondsMatrix {};
 
+	std::string m_simulationMol {};
 	std::vector<std::vector<double>> m_positionArray {};
 	std::vector<double> m_radiusArray {};
-	double m_rc {};
-	double m_lengthCube {};
-	double m_temp {};
-	double m_rbox {};
-	double m_rskin {};
-	int m_neighUpdate {};
-	int m_numberIteration {};
-	std::string m_folderPath {};
-	std::string m_neighMethod { };
+	std::vector<int> m_moleculeType {};
+	const double m_squareRc {};
+	const double m_lengthCube {};
+	const double m_temp {};
+	const double m_rbox {};
+	const double m_squareRskin {};
+	const int m_neighUpdate {};
+	const std::string m_folderPath {};
+	const std::string m_neighMethod {};
+	const int m_timeSteps {};
+	const double m_squareR0 {};
+	const double m_feneK {};
 
 public:
-	MonteCarlo( std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray,
-				double rc, double lengthCube, double temp, double rbox, double rskin, int neighUpdate,
-				std::string folderPath, std::string neighMethod, int numberIteration );
+	MonteCarlo( std::string simulationMol, std::vector<std::vector<double>> positionArray,
+				std::vector<double> radiusArray, std::vector<int> moleculeType,
+				const double rc, const double lengthCube, const double temp, const double rbox,
+				const double rskin, const int neighUpdate, const std::string folderPath,
+				const std::string neighMethod, const int timeSteps, const double r0,
+				const double feneK);
 
 	void mcTotal();
 	void createNeighborList();
 	void createCellAndIndexList();
 	void mcMove();
-	void mcTranslation();
-	void metropolis(double newEnergy, double energy);
+	std::vector<double> mcTranslation(int indexTranslation);
+	bool metropolis(double newEnergy, double energy);
 };
 
 

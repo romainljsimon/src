@@ -46,17 +46,18 @@ public:
 
 int main()
 {
-	std::string folderPath { std::filesystem::current_path() };
-	posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz" );
+	std::string folderPath ( std::filesystem::current_path() );
+
+
+	//Opening input variables file
+
+	inputVar initVar = readInput(folderPath + "/inputVar.txt");
+	posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz", initVar.simulationMol);
 	std::filesystem::create_directory (folderPath + "/outXYZ" );
 
     //Opening position file
 	initPosRad.radVector = vectorNormalization(initPosRad.radVector);     // We define the lengthscale of the system as <sigma>
 	initPosRad.radVector = divideVectorByScalar(initPosRad.radVector, 2);
-
-	//Opening input variables file
-
-	inputVar initVar = readInput(folderPath + "/inputVar.txt");
 
 	//
 
@@ -73,11 +74,11 @@ int main()
 	//randomGeneratorTest();
     // mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rbox, number);
 	//mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rbox, number);
-	std::string neighMethod { "verlet" };
 	Timer t;
-	MonteCarlo system { initPosRad.posMatrix, initPosRad.radVector, initVar.rc, lengthCube,
+	MonteCarlo system { initVar.simulationMol, initPosRad.posMatrix, initPosRad.radVector,
+						initPosRad.moleculeType,initVar.rc, lengthCube,
 						initVar.temp, initVar.rbox, initVar.rskin, initVar.neighUpdate,
-						folderPath, neighMethod, initVar.numberIteration};
+						folderPath, initVar.neighborMethod, initVar.timeSteps, initVar.r0, initVar.feneK};
 	system.mcTotal();
 
     std::cout << "Time taken: " << t.elapsed() << " seconds\n";
