@@ -18,6 +18,7 @@ private:
 	int m_errors { 0 };
 	std::vector<std::vector<std::vector<std::vector<int>>>> m_cellList {};
 	double m_energy {};
+	double m_pressure {};
 	int m_nParticles {};
 	std::vector<std::vector <int>> m_particleIndexCell {};
 	std::vector<std::vector<int>> m_bondsMatrix {};

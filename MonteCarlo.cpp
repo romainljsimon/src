@@ -77,7 +77,9 @@ void MonteCarlo::mcTotal()
 
 	else
 	{
-		m_energy = energySystem(m_positionArray, m_radiusArray, m_squareRc, m_lengthCube);
+		m_energy = energySystem(m_positionArray, m_radiusArray, m_squareRc, m_lengthCube) + 8. / 3 * 0.75 * 3.14 * m_nParticles * 1 / pow(m_squareRc, 3./2) * (1. / 3 * pow(1 / m_squareRc, 3. ) - 1);
+		double corrPressure {16. * 3.14 / 3. * 0.75 / ( m_temp *  pow(m_squareRc, 3./2)) * (2. / (3 * pow(m_squareRc, 3. )) - 1.) };
+		m_pressure = pressureSystem(m_temp, m_positionArray, m_radiusArray, m_squareRc, m_lengthCube) + corrPressure;
 	}
 	createNeighborList();
 	//createCellAndIndexList();
@@ -87,20 +89,22 @@ void MonteCarlo::mcTotal()
 	for (int i = 1; i < m_timeSteps + 1; i++)
 	{
 		saveEnergyTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
+		std::ofstream outPressure;
+		outPressure.open(m_folderPath + "/pressure.txt", std::ios_base::app);
+		outPressure << m_pressure;
+		outPressure << "\n";
+		outPressure.close();
 
 		for (int j = 0; j < m_nParticles; j++)
 		{
 			mcMove();
+
 		}
 
 		if (((i % m_neighUpdate) == 0) && (m_neighMethod == "verlet"))
 		{
 			createNeighborList();
-			std::ofstream outPressure;
-			outPressure.open(m_folderPath + "/pressure.txt", std::ios_base::app);
-			outPressure << pressureSystem(m_temp, m_positionArray, m_radiusArray, m_lengthCube);
-			outPressure << "\n";
-			outPressure.close();
+
 		}
 
 		if (i > m_timeSteps - 100)
@@ -115,6 +119,7 @@ void MonteCarlo::mcTotal()
 	outErrors << m_errors;
 	outErrors << "\n";
 	outErrors.close();
+
 }
 
 //void MonteCarlo::createNeighborList()
@@ -247,10 +252,13 @@ void MonteCarlo::mcMove()
 
 	if (acceptMove)
 	{
+		double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_radiusArray, m_squareRc, m_lengthCube)};
+		double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_radiusArray, m_squareRc, m_lengthCube)};
+		m_pressure += newPressureParticle - oldPressureParticle;
 		double newEnergy {m_energy - oldEnergyParticle + newEnergyParticle};
-
 		m_energy = newEnergy;
 		m_positionArray[indexTranslation] = positionParticleTranslation;
+
 	}
 
 }

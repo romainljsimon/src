@@ -28,8 +28,8 @@ double energySystemPolymer(std::vector<std::vector<double>> positionArray, std::
 						   double squareR0, double feneK);
 std::vector<std::vector<int>> createNeighborList(std::vector<std::vector<double>> positionArray, double skin, double lengthCube);
 std::vector<std::vector<std::vector<std::vector<int>>>> createCellList(std::vector<std::vector<double>> positionArray, double skin, double lengthCube);
-double pressureSystem(double temp, std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double lengthCube);
-
+double pressureSystem(double temp, std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double squareRc, double lengthCube);
+double pressureParticle(double temp, int indexParticle, std::vector<double> positionParticle, std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray, double squareRc, double lengthCube);
 
 
 

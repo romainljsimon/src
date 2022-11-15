@@ -198,15 +198,46 @@ double energyParticlePolymer (int indexParticle, std::vector<double> positionPar
 	return energy;
 }
 
-double rforce(double squareDistance, double sigmaA, double sigmaB)
+double rforce(double squareDistance, double sigmaA, double sigmaB, double squareRc)
 {
 	double squareSigma { pow (((sigmaA + sigmaB) / 2 ), 2) };
-	double rforceAB { 24 * (pow ((squareSigma / squareDistance), 3) - 2 * pow ((squareSigma / squareDistance), 6))};
-	return rforceAB;
-
+	if (squareDistance > squareRc * squareSigma) // We consider a cut-off radius which is the threshold maximum distance of interaction between two particles
+	{
+		return 0.;
+	}
+	else
+	{
+		return 24 * (pow (( squareSigma / squareDistance), 3 ) - 2 * pow (( squareSigma / squareDistance ), 6));
+	}
 }
 
-double pressureSystem(double temp, std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double lengthCube)
+
+double pressureParticle(double temp, int indexParticle, std::vector<double> positionParticle,
+		std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray,
+		double squareRc, double lengthCube)
+{
+	double pressure { 0. };
+	double particleRadius = radiusArray[indexParticle];
+	int neighborIListSize { static_cast<int>(neighborIList.size()) };
+	int nParticles {static_cast<int>(positionArray.size())};
+
+	for (int i = 0; i < neighborIListSize; i++)
+	{
+		int realIndex = neighborIList[i];
+		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
+
+		if (realIndex == indexParticle)
+		{
+			continue;
+		}
+
+		pressure += rforce(squareDistance, 2 * particleRadius, 2 * radiusArray[realIndex], squareRc);
+	}
+	return - pressure / (3 * temp *  nParticles);
+}
+
+
+double pressureSystem(double temp, std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double squareRc, double lengthCube)
 {
 	double sum { 0 };
 	int positionArraySize {static_cast<int>(positionArray.size())};
@@ -215,12 +246,15 @@ double pressureSystem(double temp, std::vector<std::vector<double>> positionArra
 		for (int j = i + 1; j < positionArraySize; j++) //inner loop for columns
         {
 			double squareDistance { squareDistancePair (positionArray[i], positionArray[j], lengthCube)};
-			sum += rforce(squareDistance, 2 * radiusArray[j], 2 * radiusArray[i]);
+			sum += rforce(squareDistance, 2 * radiusArray[i], 2 * radiusArray[j], squareRc);
         }
 
 	}
-	return 1 - sum / (3. * positionArraySize * temp);
+	return 1 - sum / (3. *  positionArraySize * temp);
 }
+
+
+
 //std::vector<std::vector<int>> createNeighborList(std::vector<std::vector<double>> positionArray, double skin, double lengthCube)
 //{
 //	int positionArraySize { static_cast<int>(positionArray.size()) };
