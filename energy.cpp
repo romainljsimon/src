@@ -27,6 +27,7 @@ double ljPotential(double squareDistance, double sigmaA, double sigmaB, double s
 
 	else
 	{
+
 		return 4 * (pow ((squareSigma / squareDistance), 6) - pow ((squareSigma / squareDistance), 3) + shift);
 	}
 }
@@ -36,9 +37,9 @@ double fenePotential(double squareDistance, double sigmaA, double sigmaB, double
 	double squareSigma { pow (((sigmaA + sigmaB) / 2 ), 2) };
 	squareR0 = squareR0 * squareSigma;
 
-	if (squareDistance > squareR0) // We consider a cut-off radius which is the threshold maximum distance of interaction between two particles
+	if (squareDistance >= squareR0) // We consider a cut-off radius which is the threshold maximum distance of interaction between two particles
 	{
-		return std::numeric_limits<int>::max();
+		return std::numeric_limits<double>::infinity();
 	}
 
 
@@ -224,7 +225,7 @@ double pressureParticle(double temp, int indexParticle, std::vector<double> posi
 	for (int i = 0; i < neighborIListSize; i++)
 	{
 		int realIndex = neighborIList[i];
-		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
+		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube) };
 
 		if (realIndex == indexParticle)
 		{
@@ -233,7 +234,7 @@ double pressureParticle(double temp, int indexParticle, std::vector<double> posi
 
 		pressure += rforce(squareDistance, 2 * particleRadius, 2 * radiusArray[realIndex], squareRc);
 	}
-	return - pressure / (3 * temp *  nParticles);
+	return  - pressure / (3 * temp *  nParticles);
 }
 
 

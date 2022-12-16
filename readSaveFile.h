@@ -33,8 +33,10 @@ struct inputVar
 
 posRad readXYZ(std::string path, std::string simulationMol);
 void saveInXYZ(std::vector<std::vector<double>>& positionArray, std::vector<double> radiusArray,
-			   std::vector<int> moleculeType,std::string path);
+			   std::vector<int> moleculeType,double lengthCube,  std::string path);
 void saveEnergyTXT(double energy, std::string path);
+void saveDisplacement(std::vector<std::vector<double>> dispMatrix, std::string path);
+
 inputVar readInput(std::string path);
 std::vector<std::vector<int>> readBondsTXT(std::string path);
 

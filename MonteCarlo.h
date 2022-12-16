@@ -22,6 +22,12 @@ private:
 	int m_nParticles {};
 	std::vector<std::vector <int>> m_particleIndexCell {};
 	std::vector<std::vector<int>> m_bondsMatrix {};
+	std::vector<std::vector<double>> m_totalDisplacementMatrix {};
+	std::vector<std::vector<double>> m_interDisplacementMatrix {};
+	std::vector<std::vector<double>> m_stepDisplacementMatrix {};
+	double m_acceptanceRate { 0 };
+	double m_updateRate { -1 };
+	bool m_calculatePressure {false};
 
 	std::string m_simulationMol {};
 	std::vector<std::vector<double>> m_positionArray {};
@@ -29,7 +35,7 @@ private:
 	std::vector<int> m_moleculeType {};
 	const double m_squareRc {};
 	const double m_lengthCube {};
-	const double m_temp {};
+	double m_temp {};
 	const double m_rbox {};
 	const double m_squareRskin {};
 	const int m_neighUpdate {};
@@ -38,6 +44,7 @@ private:
 	const int m_timeSteps {};
 	const double m_squareR0 {};
 	const double m_feneK {};
+	const double m_squareRdiff {};
 
 public:
 	MonteCarlo( std::string simulationMol, std::vector<std::vector<double>> positionArray,
@@ -51,8 +58,10 @@ public:
 	void createNeighborList();
 	void createCellAndIndexList();
 	void mcMove();
-	std::vector<double> mcTranslation(int indexTranslation);
+	std::vector<double> mcTranslation(int indexTranslation, std::vector<double> randomVector);
 	bool metropolis(double newEnergy, double energy);
+	void checkStepDisplacement();
+
 };
 
 

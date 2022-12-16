@@ -6,6 +6,8 @@
  */
 
 #include <vector>
+#include <functional>
+#include <numeric>
 
 //Boundary conditions
 
@@ -66,12 +68,14 @@ std::vector<double> vectorNormalization(std::vector<double> vec)
 
 std::vector<double> vectorSum(std::vector<double> vec1, std::vector<double> vec2)
 {
-	int vecSize{ static_cast<int>(vec1.size()) };
-	for (int i = 0; i < vecSize; i++)
-	{
-		vec1[i] += vec2[i];
-	}
+	std::transform (vec1.begin(), vec1.end(), vec2.begin(), vec1.begin(), std::plus<double>());
 	return vec1;
+}
+
+std::vector<double> vectorDiff(std::vector<double> vec1, std::vector<double> vec2)
+{
+	std::vector<double> minus_vec2 = multiplyVectorByScalar(vec2, -1.);
+	return vectorSum(vec1, minus_vec2);
 }
 
 double getMaxVector(std::vector<double> vec)
@@ -83,19 +87,49 @@ double getMaxVector(std::vector<double> vec)
 	}
 	return max;
 }
-//double meanMatrix(std::vector<std::vector<double>> mat)
-//{
-//	double sum{0};
-//	for (auto const &vec: mat)
-//	{
-//		for (auto const &elt: vec)
-//		{
-//			sum += elt;
-//		}
-//
-//	}
-//	return sum / static_cast<double>(mat.size());
-//}
+
+double getSquareNormVector(std::vector<double> vec)
+{
+	return std::inner_product(vec.begin(), vec.end(), vec.begin(), 0.);
+}
+
+// matrix operations
+
+
+std::vector<std::vector<double>> matrixSum(std::vector<std::vector<double>> mat1, std::vector<std::vector<double>> mat2)
+{
+	int matSize{ static_cast<int>(mat1.size()) };
+
+	for (int i = 0; i < matSize; i++)
+	{
+			mat1[i] = vectorSum(mat1[i], mat2[i]);
+	}
+	return mat1;
+
+}
+
+std::vector<std::vector<double>> matrixSumWithVector(std::vector<std::vector<double>> mat1, std::vector<double> vec1)
+{
+	int matSize{ static_cast<int>(mat1.size()) };
+
+	for (int i = 0; i < matSize; i++)
+	{
+			mat1[i] = vectorSum(mat1[i], vec1);
+	}
+	return mat1;
+
+}
+
+std::vector<std::vector<double>> matrixDiffWithVector(std::vector<std::vector<double>> mat1, std::vector<double> vec1)
+{
+	int matSize{ static_cast<int>(mat1.size()) };
+
+	for (int i = 0; i < matSize; i++)
+	{
+			mat1[i] = vectorDiff(mat1[i], vec1);
+	}
+	return mat1;
+}
 
 std::vector<std::vector<double>> multiplyMatrixByScalar(std::vector<std::vector<double>> mat, double scalar)
 {
@@ -123,4 +157,27 @@ std::vector<std::vector<double>> rescaleMatrix(std::vector<std::vector<double>> 
 	double max { getMaxMatrix(mat) };
 	double ratio {rescaler / max};
 	return multiplyMatrixByScalar(mat, ratio);
+}
+
+std::vector<double> getSquareNormRowMatrix(std::vector<std::vector<double>> mat)
+{
+	int matSize { static_cast<int>(mat.size()) };
+	std::vector<double> squareNormVector ( matSize );
+	for (int i = 0; i < matSize; i++)
+	{
+		squareNormVector[i] = getSquareNormVector( mat[i] );
+	}
+	return squareNormVector;
+}
+
+std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat)
+{
+	int matSize { static_cast<int>(mat.size()) };
+	std::vector<double> mean(3, 0);
+
+	for (int i = 0; i < matSize; i++)
+	{
+		mean = vectorSum(mean, mat[i]);
+	}
+	return divideVectorByScalar(mean, matSize);
 }

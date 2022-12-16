@@ -51,9 +51,11 @@ int main()
 
 	//Opening input variables file
 
-	inputVar initVar = readInput(folderPath + "/inputVar.txt");
+	inputVar initVar = readInput ( folderPath + "/inputVar.txt" );
 	posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz", initVar.simulationMol);
 	std::filesystem::create_directory (folderPath + "/outXYZ" );
+	std::filesystem::create_directory (folderPath + "/disp" );
+
 
     //Opening position file
 	initPosRad.radVector = vectorNormalization(initPosRad.radVector);     // We define the lengthscale of the system as <sigma>
@@ -69,7 +71,7 @@ int main()
 	//assert((initVar.rbox > 0.) && "The length of the translation box has to be superior to 0.");
 	//assert((lengthCube > 1.) && "The length of the system has to be bigger than a particle");
 
-	initPosRad.posMatrix = rescaleMatrix(initPosRad.posMatrix, lengthCube);
+    // initPosRad.posMatrix = rescaleMatrix(initPosRad.posMatrix, lengthCube);
 	//std::cout << squareDistancePairTest();
 	//randomGeneratorTest();
     // mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rbox, number);

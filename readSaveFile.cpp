@@ -9,6 +9,8 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <limits>
+
 #include "readSaveFile.h"
 
 inputVar readInput(std::string path)
@@ -73,10 +75,15 @@ posRad readXYZ(std::string path, std::string simulationMol)
 	int row{};
 	infile >> row;
 	int col { 5 };
-    std::vector<std::vector <double>> positionArray(row, std::vector<double>(3));
+
+	std::string line;
+	getline(infile, line);
+	getline(infile, line);
+
+
+	std::vector<std::vector <double>> positionArray(row, std::vector<double>(3));
     std::vector<double> radiusArray (row);
     std::vector<int> moleculeType (row , 1);
-
 
 
 	//Defining the loop for getting input from the file
@@ -139,7 +146,7 @@ std::vector<std::vector<int>> readBondsTXT(std::string path)
 }
 
 void saveInXYZ(std::vector<std::vector<double>>& positionArray, std::vector<double> radiusArray,
-			   std::vector<int> moleculeType, std::string path)
+			   std::vector<int> moleculeType,double lengthCube,  std::string path)
 {
 
 	/*
@@ -150,6 +157,16 @@ void saveInXYZ(std::vector<std::vector<double>>& positionArray, std::vector<doub
 	std::ofstream fout(path);
     fout << positionArray.size();
 	fout <<  "\n";
+	std::string lengthStr = std::to_string(lengthCube);
+    fout << "Lattice=";
+    fout << '"';
+    fout << lengthStr;
+    fout << " 0.0 0.0 0.0 ";
+    fout << lengthStr;
+    fout << " 0.0 0.0 0.0 ";
+    fout << lengthStr;
+    fout << '"';
+    fout << " Properties=type:I:1:radius:R:1:pos:R:3";
     fout <<  "\n";
     int it {0};
 	for(auto const& x : positionArray)
@@ -199,6 +216,29 @@ void saveEnergyTXT(double energy, std::string path)
 	outE << "\n";
 	outE.close();
 
+}
+
+void saveDisplacement(std::vector<std::vector<double>> dispMatrix, std::string path)
+{
+	std::ofstream fout(path);
+
+	for(auto const& x : dispMatrix)
+	{
+		int j { 0 };
+		for(auto const& i : x)
+		{
+			fout << i;
+			fout << " ";
+			if (j == 2)
+			{
+				fout << "\n";
+			}
+
+			j += 1;
+
+		}
+	}
+	fout.close();
 }
 
 void printing(const std::vector<std::vector<double>>& matrix)
