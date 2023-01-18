@@ -6,35 +6,63 @@
  */
 #include <iostream>
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include "util.h"
 #include <limits>
 
-
-double ljPotential(double squareDistance, double sigmaA, double sigmaB, double squareRc, double shift)
-/*
- *This function is calculates the Lennard-Jones potential between two particles.
-	We consider a cut off that is equal to 2.5 times the mean radius of the two particles considered
- */
+/*******************************************************************************
+ * This function calculates the Lennard-Jones potential energy between two
+ * particles seperated by a distance whose square is equal to squareDistance.
+ * We consider a cut off whose square is equal to squareRc times the mean radius
+ * of the two particles considered. The potential is equal to 0 for distances
+ * greater that the cut off.
+ *
+ * @param squareDistance Square of the distance seperating the two considered
+ *                       particles
+ *        sigmaA Particle A's diameter
+ *        sigmaB Particle B's diameter
+ *        squareRc Square of the cut off radius
+ *        shift Shifts the Lennard-Jones potential by a constant value
+ *
+ * @return energy
+ ******************************************************************************/
+double ljPotential(const double& squareDistance, const double& sigmaA, const double& sigmaB, const double& squareRc, const double& shift)
 {
-	double squareSigma { pow (((sigmaA + sigmaB) / 2 ), 2) };
+
+	double squareSigma { std::pow (((sigmaA + sigmaB) / 2. ), 2.) };
 
 	if (squareDistance > squareRc * squareSigma) // We consider a cut-off radius which is the threshold maximum distance of interaction between two particles
 	{
-		return 0;
+		return 0.;
 	}
-
 
 	else
 	{
-
-		return 4 * (pow ((squareSigma / squareDistance), 6) - pow ((squareSigma / squareDistance), 3) + shift);
+		double rap_square {std::pow ((squareSigma / squareDistance), 3.)};
+		return 4. * rap_square * ( rap_square - 1.) + 4. * shift;
 	}
 }
 
-double fenePotential(double squareDistance, double sigmaA, double sigmaB, double squareR0, double feneK)
+/*******************************************************************************
+ * This function calculates the FENE (finitely extensible nonlinear elastic) 
+ * potential energy between two nearest-neighbor monomers seperated by a 
+ * distance whose square is equal to squareDistance. SquareR0 and feneK are two
+ * parameters of the potential. SquareRo is the maximum square distance that can
+ * seperate two neighboring atoms and feneK represents the stiffness of the 
+ * elastic. They are chosen such as bond crossing doesn't occur.
+ *
+ * @param squareDistance Square of the distance seperating the two considered
+ *                       particles
+ *        sigmaA particle A's diameter.
+ *        sigmaB particle B's diameter.
+ *        squareR0 maximum square distance.
+ *        feneK stiffness of the elastic.
+ *
+ * @return energy
+ ******************************************************************************/
+double fenePotential(const double& squareDistance, const double& sigmaA, const double& sigmaB, double squareR0, double feneK)
 {
-	double squareSigma { pow (((sigmaA + sigmaB) / 2 ), 2) };
+	double squareSigma { std::pow (((sigmaA + sigmaB) / 2. ), 2.) };
 	squareR0 = squareR0 * squareSigma;
 
 	if (squareDistance >= squareR0) // We consider a cut-off radius which is the threshold maximum distance of interaction between two particles
@@ -42,23 +70,29 @@ double fenePotential(double squareDistance, double sigmaA, double sigmaB, double
 		return std::numeric_limits<double>::infinity();
 	}
 
-
 	else
 	{
 		feneK = feneK / squareSigma;
-		return -0.5 * feneK * squareR0 * log(1 - squareDistance / squareR0);
+		return -0.5 * feneK * squareR0 * std::log(1. - squareDistance / squareR0);
 	}
 }
 
-double squareDistancePair(std::vector<double> positionA,  std::vector<double> positionB, double lengthCube)
-/*
- *This function calculates the distance between two particles considering the periodic boundary conditions.
- */
+/*******************************************************************************
+ * This function calculates the distance between two particles considering the 
+ * periodic boundary conditions.
+ *
+ * @param positionA particle A's position.
+ *        particleB particle B's position.
+ *        lengthCube simulation box length.
+ *
+ * @return distance between two particles.
+ ******************************************************************************/
+double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB, const double& lengthCube)
 {
 	double squareDistance { 0. };
-	double halfLengthCube { lengthCube / 2 };
+	double halfLengthCube { lengthCube / 2. };
 
-	for (int i = 0; i < static_cast<int>(positionA.size()); i++)
+	for (int i = 0; i < 3; i++)
 	{
 		double diff { positionA[i] - positionB[i] };
 
@@ -68,19 +102,27 @@ double squareDistancePair(std::vector<double> positionA,  std::vector<double> po
 		else if (diff < - halfLengthCube)
 			diff += lengthCube;
 
-		squareDistance += pow (diff, 2);
+		squareDistance += diff * diff;
 	}
 
 	return squareDistance;
 }
 
-double energySystem(std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double squareRc, double lengthCube)
-/*
- *This function calculates the total potential energy of the system ie. the Lennard-Jones potential between each pair of particles.
- */
+/*******************************************************************************
+ * This function calculates the total potential energy of the system considering
+ * that particles are Lennard-Jones particles.
+ *
+ * @param positionArray array of particle positions.
+ *        radiusArray array of particle radiuses.
+ *        squareRc square of the cut off radius.
+ *        lengthCube simulation box length.
+ *
+ * @return System's total energy.
+ ******************************************************************************/
+double energySystem(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& radiusArray, const double& squareRc, const double& lengthCube)
 {
 	double energy { 0. };
-	int positionArraySize {static_cast<int>(positionArray.size())};
+	int positionArraySize {static_cast<int>( positionArray.size() )};
 
 	for (int i = 0; i < positionArraySize - 1; i++) //Outer loop for rows
     {
@@ -88,16 +130,29 @@ double energySystem(std::vector<std::vector<double>> positionArray, std::vector<
 		for (int j = i + 1; j < positionArraySize; j++) //inner loop for columns
         {
 			double squareDistance { squareDistancePair (positionArray[i], positionArray[j], lengthCube)};
-        	energy += ljPotential(squareDistance, 2 * radiusArray[j], 2 * radiusArray[i], squareRc, 0.);
+        	energy += ljPotential(squareDistance, 2. * radiusArray[j], 2. * radiusArray[i], squareRc, 0.);
         }
     }
 	return energy;
 }
 
-
-double energyParticle(int indexParticle, std::vector<double> positionParticle,
-		std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray,
-		double squareRc, double lengthCube)
+/*******************************************************************************
+ * This function calculates the potential energy of one particle considering
+ * that particles are Lennard-Jones particles.
+ *
+ * @param indexParticle Considered particle's index in the positionArray and 
+ *                      radiusArray arrays.
+ *        positionParticle Considered particle's position.
+ * 	      positionArray array of particle positions.
+ * 	      neighborIList Considered particle's neighbor list.
+ *        radiusArray array of particle radiuses.
+ *        squareRc square of the cut off radius.
+ *        lengthCube simulation box length.
+ * @return Particle's total energy.
+ ******************************************************************************/
+double energyParticle(const int& indexParticle, const std::vector<double>& positionParticle,
+		      const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList, const std::vector<double>& radiusArray,
+		      const double& squareRc, const double& lengthCube)
 {
 	double energy { 0. };
 	double particleRadius = radiusArray[indexParticle];
@@ -113,18 +168,29 @@ double energyParticle(int indexParticle, std::vector<double> positionParticle,
 			continue;
 		}
 
-		energy += ljPotential(squareDistance, 2 * particleRadius, 2 * radiusArray[realIndex], squareRc, 0.);
+		energy += ljPotential(squareDistance, 2. * particleRadius, 2. * radiusArray[realIndex], squareRc, 0.);
 	}
 	return energy;
 }
 
-
-double energySystemPolymer(std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray,
-						   std::vector<std::vector<int>> bondsMatrix, double squareRc, double lengthCube,
-						   double squareR0, double feneK)
-/*
- *This function calculates the total potential energy of the system ie. the Lennard-Jones potential between each pair of particles.
- */
+/*******************************************************************************
+ * This function calculates the total potential energy of the system considering
+ * that the system is polymeric. Every monomer interact via a Lennard-Jones
+ * potential. Nearest-neighbor monomers also interact via a FENE potential.
+ *
+ * @param positionArray array of particle positions.
+ *        radiusArray array of particle radiuses.
+ *        bondsMatrix matrix that indicates which monomers are linked together.
+ *        squareRc square of the cut off radius.
+ *        lengthCube simulation box length.
+ *        squareR0 maximum square distance.
+ *        feneK stiffness of the elastic
+ *
+ * @return Polymeric system's total energy.
+ ***********************************************************position65000.xyz*******************/
+double energySystemPolymer(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& radiusArray,
+						   const std::vector<std::vector<int>>& bondsMatrix, const double& squareRc, const double& lengthCube,
+						   const double& squareR0, const double& feneK)
 {
 	double energy { 0. };
 	int positionArraySize {static_cast<int>(positionArray.size())};
@@ -139,7 +205,7 @@ double energySystemPolymer(std::vector<std::vector<double>> positionArray, std::
         {
 			double squareDistance { squareDistancePair (positionArray[i], positionArray[j], lengthCube)};
 
-			energy += ljPotential(squareDistance, 2 * radiusArray[j], 2 * radiusArray[i], squareRc, 127. / 4096);
+			energy += ljPotential(squareDistance, 2 * radiusArray[j], 2 * radiusArray[i], squareRc, 0.25); //127. / 4096);
 
         }
 		for (int j = 0; j < bondsISize; j++)
@@ -152,18 +218,37 @@ double energySystemPolymer(std::vector<std::vector<double>> positionArray, std::
 			}
 
 			double squareDistance { squareDistancePair (positionArray[i], positionArray[realIndex], lengthCube)};
-			energy += fenePotential(squareDistance, 2 * radiusArray[i], 2 * radiusArray[realIndex], squareR0, feneK);
+			energy += fenePotential(squareDistance, 2. * radiusArray[i], 2. * radiusArray[realIndex], squareR0, feneK);
 
         }
     }
 	return energy;
 }
 
-
-double energyParticlePolymer (int indexParticle, std::vector<double> positionParticle,
-								std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList,
-								std::vector<double> radiusArray, std::vector<int> bondsI,
-								double squareRc, double lengthCube, double squareR0, double feneK)
+/*******************************************************************************
+ * This function calculates the potential energy of one monomer considering
+ * that it is part of a polymer chain. Every monomer interact via a 
+ * Lennard-Jones potential. Nearest-neighbor monomers also interact via a FENE 
+ * potential.
+ *
+ * @param indexParticle Considered monomer's index in the positionArray and 
+ *                      radiusArray arrays.
+ *        positionArray Array of monomer positions.
+ *        neighborIList Considered monomer's neighbor list.
+ *        radiusArray Array of particle radiuses.
+ *        bondsI vector that indicates which monomers are linked with the 
+ *               considered monomer.
+ *        squareRc Square of the cut off radius.
+ *        lengthCube Simulation box length.
+ *        squareR0 Maximum square distance.
+ *        feneK Elastic's stiffness.
+ *
+ * @return Polymeric particle's total energy.
+ ******************************************************************************/
+double energyParticlePolymer (const int& indexParticle, const std::vector<double>& positionParticle,
+							  const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
+							  const std::vector<double>& radiusArray, const std::vector<int>& bondsI,
+							  const double& squareRc, const double& lengthCube, const double& squareR0, const double& feneK)
 {
 	double energy { 0. };
 	double particleRadius = radiusArray[indexParticle];
@@ -180,20 +265,19 @@ double energyParticlePolymer (int indexParticle, std::vector<double> positionPar
 			continue;
 		}
 
-		energy += ljPotential(squareDistance, 2 * particleRadius, 2 * radiusArray[realIndex], squareRc, 127. / 4096);
+		energy += ljPotential(squareDistance, 2. * particleRadius, 2. * radiusArray[realIndex], squareRc, 0.25); //127. / 4096);
 	}
 
 	for (int i = 0; i < bondsISize; i++)
 	{
 		int realIndex = bondsI[i];
-
 		if ((realIndex == indexParticle) || (realIndex == -1))
 		{
 			continue;
 		}
 
 		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-		energy += fenePotential(squareDistance, 2 * particleRadius, 2 * radiusArray[realIndex], squareR0, feneK);
+		energy += fenePotential(squareDistance, 2. * particleRadius, 2. * radiusArray[realIndex], squareR0, feneK);
 	}
 
 	return energy;
@@ -201,14 +285,14 @@ double energyParticlePolymer (int indexParticle, std::vector<double> positionPar
 
 double rforce(double squareDistance, double sigmaA, double sigmaB, double squareRc)
 {
-	double squareSigma { pow (((sigmaA + sigmaB) / 2 ), 2) };
+	double squareSigma { std::pow (((sigmaA + sigmaB) / 2. ), 2.) };
 	if (squareDistance > squareRc * squareSigma) // We consider a cut-off radius which is the threshold maximum distance of interaction between two particles
 	{
 		return 0.;
 	}
 	else
 	{
-		return 24 * (pow (( squareSigma / squareDistance), 3 ) - 2 * pow (( squareSigma / squareDistance ), 6));
+		return 24. * (std::pow (( squareSigma / squareDistance), 3. ) - 2. * std::pow (( squareSigma / squareDistance ), 6.));
 	}
 }
 
@@ -232,9 +316,9 @@ double pressureParticle(double temp, int indexParticle, std::vector<double> posi
 			continue;
 		}
 
-		pressure += rforce(squareDistance, 2 * particleRadius, 2 * radiusArray[realIndex], squareRc);
+		pressure += rforce(squareDistance, 2. * particleRadius, 2. * radiusArray[realIndex], squareRc);
 	}
-	return  - pressure / (3 * temp *  nParticles);
+	return  - pressure / (3. * temp *  nParticles);
 }
 
 
@@ -247,70 +331,10 @@ double pressureSystem(double temp, std::vector<std::vector<double>> positionArra
 		for (int j = i + 1; j < positionArraySize; j++) //inner loop for columns
         {
 			double squareDistance { squareDistancePair (positionArray[i], positionArray[j], lengthCube)};
-			sum += rforce(squareDistance, 2 * radiusArray[i], 2 * radiusArray[j], squareRc);
+			sum += rforce(squareDistance, 2. * radiusArray[i], 2. * radiusArray[j], squareRc);
         }
 
 	}
-	return 1 - sum / (3. *  positionArraySize * temp);
+	return 1. - sum / (3. *  positionArraySize * temp);
 }
-
-
-
-//std::vector<std::vector<int>> createNeighborList(std::vector<std::vector<double>> positionArray, double skin, double lengthCube)
-//{
-//	int positionArraySize { static_cast<int>(positionArray.size()) };
-//	std::vector<std::vector<int>> neighborList( positionArraySize );
-//	double squareSkin {pow(skin, 2)};
-//
-//	for (int i = 0; i < positionArraySize - 1; i++)
-//	{
-//		std::vector<double> positionParticle = positionArray[i];
-//
-//		for (int j = i + 1; j < positionArraySize; j++)
-//		{
-//
-//			if (squareDistancePair ( positionParticle, positionArray[j], lengthCube ) < squareSkin)
-//			{
-//				neighborList[i].push_back(j);
-//				neighborList[j].push_back(i);
-//			}
-//		}
-//
-//		}
-//return neighborList;
-//}
-
-
-
-//
-//bool changeList(std::vector<double> positionDouble, double skin, double lengthCube)
-//{
-//	int positionArraySize { static_cast<int>(positionArray.size()) };
-//	int cellListSize {static_cast<int>(lengthCube / skin)};
-//	std::vector<std::vector<std::vector<std::vector<int>>>> cellList (cellListSize, std::vector<std::vector<std::vector<int>>>
-//            														 (cellListSize, std::vector<std::vector<int>>
-//            														 (cellListSize, std::vector<int>
-//                                                                     )));
-//	std::vector<std::vector <int>> particleIndexCell(positionArraySize, std::vector<int>(3));
-//
-//
-//	for (int i = 0; i < positionArraySize - 1; i++)
-//	{
-//		std::vector<double> positionParticle = positionArray[i];
-//		std::vector<int> boxIndex static_cast<int>(divideVectorByScalar(positionParticle, skin));
-//		cellList[boxIndex[0]][boxIndex[1]][boxIndex[2]].push_back(i);
-//		particleIndexCell[i] = boxIndex;
-//
-//
-//		}
-//	return cellList;
-//}
-//
-
-
-
-
-
-
-
 

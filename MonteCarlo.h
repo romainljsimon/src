@@ -14,49 +14,46 @@ class MonteCarlo
 {
 
 private:
-	std::vector<std::vector<int>> m_neighborList {};
-	int m_errors { 0 };
-	std::vector<std::vector<std::vector<std::vector<int>>>> m_cellList {};
-	double m_energy {};
-	double m_pressure {};
-	int m_nParticles {};
-	std::vector<std::vector <int>> m_particleIndexCell {};
-	std::vector<std::vector<int>> m_bondsMatrix {};
-	std::vector<std::vector<double>> m_totalDisplacementMatrix {};
-	std::vector<std::vector<double>> m_interDisplacementMatrix {};
-	std::vector<std::vector<double>> m_stepDisplacementMatrix {};
-	double m_acceptanceRate { 0 };
-	double m_updateRate { -1 };
-	bool m_calculatePressure {false};
+	std::vector<std::vector<int>> m_neighborList {};                // Neighbor list.
+	int m_errors { 0 };                                             // Errors of the neighbor list.
+	double m_energy {};                                             // System's energy.
+	double m_pressure {};                                           // System's pressure.
+	int m_nParticles {};                                            // System's number of particles.
+	std::vector<std::vector<int>> m_bondsMatrix {};                 // If the simulation is polymeric: matrix of bonded nearest-neighbors.
+	std::vector<std::vector<double>> m_totalDisplacementMatrix {};  // Total displacement Matrix.
+	std::vector<std::vector<double>> m_interDisplacementMatrix {};  // Inter neighbor list update displacement matrix.
+	std::vector<std::vector<double>> m_stepDisplacementMatrix {};   // Step displacement matrix.
+	double m_acceptanceRate { 0 };                                  // Monte Carlo acceptance rate.
+	double m_updateRate { -1 };                                     // Monte Carle neighbor list update rate.
+	bool m_calculatePressure {false};                               // Boolean that decides if the pressure is calculated or not.
 
-	std::string m_simulationMol {};
-	std::vector<std::vector<double>> m_positionArray {};
-	std::vector<double> m_radiusArray {};
-	std::vector<int> m_moleculeType {};
-	const double m_squareRc {};
-	const double m_lengthCube {};
-	double m_temp {};
-	const double m_rbox {};
-	const double m_squareRskin {};
-	const int m_neighUpdate {};
-	const std::string m_folderPath {};
-	const std::string m_neighMethod {};
-	const int m_timeSteps {};
-	const double m_squareR0 {};
-	const double m_feneK {};
-	const double m_squareRdiff {};
+	std::string m_simulationMol {};                       			// Type of system: can be either "polymer" or "atomic".
+	std::vector<std::vector<double>> m_positionArray {};  			// Particles positions array of size (N, 3).
+	std::vector<double> m_radiusArray {};                 			// Particles radiuses array of size (N, 1).
+	std::vector<int> m_moleculeType {};                   			// Particles type array of size (N, 1).
+	const double m_squareRc {};                           			// Cut off radius squared.
+	const double m_lengthCube {};                         			// Length of the simulation box.
+	double m_temp {};                                     			// Temperature.
+	const double m_rbox {};                               			// Length of the translation box.
+	const double m_squareRskin {};                        			// Skin radius squared.
+	const int m_saveUpdate {};                           			// save xyz update frequency.
+	const std::string m_folderPath {};                    			// Path to where the algorithm was launched.
+	const std::string m_neighMethod {};                   			// Neighbor list method: "verlet" for verlet neighbor list. Any other value: no neighbor list.
+	const int m_timeSteps {};                             			// Number of time steps.
+	const double m_squareR0 {};                           			// If the simulation is polymeric: max length of a bond.
+	const double m_feneK {};                              			// If the simulation is polymeric: stiffness of a bond.
+	const double m_squareRdiff {};                        			// squared difference of skin - cut off.
 
 public:
 	MonteCarlo( std::string simulationMol, std::vector<std::vector<double>> positionArray,
 				std::vector<double> radiusArray, std::vector<int> moleculeType,
 				const double rc, const double lengthCube, const double temp, const double rbox,
-				const double rskin, const int neighUpdate, const std::string folderPath,
+				const double rskin, const int saveUpdate, const std::string folderPath,
 				const std::string neighMethod, const int timeSteps, const double r0,
 				const double feneK);
 
 	void mcTotal();
 	void createNeighborList();
-	void createCellAndIndexList();
 	void mcMove();
 	std::vector<double> mcTranslation(int indexTranslation, std::vector<double> randomVector);
 	bool metropolis(double newEnergy, double energy);

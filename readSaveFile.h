@@ -31,15 +31,13 @@ struct inputVar
 };
 
 
-posRad readXYZ(std::string path, std::string simulationMol);
-void saveInXYZ(std::vector<std::vector<double>>& positionArray, std::vector<double> radiusArray,
-			   std::vector<int> moleculeType,double lengthCube,  std::string path);
-void saveEnergyTXT(double energy, std::string path);
-void saveDisplacement(std::vector<std::vector<double>> dispMatrix, std::string path);
-
-inputVar readInput(std::string path);
-std::vector<std::vector<int>> readBondsTXT(std::string path);
-
+posRad readXYZ(const std::string& path, const std::string& simulationMol);
+void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& radiusArray,
+			   const std::vector<int>& moleculeType, const double& lengthCube,  const std::string& path);
+void saveDoubleTXT(const double& number, const std::string& path);
+void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const std::string& path);
+inputVar readInput(const std::string& path);
+std::vector<std::vector<int>> readBondsTXT(const std::string& path);
 
 
 #endif /* READSAVEFILE_H_ */

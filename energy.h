@@ -14,20 +14,20 @@ struct cellAndIndex
 	std::vector<std::vector <int>> particleIndexCell;
 };
 
-double ljPotential(double distance, double sigmaA, double sigmaB, double squareRc);
-double energySystem(std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double squareRc, double lengthCube);
-double squareDistancePair(std::vector<double> positionA, std::vector<double> positionB, double lengthCube);
-double energyParticle(int indexParticle, std::vector<double> positionParticle, std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray, double squareRc, double lengthCube);
-double energyParticlePolymer (int indexParticle, std::vector<double> positionParticle,
-								std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList,
-								std::vector<double> radiusArray, std::vector<int> bondsI,
-								double squareRc, double lengthCube, double squareR0, double feneK);
 
-double energySystemPolymer(std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray,
-						   std::vector<std::vector<int>> bondsMatrix, double squareRc, double lengthCube,
-						   double squareR0, double feneK);
-std::vector<std::vector<int>> createNeighborList(std::vector<std::vector<double>> positionArray, double skin, double lengthCube);
-std::vector<std::vector<std::vector<std::vector<int>>>> createCellList(std::vector<std::vector<double>> positionArray, double skin, double lengthCube);
+double ljPotential(const double& squareDistance, const double& sigmaA, const double& sigmaB, const double& squareRc, const double& shift);
+double energySystem(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& radiusArray, const double& squareRc, const double& lengthCube);
+double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB, const double& lengthCube);
+double energyParticle(const int& indexParticle, const std::vector<double>& positionParticle, const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList, const std::vector<double>& radiusArray, const double& squareRc, const double& lengthCube);
+double energyParticlePolymer (const int& indexParticle, const std::vector<double>& positionParticle,
+							  const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
+							  const std::vector<double>& radiusArray, const std::vector<int>& bondsI,
+							  const double& squareRc, const double& lengthCube, const double& squareR0, const double& feneK);
+
+double energySystemPolymer(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& radiusArray,
+						   const std::vector<std::vector<int>>& bondsMatrix, const double& squareRc, const double& lengthCube,
+						   const double& squareR0, const double& feneK);
+
 double pressureSystem(double temp, std::vector<std::vector<double>> positionArray, std::vector<double> radiusArray, double squareRc, double lengthCube);
 double pressureParticle(double temp, int indexParticle, std::vector<double> positionParticle, std::vector<std::vector<double>> positionArray, std::vector<int> neighborIList, std::vector<double> radiusArray, double squareRc, double lengthCube);
 

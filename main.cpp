@@ -3,7 +3,7 @@
 // Author      : Romain Simon
 // Version     :
 // Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Description : main function of the swapMC project in C++, Ansi-style
 //============================================================================
 
 #include <iostream>
@@ -16,7 +16,6 @@
 #include "readSaveFile.h"
 #include "random.h"
 #include "energy.h"
-#include "mc.h"
 #include "util.h"
 #include "MonteCarlo.h"
 #include <filesystem>

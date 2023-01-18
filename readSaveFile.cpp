@@ -13,7 +13,7 @@
 
 #include "readSaveFile.h"
 
-inputVar readInput(std::string path)
+inputVar readInput(const std::string& path)
 {
 	inputVar initVar;
 	std::string null;
@@ -65,7 +65,7 @@ inputVar readInput(std::string path)
 	}
 	return initVar;
 }
-posRad readXYZ(std::string path, std::string simulationMol)
+posRad readXYZ(const std::string& path, const std::string& simulationMol)
 {
 	std::ifstream infile(path);
 
@@ -117,7 +117,7 @@ posRad readXYZ(std::string path, std::string simulationMol)
 	return initPosRad;
 }
 
-std::vector<std::vector<int>> readBondsTXT(std::string path)
+std::vector<std::vector<int>> readBondsTXT(const std::string& path)
 {
 	std::ifstream infile(path);
 
@@ -145,8 +145,8 @@ std::vector<std::vector<int>> readBondsTXT(std::string path)
 	return bondsMatrix;
 }
 
-void saveInXYZ(std::vector<std::vector<double>>& positionArray, std::vector<double> radiusArray,
-			   std::vector<int> moleculeType,double lengthCube,  std::string path)
+void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& radiusArray,
+			   const std::vector<int>& moleculeType, const double& lengthCube,  const std::string& path)
 {
 
 	/*
@@ -204,21 +204,20 @@ void saveInXYZ(std::vector<std::vector<double>>& positionArray, std::vector<doub
 	fout.close();
 }
 
-void saveEnergyTXT(double energy, std::string path)
+void saveDoubleTXT(const double& number, const std::string& path)
 /*
  * This function saves the system energy in a txt file
  */
 {
-	std::ofstream outE;
-	outE.open(path, std::ios_base::app);
-
-	outE << energy;
-	outE << "\n";
-	outE.close();
+	std::ofstream fout;
+	fout.open(path, std::ios_base::app);
+	fout << number;
+	fout << "\n";
+	fout.close();
 
 }
 
-void saveDisplacement(std::vector<std::vector<double>> dispMatrix, std::string path)
+void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const std::string& path)
 {
 	std::ofstream fout(path);
 

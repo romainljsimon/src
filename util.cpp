@@ -11,7 +11,7 @@
 
 //Boundary conditions
 
-std::vector<double> periodicBC(std::vector<double> positionParticle, double lengthCube)
+std::vector<double> periodicBC(std::vector<double> positionParticle, const double& lengthCube)
 /*
  *This function is an implementation of the periodic Boundary conditions.
  *If a particle gets out of the simulation box from one of the sides, it gets back in the box from the opposite side.
@@ -41,7 +41,7 @@ double meanVector(std::vector<double> vec)
 	return sum / static_cast<double>(vec.size());
 }
 
-std::vector<double> divideVectorByScalar(std::vector<double> vec, double scalar)
+std::vector<double> divideVectorByScalar(std::vector<double> vec, const double& scalar)
 {
 	for (int i = 0; i < static_cast<int>(vec.size()); i++)
 	{
@@ -50,7 +50,7 @@ std::vector<double> divideVectorByScalar(std::vector<double> vec, double scalar)
 	return vec;
 }
 
-std::vector<double> multiplyVectorByScalar(std::vector<double> vec, double scalar)
+std::vector<double> multiplyVectorByScalar(std::vector<double> vec, const double& scalar)
 {
 	for (int i = 0; i < static_cast<int>(vec.size()); i++)
 	{
@@ -66,7 +66,7 @@ std::vector<double> vectorNormalization(std::vector<double> vec)
 	return divideVectorByScalar(vec, mean);
 }
 
-std::vector<double> vectorSum(std::vector<double> vec1, std::vector<double> vec2)
+std::vector<double> vectorSum(std::vector<double> vec1, const std::vector<double>& vec2)
 {
 	std::transform (vec1.begin(), vec1.end(), vec2.begin(), vec1.begin(), std::plus<double>());
 	return vec1;
@@ -78,7 +78,7 @@ std::vector<double> vectorDiff(std::vector<double> vec1, std::vector<double> vec
 	return vectorSum(vec1, minus_vec2);
 }
 
-double getMaxVector(std::vector<double> vec)
+double getMaxVector(const std::vector<double>& vec)
 {
 	double max = vec[0];
 	for (auto const &elt: vec)
@@ -88,7 +88,7 @@ double getMaxVector(std::vector<double> vec)
 	return max;
 }
 
-double getSquareNormVector(std::vector<double> vec)
+double getSquareNormVector(const std::vector<double>& vec)
 {
 	return std::inner_product(vec.begin(), vec.end(), vec.begin(), 0.);
 }
@@ -96,7 +96,7 @@ double getSquareNormVector(std::vector<double> vec)
 // matrix operations
 
 
-std::vector<std::vector<double>> matrixSum(std::vector<std::vector<double>> mat1, std::vector<std::vector<double>> mat2)
+std::vector<std::vector<double>> matrixSum(std::vector<std::vector<double>> mat1, const std::vector<std::vector<double>>& mat2)
 {
 	int matSize{ static_cast<int>(mat1.size()) };
 
@@ -108,7 +108,7 @@ std::vector<std::vector<double>> matrixSum(std::vector<std::vector<double>> mat1
 
 }
 
-std::vector<std::vector<double>> matrixSumWithVector(std::vector<std::vector<double>> mat1, std::vector<double> vec1)
+std::vector<std::vector<double>> matrixSumWithVector(std::vector<std::vector<double>> mat1, const std::vector<double>& vec1)
 {
 	int matSize{ static_cast<int>(mat1.size()) };
 
@@ -131,7 +131,7 @@ std::vector<std::vector<double>> matrixDiffWithVector(std::vector<std::vector<do
 	return mat1;
 }
 
-std::vector<std::vector<double>> multiplyMatrixByScalar(std::vector<std::vector<double>> mat, double scalar)
+std::vector<std::vector<double>> multiplyMatrixByScalar(std::vector<std::vector<double>> mat, const double& scalar)
 {
 	for (int i = 0; i < static_cast<int>(mat.size()); i++)
 		{
@@ -140,7 +140,7 @@ std::vector<std::vector<double>> multiplyMatrixByScalar(std::vector<std::vector<
 	return mat;
 }
 
-double getMaxMatrix(std::vector<std::vector<double>> mat)
+double getMaxMatrix(const std::vector<std::vector<double>>& mat)
 {
 	double max { mat[0][0] };
 
@@ -152,7 +152,7 @@ double getMaxMatrix(std::vector<std::vector<double>> mat)
 	return max;
 }
 
-std::vector<std::vector<double>> rescaleMatrix(std::vector<std::vector<double>> mat, double rescaler)
+std::vector<std::vector<double>> rescaleMatrix(std::vector<std::vector<double>> mat, const double& rescaler)
 {
 	double max { getMaxMatrix(mat) };
 	double ratio {rescaler / max};
@@ -180,4 +180,29 @@ std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat)
 		mean = vectorSum(mean, mat[i]);
 	}
 	return divideVectorByScalar(mean, matSize);
+}
+
+std::vector<int> createSaveTime(const int& max, const int& scalar)
+{
+	std::vector<int> timeStepArray { 1 };
+	std::vector<int> baseTimeStepArray { 0, 1 };
+
+	for (int i = scalar; i < max + 1; i = scalar * i)
+	{
+		baseTimeStepArray.push_back ( i );
+
+		for (auto const &elt: baseTimeStepArray)
+		{
+			int new_step = i + elt;
+
+			if (new_step <= max)
+			{
+				timeStepArray.push_back(i + elt);
+			}
+		}
+
+	}
+
+	return timeStepArray;
+
 }
