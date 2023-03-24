@@ -23,8 +23,8 @@ private:
 	std::vector<std::vector<double>> m_totalDisplacementMatrix {};  // Total displacement Matrix.
 	std::vector<std::vector<double>> m_interDisplacementMatrix {};  // Inter neighbor list update displacement matrix.
 	std::vector<std::vector<double>> m_stepDisplacementMatrix {};   // Step displacement matrix.
-	double m_acceptanceRate { 0 };                                  // Monte Carlo acceptance rate.
-	double m_updateRate { -1 };                                     // Monte Carle neighbor list update rate.
+	double m_acceptanceRate { 0. };                                 // Monte Carlo acceptance rate.
+	double m_updateRate { -1. };                                     // Monte Carle neighbor list update rate.
 	bool m_calculatePressure {false};                               // Boolean that decides if the pressure is calculated or not.
 
 	std::string m_simulationMol {};                       			// Type of system: can be either "polymer" or "atomic".
@@ -54,6 +54,7 @@ public:
 
 	void mcTotal();
 	void createNeighborList();
+	void mcAllMove();
 	void mcMove();
 	std::vector<double> mcTranslation(int indexTranslation, std::vector<double> randomVector);
 	bool metropolis(double newEnergy, double energy);

@@ -38,6 +38,6 @@ std::vector<double> getSquareNormRowMatrix(std::vector<std::vector<double>> mat)
 
 std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat);
 
-std::vector<int> createSaveTime(const int& max, const int& scalar);
+std::vector<int> createSaveTime(const int& max, const int& linear_scalar, const float& log_scalar);
 
 #endif /* UTIL_H_ */

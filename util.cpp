@@ -182,27 +182,23 @@ std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat)
 	return divideVectorByScalar(mean, matSize);
 }
 
-std::vector<int> createSaveTime(const int& max, const int& scalar)
+std::vector<int> createSaveTime(const int& max, const int& linear_scalar, const float& log_scalar)
 {
-	std::vector<int> timeStepArray { 1 };
-	std::vector<int> baseTimeStepArray { 0, 1 };
+	std::vector<int> timeStepArray;
 
-	for (int i = scalar; i < max + 1; i = scalar * i)
+	for (int j = 0; j < max; j += linear_scalar)
 	{
-		baseTimeStepArray.push_back ( i );
+		timeStepArray.push_back ( j ) ;
+		timeStepArray.push_back ( j + 1 );
 
-		for (auto const &elt: baseTimeStepArray)
+
+		for (int i = static_cast<int>(log_scalar) +1; i < linear_scalar; i = static_cast<int>(i * log_scalar) +1)
 		{
-			int new_step = i + elt;
+			timeStepArray.push_back ( j + i );
 
-			if (new_step <= max)
-			{
-				timeStepArray.push_back(i + elt);
-			}
 		}
-
 	}
-
+	timeStepArray.push_back ( max ) ;
 	return timeStepArray;
 
 }

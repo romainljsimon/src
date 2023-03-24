@@ -51,31 +51,35 @@ MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<doub
 	m_stepDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
 	m_neighborList.resize(m_nParticles);
 
+	createNeighborList();
+
 	if (m_simulationMol == "polymer")
 	{
 		m_bondsMatrix = readBondsTXT(m_folderPath + "/bonds.txt");
 		m_energy = energySystemPolymer(m_positionArray, m_radiusArray, m_bondsMatrix,
-									   m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+									   m_neighborList, m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+		// m_energy = 0;
 	}
 
 	else
 	{
 		// double density {m_nParticles / pow(m_lengthCube, 3.)};
-		m_energy = energySystem(m_positionArray, m_radiusArray, m_squareRc, m_lengthCube);  // + 8. / 3 * density * 3.14 * m_nParticles * 1 / pow(m_squareRc, 3./2) * (1. / 3 * pow(1 / m_squareRc, 3. ) - 1);
+		m_energy = energySystem(m_positionArray, m_radiusArray, m_neighborList, m_squareRc, m_lengthCube);  // + 8. / 3 * density * 3.14 * m_nParticles * 1 / pow(m_squareRc, 3./2) * (1. / 3 * pow(1 / m_squareRc, 3. ) - 1);
 		// double corrPressure {16. * 3.14 / 3. * density / ( m_temp *  pow(m_squareRc, 3./2)) * (2. / (3 * pow(m_squareRc, 3. )) - 1.) };
+
 		if (m_calculatePressure)
 		{
 			m_pressure = pressureSystem(m_temp, m_positionArray, m_radiusArray, m_squareRc, m_lengthCube); //+ corrPressure;
 		}
 	}
-	createNeighborList();
 }
 
 
 /*******************************************************************************
  * This function is the core of the Monte Carlo program. It iterates over
  * m_timeSteps steps that the user defines. At each step m_nParticles Monte
- * Carlo moves are made. For now the Monte Carlo move is a translation.
+ * Carlo moves are made. For now the Monte Carlo move is a translation of a
+ * randomly chosen particle.
  * The energy, particles positions, particles displacements and pressure
  * (optional) are written in files.
  ******************************************************************************/
@@ -88,11 +92,14 @@ void MonteCarlo::mcTotal()
 	std::string extnameDisp {".txt"};
 	saveInXYZ(m_positionArray,  m_radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(0) + extname );
 	saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
+	saveDisplacement(m_totalDisplacementMatrix, prenameDisp + std::to_string(0) + extnameDisp);
 
-	std::vector<int> saveTimeStepArray ( createSaveTime(m_timeSteps, 3) );
+	std::vector<int> saveTimeStepArray ( createSaveTime(m_timeSteps, m_saveUpdate, 1.5));
+
 	int save_index { 0 };
 
-	for (int i = 1; i < m_timeSteps + 1; i++) //Iteration over m_timeSteps
+
+	for (int i = 0; i < m_timeSteps; i++) //Iteration over m_timeSteps
 	{
 
 		for (int j = 0; j < m_nParticles; j++) // N Monte Carlo moves are tried in one time step.
@@ -111,31 +118,31 @@ void MonteCarlo::mcTotal()
 
 		// Next, the results of the simulations are saved.
 
-		if ((i % m_saveUpdate) == 0)
-		{
-			saveInXYZ(m_positionArray,  m_radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(i) + extname );
-		}
-
 		if (saveTimeStepArray[save_index] == i)
 		{
-			saveDisplacement(m_totalDisplacementMatrix, prenameDisp + std::to_string(i) + extnameDisp);
+			saveInXYZ ( m_positionArray,  m_radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(i+1) + extname );
+			saveDisplacement ( m_totalDisplacementMatrix, prenameDisp + std::to_string(i+1) + extnameDisp );
 			++save_index;
 		}
 
-		saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt"); //Energy is saved at each time step.
-
+		if (i % 10 == 0)
+		{
+			saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt"); //Energy is saved at each time step.
+		}
 		if (m_calculatePressure) // Saves pressure if m_calculatePressure is True
 		{
 			saveDoubleTXT( m_pressure, m_folderPath + "/outP.txt");
 		}
 
 	}
+	m_acceptanceRate /= m_timeSteps;
 	saveInXYZ(m_positionArray,  m_radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(m_timeSteps) + extname );
 	saveDisplacement(m_totalDisplacementMatrix, prenameDisp + std::to_string(m_timeSteps) + extnameDisp);
 	saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
 
-	std::cout << "The acceptance rate is: " << m_acceptanceRate / ( m_nParticles * m_timeSteps ) << "\n";
-	std::cout << "The neighbor list update rate is: " << m_updateRate / m_timeSteps << "\n";
+	std::cout << "MC move acceptance rate: " << m_acceptanceRate << "\n";
+	std::cout << "Neighbor list update rate: " << m_updateRate / m_timeSteps << "\n";
+	std::cout << "Number of neighbor list errors: " << m_errors << "\n";
 
 }
 
@@ -266,7 +273,85 @@ void MonteCarlo::mcMove()
 		m_energy = newEnergy;
 		m_stepDisplacementMatrix[indexTranslation] = vectorSum(m_stepDisplacementMatrix[indexTranslation], randomVector);
 		m_positionArray[indexTranslation] = positionParticleTranslation;
-		++m_acceptanceRate; // increment of the acceptance rate.
+		m_acceptanceRate += 1. / m_nParticles; // increment of the acceptance rate.
+
+	}
+
+}
+
+/*******************************************************************************
+ * This function implements a Monte Carlo move: translation of a the whole
+ * polymer, calculation of the energy of the new system and then acceptation or not of
+ * the move according to the Metropolis criterion. It is called ??? times in one
+ * time step.
+ ******************************************************************************/
+void MonteCarlo::mcAllMove()
+{
+	int indexTranslation { randomIntGenerator(0, (m_nParticles - 1) / 3) }; // randomly chosen particle
+	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -m_rbox, m_rbox) );
+
+	double oldEnergyPolymer {};
+	double newEnergyPolymer {};
+	std::vector< std::vector<double>> tentativePositionArray(m_positionArray);
+
+	for (int j = 0; j < 2; j++)
+	{
+
+		std::vector<double> positionParticleTranslation = mcTranslation ( indexTranslation + j, randomVector );
+
+		tentativePositionArray[indexTranslation + j] = positionParticleTranslation;
+
+	}
+
+	for (int j = 0; j < 2; j++)
+	{
+		std::vector<int> neighborIList { };
+
+		if ( m_neighMethod == "verlet" )
+		{
+			neighborIList = m_neighborList[indexTranslation + j]; // particle's neighbor list
+		}
+
+		else
+		{
+			neighborIList.resize ( m_nParticles );
+			std::iota (std::begin(neighborIList), std::end(neighborIList), 0);
+
+		}
+
+		double oldEnergyParticle {};
+		double newEnergyParticle {};
+
+ 		std::vector<int> bondsI ( m_bondsMatrix[indexTranslation] );
+
+		oldEnergyParticle = energyParticlePolymer (indexTranslation, m_positionArray[indexTranslation],
+												   m_positionArray, neighborIList, m_radiusArray, bondsI,
+												   m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+		newEnergyParticle = energyParticlePolymer (indexTranslation, tentativePositionArray[indexTranslation + j],
+												   tentativePositionArray, neighborIList, m_radiusArray, bondsI,
+												   m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+
+		oldEnergyPolymer += oldEnergyParticle;
+		newEnergyParticle += newEnergyParticle;
+
+	}
+
+
+	// Metropolis criterion
+	bool acceptMove { metropolis (newEnergyPolymer, oldEnergyPolymer) } ;
+
+	// If the move is accepted, then the energy, the position array and the displacement array can be updated.
+	// If the m_calculatePressure is set to True, then the pressure is calculated.
+	if ( acceptMove )
+	{
+
+
+
+		double newEnergy {m_energy - oldEnergyPolymer + newEnergyPolymer};
+		m_energy = newEnergy;
+		m_stepDisplacementMatrix[indexTranslation] = vectorSum(m_stepDisplacementMatrix[indexTranslation], randomVector);
+		m_positionArray = tentativePositionArray;
+		// m_acceptanceRate += 1. / m_nParticles; // increment of the acceptance rate.
 
 	}
 
@@ -288,6 +373,8 @@ std::vector<double> MonteCarlo::mcTranslation(int indexTranslation, std::vector<
 	positionParticleTranslation = periodicBC (positionParticleTranslation, m_lengthCube);
 	return positionParticleTranslation;
 }
+
+
 
 /*******************************************************************************
  * This function is an implementation of the Metropolis algorithm.
