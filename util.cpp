@@ -66,10 +66,16 @@ std::vector<double> vectorNormalization(std::vector<double> vec)
 	return divideVectorByScalar(vec, mean);
 }
 
-std::vector<double> vectorSum(std::vector<double> vec1, const std::vector<double>& vec2)
+std::vector<double> vectorSum(const std::vector<double>& vec1, const std::vector<double>& vec2)
 {
-	std::transform (vec1.begin(), vec1.end(), vec2.begin(), vec1.begin(), std::plus<double>());
-	return vec1;
+    //std::transform (vec1.begin(), vec1.end(), vec2.begin(), vec1.begin(), std::plus<double>());
+    int vecSize{ static_cast<int>(vec1.size()) };
+    std::vector<double> sumVec(vecSize);
+    for (int i=0; i<vecSize; i++)
+    {
+        sumVec[i] = vec1[i] + vec2[i];
+    }
+    return sumVec;
 }
 
 std::vector<double> vectorDiff(std::vector<double> vec1, std::vector<double> vec2)

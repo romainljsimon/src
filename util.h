@@ -16,7 +16,7 @@ std::vector<double> multiplyVectorByScalar(std::vector<double> vec, const double
 
 std::vector<double> vectorNormalization(std::vector<double> vec);
 
-std::vector<double> vectorSum(std::vector<double> vec1, const std::vector<double>& vec2);
+std::vector<double> vectorSum(const std::vector<double>& vec1, const std::vector<double>& vec2);
 
 std::vector<double> vectorDiff(std::vector<double> vec1, std::vector<double> vec2);
 

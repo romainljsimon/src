@@ -18,26 +18,27 @@
 #include "energy.h"
 #include "util.h"
 #include "MonteCarlo.h"
-#include <filesystem>
+// #include <filesystem>
 #include <chrono>
 #include <limits.h>
 
 int main()
 {
-	std::string folderPath ( std::filesystem::current_path() );
+	std::string folderPath ( "." );
 
 
 	//Opening input variables file
 
 	inputVar initVar = readInput ( folderPath + "/inputVar.txt" );
 	posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz", initVar.simulationMol);
-	std::filesystem::create_directory (folderPath + "/outXYZ" );
-	std::filesystem::create_directory (folderPath + "/disp" );
+	// std::filesystem::create_directory (folderPath + "/outXYZ" );
+	// std::filesystem::create_directory (folderPath + "/disp" );
 
 
     //Opening position file
-	initPosRad.radVector = vectorNormalization(initPosRad.radVector);     // We define the lengthscale of the system as <sigma>
-	initPosRad.radVector = divideVectorByScalar(initPosRad.radVector, 2);
+	initPosRad.radVector = vectorNormalization(initPosRad.radVector);
+    // We define the lengths cale of the system as <sigma>. radVector is now the diameterVector
+	// initPosRad.radVector = divideVectorByScalar(initPosRad.radVector, 2);
 
 	//
 	double lengthCube {pow (static_cast<double>(initPosRad.radVector.size()) / initVar.density, 1./3) };

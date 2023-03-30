@@ -21,7 +21,7 @@
 
 
 MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<double>> positionArray,
-						 std::vector<double> radiusArray, std::vector<int> moleculeType,const double rc,
+						 std::vector<double> diameterArray, std::vector<int> moleculeType,const double rc,
 						 const double lengthCube, const double temp,
 						 const double rbox, const double rskin, const int saveUpdate,
 						 const std::string folderPath, const std::string neighMethod,
@@ -29,7 +29,7 @@ MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<doub
 
 	: m_simulationMol ( simulationMol )
 	, m_positionArray ( positionArray )
-	, m_radiusArray ( radiusArray )
+	, m_diameterArray ( diameterArray )
 	, m_moleculeType ( moleculeType )
 	, m_squareRc { pow ( rc, 2 ) }
 	, m_lengthCube { lengthCube }
@@ -56,7 +56,7 @@ MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<doub
 	if (m_simulationMol == "polymer")
 	{
 		m_bondsMatrix = readBondsTXT(m_folderPath + "/bonds.txt");
-		m_energy = energySystemPolymer(m_positionArray, m_radiusArray, m_bondsMatrix,
+		m_energy = energySystemPolymer(m_positionArray, m_diameterArray, m_bondsMatrix,
 									   m_neighborList, m_squareRc, m_lengthCube, m_squareR0, m_feneK);
 		// m_energy = 0;
 	}
@@ -64,12 +64,12 @@ MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<doub
 	else
 	{
 		// double density {m_nParticles / pow(m_lengthCube, 3.)};
-		m_energy = energySystem(m_positionArray, m_radiusArray, m_neighborList, m_squareRc, m_lengthCube);  // + 8. / 3 * density * 3.14 * m_nParticles * 1 / pow(m_squareRc, 3./2) * (1. / 3 * pow(1 / m_squareRc, 3. ) - 1);
+		m_energy = energySystem(m_positionArray, m_diameterArray, m_neighborList, m_squareRc, m_lengthCube);  // + 8. / 3 * density * 3.14 * m_nParticles * 1 / pow(m_squareRc, 3./2) * (1. / 3 * pow(1 / m_squareRc, 3. ) - 1);
 		// double corrPressure {16. * 3.14 / 3. * density / ( m_temp *  pow(m_squareRc, 3./2)) * (2. / (3 * pow(m_squareRc, 3. )) - 1.) };
 
 		if (m_calculatePressure)
 		{
-			m_pressure = pressureSystem(m_temp, m_positionArray, m_radiusArray, m_squareRc, m_lengthCube); //+ corrPressure;
+			m_pressure = pressureSystem(m_temp, m_positionArray, m_diameterArray, m_squareRc, m_lengthCube); //+ corrPressure;
 		}
 	}
 }
@@ -90,7 +90,7 @@ void MonteCarlo::mcTotal()
 	std::string extname {".xyz"};
 	std::string prenameDisp (m_folderPath + "/disp/displacement");
 	std::string extnameDisp {".txt"};
-	saveInXYZ(m_positionArray,  m_radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(0) + extname );
+	saveInXYZ(m_positionArray,  m_diameterArray, m_moleculeType, m_lengthCube, prename + std::to_string(0) + extname );
 	saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
 	saveDisplacement(m_totalDisplacementMatrix, prenameDisp + std::to_string(0) + extnameDisp);
 
@@ -120,12 +120,13 @@ void MonteCarlo::mcTotal()
 
 		if (saveTimeStepArray[save_index] == i)
 		{
-			saveInXYZ ( m_positionArray,  m_radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(i+1) + extname );
+			std::vector<double> radiusArray (divideVectorByScalar(m_diameterArray, 2));
+            saveInXYZ ( m_positionArray,  radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(i+1) + extname );
 			saveDisplacement ( m_totalDisplacementMatrix, prenameDisp + std::to_string(i+1) + extnameDisp );
 			++save_index;
 		}
 
-		if (i % 10 == 0)
+		if (i % 50 == 0)
 		{
 			saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt"); //Energy is saved at each time step.
 		}
@@ -136,7 +137,7 @@ void MonteCarlo::mcTotal()
 
 	}
 	m_acceptanceRate /= m_timeSteps;
-	saveInXYZ(m_positionArray,  m_radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(m_timeSteps) + extname );
+	saveInXYZ(m_positionArray,  m_diameterArray, m_moleculeType, m_lengthCube, prename + std::to_string(m_timeSteps) + extname );
 	saveDisplacement(m_totalDisplacementMatrix, prenameDisp + std::to_string(m_timeSteps) + extnameDisp);
 	saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
 
@@ -167,7 +168,7 @@ void MonteCarlo::createNeighborList()
 {
 	++m_updateRate;
 	std::vector<std::vector<int>> oldNeighborList = m_neighborList;
-	m_neighborList.clear();
+	m_neighborList.clear();a
 	m_neighborList.resize(m_nParticles);
 
 	for (int i = 0; i < m_nParticles - 1; i++)
@@ -238,10 +239,10 @@ void MonteCarlo::mcMove()
  		std::vector<int> bondsI ( m_bondsMatrix[indexTranslation] );
 
 		oldEnergyParticle = energyParticlePolymer (indexTranslation, m_positionArray[indexTranslation],
-													m_positionArray, neighborIList, m_radiusArray, bondsI,
+													m_positionArray, neighborIList, m_diameterArray, bondsI,
 													m_squareRc, m_lengthCube, m_squareR0, m_feneK);
 		newEnergyParticle = energyParticlePolymer (indexTranslation, positionParticleTranslation,
-													m_positionArray, neighborIList, m_radiusArray, bondsI,
+													m_positionArray, neighborIList, m_diameterArray, bondsI,
 													m_squareRc, m_lengthCube, m_squareR0, m_feneK);
 
 	}
@@ -249,9 +250,9 @@ void MonteCarlo::mcMove()
 	else
 	{
 		oldEnergyParticle = energyParticle (indexTranslation, m_positionArray[indexTranslation], m_positionArray,
-											neighborIList, m_radiusArray, m_squareRc, m_lengthCube);
+											neighborIList, m_diameterArray, m_squareRc, m_lengthCube);
 		newEnergyParticle = energyParticle (indexTranslation, positionParticleTranslation, m_positionArray,
-											neighborIList, m_radiusArray, m_squareRc, m_lengthCube);
+											neighborIList, m_diameterArray, m_squareRc, m_lengthCube);
 	}
 
 	// Metropolis criterion
@@ -264,8 +265,8 @@ void MonteCarlo::mcMove()
 
 		if (m_calculatePressure)
 		{
-			double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_radiusArray, m_squareRc, m_lengthCube)};
-			double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_radiusArray, m_squareRc, m_lengthCube)};
+			double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube)};
+			double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube)};
 			m_pressure += newPressureParticle - oldPressureParticle;
 		}
 
@@ -325,10 +326,10 @@ void MonteCarlo::mcAllMove()
  		std::vector<int> bondsI ( m_bondsMatrix[indexTranslation] );
 
 		oldEnergyParticle = energyParticlePolymer (indexTranslation, m_positionArray[indexTranslation],
-												   m_positionArray, neighborIList, m_radiusArray, bondsI,
+												   m_positionArray, neighborIList, m_diameterArray, bondsI,
 												   m_squareRc, m_lengthCube, m_squareR0, m_feneK);
 		newEnergyParticle = energyParticlePolymer (indexTranslation, tentativePositionArray[indexTranslation + j],
-												   tentativePositionArray, neighborIList, m_radiusArray, bondsI,
+												   tentativePositionArray, neighborIList, m_diameterArray, bondsI,
 												   m_squareRc, m_lengthCube, m_squareR0, m_feneK);
 
 		oldEnergyPolymer += oldEnergyParticle;

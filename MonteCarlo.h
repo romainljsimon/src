@@ -29,7 +29,7 @@ private:
 
 	std::string m_simulationMol {};                       			// Type of system: can be either "polymer" or "atomic".
 	std::vector<std::vector<double>> m_positionArray {};  			// Particles positions array of size (N, 3).
-	std::vector<double> m_radiusArray {};                 			// Particles radiuses array of size (N, 1).
+	std::vector<double> m_diameterArray {};                 		// Particles diameters array of size (N, 1).
 	std::vector<int> m_moleculeType {};                   			// Particles type array of size (N, 1).
 	const double m_squareRc {};                           			// Cut off radius squared.
 	const double m_lengthCube {};                         			// Length of the simulation box.
@@ -46,7 +46,7 @@ private:
 
 public:
 	MonteCarlo( std::string simulationMol, std::vector<std::vector<double>> positionArray,
-				std::vector<double> radiusArray, std::vector<int> moleculeType,
+				std::vector<double> diameterArray, std::vector<int> moleculeType,
 				const double rc, const double lengthCube, const double temp, const double rbox,
 				const double rskin, const int saveUpdate, const std::string folderPath,
 				const std::string neighMethod, const int timeSteps, const double r0,

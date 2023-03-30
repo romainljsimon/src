@@ -43,14 +43,14 @@ int squareDistancePairTest()
 
 void randomIntGeneratorTest()
 {
-	constexpr int nrolls     = 10000;  // number of experiments
-	constexpr int nstars     = 95;     // maximum number of stars to distribute
-	constexpr int nintervals = 6;      // number of intervals
+	constexpr int nRolls     = 10000;  // number of experiments
+	constexpr int nStars     = 95;     // maximum number of stars to distribute
+	constexpr int nIntervals = 6;      // number of intervals
 
 
-	int p[nintervals]={};
+	int p[nIntervals]={};
 
-	for (int i=0; i < nrolls; ++i)
+	for (int i=0; i < nRolls; ++i)
 	{
 		int number = randomIntGenerator(0, 5);
 	    ++p[number];
@@ -59,33 +59,33 @@ void randomIntGeneratorTest()
 	std::cout << "uniform_discrete_distribution (0, 6):" << '\n';
 	std::cout << std::fixed; std::cout.precision(1);
 
-	for (int i=0; i < nintervals; ++i)
+	for (int i=0; i < nIntervals; ++i)
 	{
 		std::cout << i << ": ";
-	    std::cout << std::string(p[i]*nstars/nrolls,'*') << std::endl;
+	    std::cout << std::string(p[i]*nStars/nRolls,'*') << std::endl;
 	}
 
 }
 
 void randomDoubleGeneratorTest()
 {
-  constexpr int nrolls=10000;  // number of experiments
-  constexpr int nstars=95;     // maximum number of stars to distribute
-  constexpr int nintervals=10; // number of intervals
+  constexpr int nRolls=10000;  // number of experiments
+  constexpr int nStars=95;     // maximum number of stars to distribute
+  constexpr int nIntervals=10; // number of intervals
 
-  int p[nintervals]={};
+  int p[nIntervals]={};
 
-  for (int i=0; i<nrolls; ++i) {
+  for (int i=0; i<nRolls; ++i) {
     double number = randomDoubleGenerator(0., 1.);
-    ++p[int(nintervals*number)];
+    ++p[int(nIntervals*number)];
   }
 
   std::cout << "uniform_real_distribution (0.0,1.0):" << '\n';
   std::cout << std::fixed; std::cout.precision(1);
 
-  for (int i=0; i < nintervals; ++i) {
-    std::cout << float(i) / nintervals << "-" << float(i+1) / nintervals << ": ";
-    std::cout << std::string(p[i] * nstars / nrolls,'*') << '\n';
+  for (int i=0; i < nIntervals; ++i) {
+    std::cout << float(i) / nIntervals << "-" << float(i+1) / nIntervals << ": ";
+    std::cout << std::string(p[i] * nStars / nRolls,'*') << '\n';
   }
 
 }
