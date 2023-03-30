@@ -47,16 +47,16 @@ private:
 public:
 	MonteCarlo( std::string simulationMol, std::vector<std::vector<double>> positionArray,
 				std::vector<double> diameterArray, std::vector<int> moleculeType,
-				const double rc, const double lengthCube, const double temp, const double rbox,
-				const double rskin, const int saveUpdate, const std::string folderPath,
-				const std::string neighMethod, const int timeSteps, const double r0,
-				const double feneK);
+				double rc, double lengthCube, double temp, double rbox,
+				double rskin, int saveUpdate, std::string  folderPath,
+				std::string  neighMethod, int timeSteps, double r0,
+				double feneK);
 
 	void mcTotal();
 	void createNeighborList();
-	void mcAllMove();
+	// void mcAllMove();
 	void mcMove();
-	std::vector<double> mcTranslation(int indexTranslation, std::vector<double> randomVector);
+	std::vector<double> mcTranslation(int indexTranslation, const std::vector<double>& randomVector);
 	bool metropolis(double newEnergy, double energy);
 	void checkStepDisplacement();
 

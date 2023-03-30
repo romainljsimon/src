@@ -6,9 +6,9 @@
  */
 
 #include <iostream>
+#include <utility>
 #include <vector>
-#include <math.h>
-#include <fstream>
+#include <cmath>
 
 #include <string>
 #include <numeric>
@@ -24,21 +24,21 @@ MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<doub
 						 std::vector<double> diameterArray, std::vector<int> moleculeType,const double rc,
 						 const double lengthCube, const double temp,
 						 const double rbox, const double rskin, const int saveUpdate,
-						 const std::string folderPath, const std::string neighMethod,
+						 std::string  folderPath, std::string  neighMethod,
 						 const int timeSteps, const double r0, const double feneK)
 
-	: m_simulationMol ( simulationMol )
-	, m_positionArray ( positionArray )
-	, m_diameterArray ( diameterArray )
-	, m_moleculeType ( moleculeType )
+	: m_simulationMol (std::move( simulationMol ))
+	, m_positionArray (std::move( positionArray ))
+	, m_diameterArray (std::move( diameterArray ))
+	, m_moleculeType (std::move( moleculeType ))
 	, m_squareRc { pow ( rc, 2 ) }
 	, m_lengthCube { lengthCube }
 	, m_temp { temp }
 	, m_rbox { rbox }
 	, m_squareRskin { pow ( rskin, 2 ) }
 	, m_saveUpdate { saveUpdate }
-	, m_folderPath ( folderPath )
-	, m_neighMethod ( neighMethod )
+	, m_folderPath (std::move( folderPath ))
+	, m_neighMethod (std::move( neighMethod ))
 	, m_timeSteps { timeSteps }
 	, m_squareR0 { pow ( r0, 2 ) }
 	, m_feneK { feneK }
@@ -90,7 +90,8 @@ void MonteCarlo::mcTotal()
 	std::string extname {".xyz"};
 	std::string prenameDisp (m_folderPath + "/disp/displacement");
 	std::string extnameDisp {".txt"};
-	saveInXYZ(m_positionArray,  m_diameterArray, m_moleculeType, m_lengthCube, prename + std::to_string(0) + extname );
+    std::vector<double> radiusArray (divideVectorByScalar(m_diameterArray, 2));
+	saveInXYZ(m_positionArray,  radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(0) + extname );
 	saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
 	saveDisplacement(m_totalDisplacementMatrix, prenameDisp + std::to_string(0) + extnameDisp);
 
@@ -120,7 +121,7 @@ void MonteCarlo::mcTotal()
 
 		if (saveTimeStepArray[save_index] == i)
 		{
-			std::vector<double> radiusArray (divideVectorByScalar(m_diameterArray, 2));
+			radiusArray = divideVectorByScalar(m_diameterArray, 2);
             saveInXYZ ( m_positionArray,  radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(i+1) + extname );
 			saveDisplacement ( m_totalDisplacementMatrix, prenameDisp + std::to_string(i+1) + extnameDisp );
 			++save_index;
@@ -168,7 +169,7 @@ void MonteCarlo::createNeighborList()
 {
 	++m_updateRate;
 	std::vector<std::vector<int>> oldNeighborList = m_neighborList;
-	m_neighborList.clear();a
+	m_neighborList.clear();
 	m_neighborList.resize(m_nParticles);
 
 	for (int i = 0; i < m_nParticles - 1; i++)
@@ -286,6 +287,7 @@ void MonteCarlo::mcMove()
  * the move according to the Metropolis criterion. It is called ??? times in one
  * time step.
  ******************************************************************************/
+/***
 void MonteCarlo::mcAllMove()
 {
 	int indexTranslation { randomIntGenerator(0, (m_nParticles - 1) / 3) }; // randomly chosen particle
@@ -357,7 +359,7 @@ void MonteCarlo::mcAllMove()
 	}
 
 }
-
+***/
 /*******************************************************************************
  * This function returns a tentative new particle position.
  *
@@ -366,7 +368,7 @@ void MonteCarlo::mcAllMove()
  *                     taken from a uniform distribution U(-m_rbox, m_rbox).
  * @return Tentative new particle position.
  ******************************************************************************/
-std::vector<double> MonteCarlo::mcTranslation(int indexTranslation, std::vector<double> randomVector)
+std::vector<double> MonteCarlo::mcTranslation(int indexTranslation, const std::vector<double>& randomVector)
 {
 
 	std::vector<double> positionParticleTranslation = m_positionArray[indexTranslation];

@@ -67,8 +67,6 @@ double fenePotential(const double& squareDistance, const double& sigmaA, const d
     // We consider a cut-off radius which is the threshold maximum distance of interaction between two particles
     if (squareDistance >= squareR0)
 	{
-		std::cout << 'a' << '\n';
-
 		return std::numeric_limits<double>::infinity();
 	}
 
