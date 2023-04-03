@@ -5,8 +5,8 @@
  *      Author: rsimon
  */
 
+#include <utility>
 #include <vector>
-#include <functional>
 #include <numeric>
 
 //Boundary conditions
@@ -31,7 +31,7 @@ std::vector<double> periodicBC(std::vector<double> positionParticle, const doubl
 
 // Vector Operators
 
-double meanVector(std::vector<double> vec)
+double meanVector(const std::vector<double>& vec)
 {
 	double sum { 0 };
 	for (auto const &elt: vec)
@@ -43,24 +43,24 @@ double meanVector(std::vector<double> vec)
 
 std::vector<double> divideVectorByScalar(std::vector<double> vec, const double& scalar)
 {
-	for (int i = 0; i < static_cast<int>(vec.size()); i++)
+	for (double & i : vec)
 	{
-		vec[i] = vec[i] / scalar;
+		i = i / scalar;
 	}
 	return vec;
 }
 
 std::vector<double> multiplyVectorByScalar(std::vector<double> vec, const double& scalar)
 {
-	for (int i = 0; i < static_cast<int>(vec.size()); i++)
+	for (double & i : vec)
 	{
-		vec[i] = vec[i] * scalar;
+		i = i * scalar;
 	}
 	return vec;
 }
 
 
-std::vector<double> vectorNormalization(std::vector<double> vec)
+std::vector<double> vectorNormalization(const std::vector<double>& vec)
 {
 	double mean { meanVector(vec) };
 	return divideVectorByScalar(vec, mean);
@@ -78,9 +78,9 @@ std::vector<double> vectorSum(const std::vector<double>& vec1, const std::vector
     return sumVec;
 }
 
-std::vector<double> vectorDiff(std::vector<double> vec1, std::vector<double> vec2)
+std::vector<double> vectorDiff(const std::vector<double>& vec1, std::vector<double> vec2)
 {
-	std::vector<double> minus_vec2 = multiplyVectorByScalar(vec2, -1.);
+	std::vector<double> minus_vec2 = multiplyVectorByScalar(std::move(vec2), -1.);
 	return vectorSum(vec1, minus_vec2);
 }
 
@@ -126,7 +126,7 @@ std::vector<std::vector<double>> matrixSumWithVector(std::vector<std::vector<dou
 
 }
 
-std::vector<std::vector<double>> matrixDiffWithVector(std::vector<std::vector<double>> mat1, std::vector<double> vec1)
+std::vector<std::vector<double>> matrixDiffWithVector(std::vector<std::vector<double>> mat1, const std::vector<double>& vec1)
 {
 	int matSize{ static_cast<int>(mat1.size()) };
 
@@ -139,9 +139,9 @@ std::vector<std::vector<double>> matrixDiffWithVector(std::vector<std::vector<do
 
 std::vector<std::vector<double>> multiplyMatrixByScalar(std::vector<std::vector<double>> mat, const double& scalar)
 {
-	for (int i = 0; i < static_cast<int>(mat.size()); i++)
+	for (auto & i : mat)
 		{
-			mat[i] = multiplyVectorByScalar(mat[i], scalar);
+			i = multiplyVectorByScalar(i, scalar);
 		}
 	return mat;
 }

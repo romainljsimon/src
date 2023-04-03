@@ -27,7 +27,7 @@ MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<doub
 						 std::string  folderPath, std::string  neighMethod,
 						 const int timeSteps, const double r0, const double feneK)
 
-	: m_simulationMol (std::move( simulationMol ))
+	: m_simulationMol (std::move(simulationMol ))
 	, m_positionArray (std::move( positionArray ))
 	, m_diameterArray (std::move( diameterArray ))
 	, m_moleculeType (std::move( moleculeType ))
@@ -137,8 +137,9 @@ void MonteCarlo::mcTotal()
 		}
 
 	}
+    radiusArray = divideVectorByScalar(m_diameterArray, 2);
 	m_acceptanceRate /= m_timeSteps;
-	saveInXYZ(m_positionArray,  m_diameterArray, m_moleculeType, m_lengthCube, prename + std::to_string(m_timeSteps) + extname );
+	saveInXYZ(m_positionArray,  radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(m_timeSteps) + extname );
 	saveDisplacement(m_totalDisplacementMatrix, prenameDisp + std::to_string(m_timeSteps) + extnameDisp);
 	saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
 

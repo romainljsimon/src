@@ -4,11 +4,10 @@
  *  Created on: 3 oct. 2022
  *      Author: romainsimon
  */
-#include <iostream>
 #include <vector>
 #include <cmath>
-#include "util.h"
 #include <limits>
+#include <algorithm>
 
 /*******************************************************************************
  * This function calculates the Lennard-Jones potential energy between two
@@ -69,8 +68,7 @@ double fenePotential(const double& squareDistance, const double& sigmaA, const d
 	{
 		return std::numeric_limits<double>::infinity();
 	}
-
-	else
+    else
 	{
 		feneK = feneK / squareSigma;
 		return -0.5 * feneK * squareR0 * std::log(1. - squareDistance / squareR0);
@@ -167,7 +165,7 @@ double energySystem(const std::vector<std::vector<double>>& positionArray, const
 
 	for (int i = 0; i < positionArraySize - 1; i++) //Outer loop for rows
     {
-    	std::vector<int> neighborIList ( neighborList[i] );
+    	const std::vector<int>& neighborIList ( neighborList[i] );
 
     	energy += energyParticle (i, positionArray[i], positionArray, neighborIList,
 				  diameterArray, squareRc, lengthCube) / 2;
@@ -212,100 +210,33 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
 	double particleDiameter = diameterArray[indexParticle];
 	int neighborIListSize { static_cast<int>(neighborIList.size()) };
 	int bondsISize { static_cast<int>(bondsI.size()) };
+    std::vector<int> alreadyCalculated {};
+    double sigmaFactor { 1.35 };
 
-	for (int i = 0; i < neighborIListSize; i++)
-	{
-		int realIndex = neighborIList[i];
-		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
+    for (int i = 0; i < bondsISize; i++)
+    {
+        int realIndex = bondsI[i];
 
-		if (realIndex == indexParticle)
-		{
-			continue;
-		}
+        alreadyCalculated.push_back(realIndex);
+        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
 
-		energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25); //127. / 4096);
-	}
+        energy += ljPotential(squareDistance, particleDiameter * sigmaFactor, diameterArray[realIndex] * sigmaFactor, squareRc, 0.25);
 
-	for (int i = 0; i < bondsISize; i++)
-	{
-		int realIndex = bondsI[i];
+        energy += fenePotential(squareDistance, particleDiameter * sigmaFactor, diameterArray[realIndex] * sigmaFactor, squareR0, feneK);
 
-		if ((realIndex == indexParticle) || (realIndex == -1))
-		{
-			continue;
-		}
+    }
 
-		/*** Weak Fene case
-		if (((( indexParticle % 3 ) == 0) && (realIndex == indexParticle + 2)) || (( indexParticle == realIndex + 2 ) && ( (realIndex % 3 ) == 0)))
-		{
+    for (int i = 0; i < neighborIListSize; i++)
+    {
+        int realIndex = neighborIList[i];
+        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
 
-			double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-			energy += fenePotential(squareDistance, 2. * particleRadius, 2. * diameterArray[realIndex], 1.56, 0.3);
-		}
-		else
-		{
-			double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-			energy += fenePotential(squareDistance, 2. * particleRadius, 2. * diameterArray[realIndex], squareR0, feneK);
-		}
-		***/
+        if ((realIndex != indexParticle) && !std::binary_search(alreadyCalculated.begin(), alreadyCalculated.end(), realIndex))
+        {
 
-		/*** Normal case
-
-
-		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-		energy += fenePotential(squareDistance, 2. * particleRadius, 2. * diameterArray[realIndex], squareR0, feneK);
-		***/
-
-		/*** Shifted WCA model
-
-		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-
-		if (((( indexParticle % 3 ) == 0) && (realIndex == indexParticle + 2)) || (( indexParticle == realIndex + 2 ) && ( (realIndex % 3 ) == 0)))
-		{
-
-			energy -= ljPotential(squareDistance, 2. * particleRadius, 2. * diameterArray[realIndex], squareRc, 0.25);
-			energy += ljPotential(squareDistance - 0.25, 2. * particleRadius, 2. * diameterArray[realIndex], squareRc, 0.25);
-		}
-
-		energy += fenePotential(squareDistance, 2. * particleRadius, 2. * diameterArray[realIndex], squareR0, feneK);
-		***/
-
-		/*** Good shifted model
-
-		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-
-		if (((( indexParticle % 3 ) == 0) && (realIndex == indexParticle + 2)) || (( indexParticle == realIndex + 2 ) && ( (realIndex % 3 ) == 0)))
-		{
-
-			energy -= ljPotential(squareDistance, 2. * particleRadius, 2. * diameterArray[realIndex], squareRc, 0.25);
-			energy += ljPotential(squareDistance - 0.4, 2. * particleRadius, 2. * diameterArray[realIndex], squareRc, 0.25);
-			energy += fenePotential(squareDistance, 2. * particleRadius, 2. * diameterArray[realIndex], 2.89, feneK);
-		}
-		else
-		{
-			energy += fenePotential(squareDistance, 2. * particleRadius, 2. * diameterArray[realIndex], squareR0, feneK);
-		}
-		***/
-
-		// Large End case
-		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-
-
-		if (((( indexParticle % 3 ) == 0) && (realIndex == indexParticle + 2)) || (( indexParticle == realIndex + 2 ) && ( (realIndex % 3 ) == 0)))
-		{
-			double sigma_factor = 1.35;
-			double newSquareR0 = 1;
-			energy -= ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25);
-			energy += ljPotential(squareDistance, particleDiameter * sigma_factor, diameterArray[realIndex] * sigma_factor, squareRc, 0.25);
-			energy += fenePotential(squareDistance, particleDiameter * sigma_factor, diameterArray[realIndex] * sigma_factor, squareR0, feneK);
-		}
-		else
-		{
-			energy += fenePotential(squareDistance, particleDiameter , diameterArray[realIndex], squareR0, feneK);
-		}
-
-	}
-
+            energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25); //127. / 4096);
+        }
+    }
 	return energy;
 }
 
@@ -335,10 +266,8 @@ double energySystemPolymer(const std::vector<std::vector<double>>& positionArray
 	for (int i = 0; i < positionArraySize; i++) //Outer loop for rows
     {
 
-    	std::vector<int> bondsI ( bondsMatrix[i] );
-    	int bondsISize { static_cast<int>(bondsI.size()) };
-
-    	std::vector<int> neighborIList ( neighborList[i] );
+    	const std::vector<int>& bondsI ( bondsMatrix[i] );
+    	const std::vector<int>& neighborIList ( neighborList[i] );
 
     	energy += energyParticlePolymer (i, positionArray[i], positionArray, neighborIList,
 				  diameterArray, bondsI, squareRc, lengthCube, squareR0, feneK) / 2.;
