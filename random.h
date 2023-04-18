@@ -2,7 +2,7 @@
  * random.h
  *
  *  Created on: 3 oct. 2022
- *      Author: romainsimon
+ *      Author: Romain Simon
  */
 
 #ifndef RANDOM_H_

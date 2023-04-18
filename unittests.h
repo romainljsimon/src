@@ -2,7 +2,7 @@
  * unittests.h
  *
  *  Created on: 6 oct. 2022
- *      Author: romainsimon
+ *      Author: Romain Simon
  */
 
 #ifndef UNITTESTS_H_

@@ -2,12 +2,45 @@
  * util.cpp
  *
  *  Created on: 13 oct. 2022
- *      Author: rsimon
+ *      Author: Romain Simon
  */
 
 #include <utility>
 #include <vector>
 #include <numeric>
+#include <valarray>
+
+
+/*******************************************************************************
+ * This function calculates the distance between two particles considering the
+ * periodic boundary conditions.
+ *
+ * @param positionA particle A's position.
+ *        particleB particle B's position.
+ *        lengthCube simulation box length.
+ *
+ * @return distance between two particles.
+ ******************************************************************************/
+double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB, const double& lengthCube)
+{
+    double squareDistance { 0. };
+    double halfLengthCube { lengthCube / 2. };
+
+    for (int i = 0; i < 3; i++)
+    {
+        double diff { positionA[i] - positionB[i] };
+
+        if (diff > halfLengthCube)
+            diff -= lengthCube;
+
+        else if (diff < - halfLengthCube)
+            diff += lengthCube;
+
+        squareDistance += std::pow(diff, 2);
+    }
+
+    return squareDistance;
+}
 
 //Boundary conditions
 
@@ -158,10 +191,10 @@ double getMaxMatrix(const std::vector<std::vector<double>>& mat)
 	return max;
 }
 
-std::vector<std::vector<double>> rescaleMatrix(std::vector<std::vector<double>> mat, const double& rescaler)
+std::vector<std::vector<double>> rescaleMatrix(const std::vector<std::vector<double>>& mat, const double& rescale)
 {
 	double max { getMaxMatrix(mat) };
-	double ratio {rescaler / max};
+	double ratio {rescale / max};
 	return multiplyMatrixByScalar(mat, ratio);
 }
 

@@ -2,70 +2,15 @@
  * readSaveFile.cpp
  *
  *  Created on: 7 oct. 2022
- *      Author: romainsimon
+ *      Author: Romain Simon
  */
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <vector>
 #include <string>
-#include <limits>
-
 #include "readSaveFile.h"
 
-inputVar readInput(const std::string& path)
-{
-	inputVar initVar;
-	std::string null;
-	std::ifstream infile(path);
-
-	if (!infile.is_open())
-		std::cout << "Error opening file" ;
-
-	infile >> initVar.simulationMol;
-	infile >> null;
-	infile >> null;
-	infile >> initVar.neighborMethod;
-	infile >> null;
-	infile >> null;
-	infile >> initVar.temp;
-	infile >> null;
-	infile >> null;
-	infile >> initVar.density;
-	infile >> null;
-	infile >> null;
-	infile >> initVar.rc;
-	infile >> null;
-	infile >> null;
-	infile >> initVar.rskin;
-	infile >> null;
-	infile >> null;
-	infile >> initVar.rbox;
-	infile >> null;
-	infile >> null;
-	infile >> initVar.neighUpdate;
-	infile >> null;
-	infile >> null;
-	infile >> initVar.timeSteps;
-	infile >> null;
-	infile >> null;
-
-	if (initVar.simulationMol == "polymer")
-	{
-		infile >> initVar.r0;
-		infile >> null;
-		infile >> null;
-		infile >> initVar.feneK;
-	}
-
-	else
-	{
-		initVar.r0 = 0;
-		initVar.feneK = 0;
-	}
-	return initVar;
-}
-posRad readXYZ(const std::string& path, const std::string& simulationMol)
+posRad readXYZ(const std::string& path)
 {
 	std::ifstream infile(path);
 
@@ -154,20 +99,20 @@ void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std:
 	  */
 
 
-	std::ofstream fout(path);
-    fout << positionArray.size();
-	fout <<  "\n";
+	std::ofstream fOut(path);
+    fOut << positionArray.size();
+	fOut << "\n";
 	std::string lengthStr = std::to_string(lengthCube);
-    fout << "Lattice=";
-    fout << '"';
-    fout << lengthStr;
-    fout << " 0.0 0.0 0.0 ";
-    fout << lengthStr;
-    fout << " 0.0 0.0 0.0 ";
-    fout << lengthStr;
-    fout << '"';
-    fout << " Properties=type:I:1:radius:R:1:pos:R:3";
-    fout <<  "\n";
+    fOut << "Lattice=";
+    fOut << '"';
+    fOut << lengthStr;
+    fOut << " 0.0 0.0 0.0 ";
+    fOut << lengthStr;
+    fOut << " 0.0 0.0 0.0 ";
+    fOut << lengthStr;
+    fOut << '"';
+    fOut << " Properties=type:I:1:radius:R:1:pos:R:3";
+    fOut << "\n";
     int it {0};
 	for(auto const& x : positionArray)
 	{
@@ -178,22 +123,22 @@ void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std:
 
 			if (j == 2)
 			{
-				fout << i;
-				fout << "\n";
+				fOut << i;
+				fOut << "\n";
 			}
 			else if (j==0)
 			{
-				fout << moleculeType[it];
-				fout << " ";
-				fout << radiusArray[it];
-				fout << " ";
-				fout << i;
-				fout << " ";
+				fOut << moleculeType[it];
+				fOut << " ";
+				fOut << radiusArray[it];
+				fOut << " ";
+				fOut << i;
+				fOut << " ";
 			}
 			else
 			{
-				fout << i;
-				fout << " ";
+				fOut << i;
+				fOut << " ";
 			}
 
 			j += 1;
@@ -201,7 +146,7 @@ void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std:
 		}
 		it += 1;
 	}
-	fout.close();
+	fOut.close();
 }
 
 void saveDoubleTXT(const double& number, const std::string& path)
@@ -209,43 +154,43 @@ void saveDoubleTXT(const double& number, const std::string& path)
  * This function saves the system energy in a txt file
  */
 {
-	std::ofstream fout;
-	fout.open(path, std::ios_base::app);
-	fout << number;
-	fout << "\n";
-	fout.close();
+	std::ofstream fOut;
+	fOut.open(path, std::ios_base::app);
+	fOut << number;
+	fOut << "\n";
+	fOut.close();
 
 }
 
 void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const std::string& path)
 {
-	std::ofstream fout(path);
+	std::ofstream fOut(path);
 
 	for(auto const& x : dispMatrix)
 	{
 		int j { 0 };
 		for(auto const& i : x)
 		{
-			fout << i;
-			fout << " ";
+			fOut << i;
+			fOut << " ";
 			if (j == 2)
 			{
-				fout << "\n";
+				fOut << "\n";
 			}
 
 			j += 1;
 
 		}
 	}
-	fout.close();
+	fOut.close();
 }
 
 void printing(const std::vector<std::vector<double>>& matrix)
 /*
- * This function prints a two dimensional array (matrix).
+ * This function prints a two-dimensional array (matrix).
  */
 {
-	for (auto i: matrix)
+	for (const auto& i: matrix)
 	{
 		for (auto j: i)
 			std::cout << j << " " ;

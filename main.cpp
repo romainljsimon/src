@@ -7,20 +7,15 @@
 //============================================================================
 
 #include <iostream>
-#include <math.h>
-#include <fstream>
+#include <cmath>
 #include <string>
 #include <vector>
-#include <cassert>
-#include "unittests.h"
+#include <chrono>
 #include "readSaveFile.h"
-#include "random.h"
-#include "energy.h"
 #include "util.h"
 #include "MonteCarlo.h"
-// #include <filesystem>
-#include <chrono>
-#include <limits.h>
+#include <input/Parameter.h>
+
 
 int main()
 {
@@ -28,9 +23,8 @@ int main()
 
 
 	//Opening input variables file
-
-	inputVar initVar = readInput ( folderPath + "/inputVar.txt" );
-	posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz", initVar.simulationMol);
+    param::Parameter param(folderPath + "/inputVar.txt" );
+	posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz");
 	// std::filesystem::create_directory (folderPath + "/outXYZ" );
 	// std::filesystem::create_directory (folderPath + "/disp" );
 
@@ -40,28 +34,43 @@ int main()
     // We define the lengths cale of the system as <sigma>. radVector is now the diameterVector
 	// initPosRad.radVector = divideVectorByScalar(initPosRad.radVector, 2);
 
-	//
-	double lengthCube {pow (static_cast<double>(initPosRad.radVector.size()) / initVar.density, 1./3) };
-
 	//assert((initVar.rc > 1.) && "The cut-off radius has to be superior to 1.");
 	//assert((initVar.temp > 0.) && "The temperature has to be superior to 0.");
 	//assert((initVar.density > 0.) && "The number density has to be superior to 0.");
-	//assert((initVar.rbox > 0.) && "The length of the translation box has to be superior to 0.");
+	//assert((initVar.rBox > 0.) && "The length of the translation box has to be superior to 0.");
 	//assert((lengthCube > 1.) && "The length of the system has to be bigger than a particle");
 
     //initPosRad.posMatrix = rescaleMatrix(initPosRad.posMatrix, lengthCube);
 	//std::cout << squareDistancePairTest();
 	//randomGeneratorTest();
-    // mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rbox, number);
-	//mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rbox, number);
+    // mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rBox, number);
+	//mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rBox, number);
 	std::clock_t c_start = std::clock();
 	auto t_start = std::chrono::high_resolution_clock::now();
-	MonteCarlo system { initVar.simulationMol, initPosRad.posMatrix, initPosRad.radVector,
-						initPosRad.moleculeType,initVar.rc, lengthCube,
-						initVar.temp, initVar.rbox, initVar.rskin, initVar.neighUpdate,
-						folderPath, initVar.neighborMethod, initVar.timeSteps, initVar.r0, initVar.feneK};
 
-	system.mcTotal();
+    std::string simType { param.get<std::string>("simType") };
+
+    if (simType == "polymer")
+    {
+        std::vector<std::vector<int>> bondsMatrix = readBondsTXT(folderPath + "/bonds.txt");
+
+        MonteCarlo system {param, initPosRad.posMatrix, initPosRad.radVector,
+                          initPosRad.moleculeType, bondsMatrix, folderPath};
+
+        system.mcTotal();
+    }
+    else if (simType == "atomic")
+    {
+        MonteCarlo system{param,initPosRad.posMatrix,initPosRad.radVector,
+                          initPosRad.moleculeType, folderPath};
+
+        system.mcTotal();
+    }
+    else
+    {
+        std::cout << "The simType variable is not 'atomic' or 'polymer'";
+        std::cout << "Please define the simulation type as one of the two\n";
+    }
 
 	std::clock_t c_end = std::clock();
 	auto t_end = std::chrono::high_resolution_clock::now();
