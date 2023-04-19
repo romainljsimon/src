@@ -6,11 +6,8 @@
  */
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <vector>
 #include <string>
-#include <limits>
-
 #include "readSaveFile.h"
 
 inputVar readInput(const std::string& path)
@@ -242,7 +239,7 @@ void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const 
 
 void printing(const std::vector<std::vector<double>>& matrix)
 /*
- * This function prints a two dimensional array (matrix).
+ * This function prints a two-dimensional array (matrix).
  */
 {
 	for (auto i: matrix)

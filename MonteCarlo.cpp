@@ -2,7 +2,7 @@
  * MonteCarlo.cpp
  *
  *  Created on: 27 oct. 2022
- *      Author: rsimon
+ *      Author: Romain Simon
  */
 
 #include <iostream>
@@ -20,12 +20,12 @@
 #include "util.h"
 
 
-MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<double>> positionArray,
-						 std::vector<double> diameterArray, std::vector<int> moleculeType,const double rc,
-						 const double lengthCube, const double temp,
-						 const double rbox, const double rskin, const int saveUpdate,
-						 std::string  folderPath, std::string  neighMethod,
-						 const int timeSteps, const double r0, const double feneK)
+MonteCarlo::MonteCarlo (std::string simulationMol, std::vector<std::vector<double>> positionArray,
+                        std::vector<double> diameterArray, std::vector<int> moleculeType, const double rc,
+                        const double lengthCube, const double temp,
+                        const double rBox, const double rSkin, const int saveUpdate,
+                        std::string  folderPath, std::string  neighMethod,
+                        const int timeSteps, const double r0, const double feneK)
 
 	: m_simulationMol (std::move(simulationMol ))
 	, m_positionArray (std::move( positionArray ))
@@ -34,15 +34,15 @@ MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<doub
 	, m_squareRc { pow ( rc, 2 ) }
 	, m_lengthCube { lengthCube }
 	, m_temp { temp }
-	, m_rbox { rbox }
-	, m_squareRskin { pow ( rskin, 2 ) }
+	, m_rBox {rBox }
+	, m_squareRSkin {pow (rSkin, 2 ) }
 	, m_saveUpdate { saveUpdate }
 	, m_folderPath (std::move( folderPath ))
 	, m_neighMethod (std::move( neighMethod ))
 	, m_timeSteps { timeSteps }
 	, m_squareR0 { pow ( r0, 2 ) }
 	, m_feneK { feneK }
-	, m_squareRdiff{ pow ( (rskin - rc) / 2, 2)}
+	, m_squareRDiff{ pow ((rSkin - rc) / 2, 2)}
 
 {
 	m_nParticles = static_cast<int>( m_positionArray.size() );
@@ -86,16 +86,16 @@ MonteCarlo::MonteCarlo ( std::string simulationMol, std::vector<std::vector<doub
 void MonteCarlo::mcTotal()
 
 {
-	std::string prename (m_folderPath + "/outXYZ/position");
+	std::string preName (m_folderPath + "/outXYZ/position");
 	std::string extname {".xyz"};
-	std::string prenameDisp (m_folderPath + "/disp/displacement");
+	std::string preNameDisp (m_folderPath + "/disp/displacement");
 	std::string extnameDisp {".txt"};
     std::vector<double> radiusArray (divideVectorByScalar(m_diameterArray, 2));
-	saveInXYZ(m_positionArray,  radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(0) + extname );
+	saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(0) + extname );
 	saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
-	saveDisplacement(m_totalDisplacementMatrix, prenameDisp + std::to_string(0) + extnameDisp);
+	saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(0) + extnameDisp);
 
-	std::vector<int> saveTimeStepArray ( createSaveTime(m_timeSteps, m_saveUpdate, 1.5));
+	std::vector<int> saveTimeStepArray ( createSaveTime(m_timeSteps, m_saveUpdate, 1.1));
 
 	int save_index { 0 };
 
@@ -122,12 +122,12 @@ void MonteCarlo::mcTotal()
 		if (saveTimeStepArray[save_index] == i)
 		{
 			radiusArray = divideVectorByScalar(m_diameterArray, 2);
-            saveInXYZ ( m_positionArray,  radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(i+1) + extname );
-			saveDisplacement ( m_totalDisplacementMatrix, prenameDisp + std::to_string(i+1) + extnameDisp );
+            saveInXYZ (m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(i + 1) + extname );
+			saveDisplacement (m_totalDisplacementMatrix, preNameDisp + std::to_string(i + 1) + extnameDisp );
 			++save_index;
 		}
 
-		if (i % 50 == 0)
+		if (i % 5 == 0)
 		{
 			saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt"); //Energy is saved at each time step.
 		}
@@ -139,8 +139,8 @@ void MonteCarlo::mcTotal()
 	}
     radiusArray = divideVectorByScalar(m_diameterArray, 2);
 	m_acceptanceRate /= m_timeSteps;
-	saveInXYZ(m_positionArray,  radiusArray, m_moleculeType, m_lengthCube, prename + std::to_string(m_timeSteps) + extname );
-	saveDisplacement(m_totalDisplacementMatrix, prenameDisp + std::to_string(m_timeSteps) + extnameDisp);
+	saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(m_timeSteps) + extname );
+	saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(m_timeSteps) + extnameDisp);
 	saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
 
 	std::cout << "MC move acceptance rate: " << m_acceptanceRate << "\n";
@@ -152,7 +152,7 @@ void MonteCarlo::mcTotal()
 
 /*******************************************************************************
  * Creation or update of the Verlet neighbor list. The neighbor list is
- * implemented as an 2d array suchs as row i of the array is particle i's
+ * implemented as an 2d array such as row i of the array is particle i's
  * neighbor list. If j is on row i then i is on row j.
  *
  * Example of a neighbor list with 4 particles:
@@ -182,7 +182,7 @@ void MonteCarlo::createNeighborList()
 
 			double squareDistance { squareDistancePair (positionParticle, m_positionArray[j], m_lengthCube) };
 
-			if (squareDistance < m_squareRskin)
+			if (squareDistance < m_squareRSkin)
 			{
 				// j and i are neighbors
 
@@ -217,69 +217,24 @@ void MonteCarlo::createNeighborList()
  ******************************************************************************/
 void MonteCarlo::mcMove()
 {
-	int indexTranslation { randomIntGenerator(0, m_nParticles - 1) }; // randomly chosen particle
-	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -m_rbox, m_rbox) );
-	std::vector<double> positionParticleTranslation = mcTranslation ( indexTranslation, randomVector );
-	std::vector<int> neighborIList { };
+    if ( m_swap )
+    {
+        double randomDouble { randomDoubleGenerator(0., 1.) } ;
+        bool swapped {randomDouble < 0.1};
 
-	if ( m_neighMethod == "verlet" )
-	{
-		neighborIList = m_neighborList[indexTranslation]; // particle's neighbor list
-	}
-
-	else
-	{
-		neighborIList.resize ( m_nParticles );
-		std::iota (std::begin(neighborIList), std::end(neighborIList), 0);
-	}
-
-	double oldEnergyParticle {};
-	double newEnergyParticle {};
-
-	if (m_simulationMol == "polymer")
-	{
- 		std::vector<int> bondsI ( m_bondsMatrix[indexTranslation] );
-
-		oldEnergyParticle = energyParticlePolymer (indexTranslation, m_positionArray[indexTranslation],
-													m_positionArray, neighborIList, m_diameterArray, bondsI,
-													m_squareRc, m_lengthCube, m_squareR0, m_feneK);
-		newEnergyParticle = energyParticlePolymer (indexTranslation, positionParticleTranslation,
-													m_positionArray, neighborIList, m_diameterArray, bondsI,
-													m_squareRc, m_lengthCube, m_squareR0, m_feneK);
-
-	}
-
-	else
-	{
-		oldEnergyParticle = energyParticle (indexTranslation, m_positionArray[indexTranslation], m_positionArray,
-											neighborIList, m_diameterArray, m_squareRc, m_lengthCube);
-		newEnergyParticle = energyParticle (indexTranslation, positionParticleTranslation, m_positionArray,
-											neighborIList, m_diameterArray, m_squareRc, m_lengthCube);
-	}
-
-	// Metropolis criterion
-	bool acceptMove { metropolis (newEnergyParticle, oldEnergyParticle) } ;
-
-	// If the move is accepted, then the energy, the position array and the displacement array can be updated.
-	// If the m_calculatePressure is set to True, then the pressure is calculated.
-	if ( acceptMove )
-	{
-
-		if (m_calculatePressure)
-		{
-			double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube)};
-			double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube)};
-			m_pressure += newPressureParticle - oldPressureParticle;
-		}
-
-		double newEnergy {m_energy - oldEnergyParticle + newEnergyParticle};
-		m_energy = newEnergy;
-		m_stepDisplacementMatrix[indexTranslation] = vectorSum(m_stepDisplacementMatrix[indexTranslation], randomVector);
-		m_positionArray[indexTranslation] = positionParticleTranslation;
-		m_acceptanceRate += 1. / m_nParticles; // increment of the acceptance rate.
-
-	}
-
+        if ( swapped )
+        {
+            mcSwap();
+        }
+        else
+        {
+            mcTranslation ();
+        }
+    }
+    else
+    {
+        mcTranslation ();
+    }
 }
 
 /*******************************************************************************
@@ -292,7 +247,7 @@ void MonteCarlo::mcMove()
 void MonteCarlo::mcAllMove()
 {
 	int indexTranslation { randomIntGenerator(0, (m_nParticles - 1) / 3) }; // randomly chosen particle
-	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -m_rbox, m_rbox) );
+	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -m_rBox, m_rBox) );
 
 	double oldEnergyPolymer {};
 	double newEnergyPolymer {};
@@ -366,19 +321,217 @@ void MonteCarlo::mcAllMove()
  *
  * @param indexTranslation Translated particle's index.
  *        randomVector Random vector of size 3. The components of the vector are
- *                     taken from a uniform distribution U(-m_rbox, m_rbox).
+ *                     taken from a uniform distribution U(-m_rBox, m_rBox).
  * @return Tentative new particle position.
  ******************************************************************************/
-std::vector<double> MonteCarlo::mcTranslation(int indexTranslation, const std::vector<double>& randomVector)
-{
+void MonteCarlo::mcTranslation() {
+    int indexTranslation{randomIntGenerator(0, m_nParticles - 1)}; // randomly chosen particle
+    std::vector<double> randomVector(randomVectorDoubleGenerator(3, -m_rBox, m_rBox));
+    std::vector<double> positionParticleTranslation = m_positionArray[indexTranslation];
+    positionParticleTranslation = vectorSum(positionParticleTranslation, randomVector);
+    positionParticleTranslation = periodicBC(positionParticleTranslation, m_lengthCube);
 
-	std::vector<double> positionParticleTranslation = m_positionArray[indexTranslation];
-	positionParticleTranslation = vectorSum (positionParticleTranslation, randomVector);
-	positionParticleTranslation = periodicBC (positionParticleTranslation, m_lengthCube);
-	return positionParticleTranslation;
+    std::vector<int> neighborIList{findNeighborIList( indexTranslation )};
+
+    double oldEnergyParticle;
+    double newEnergyParticle;
+
+    if (m_simulationMol == "polymer")
+    {
+        std::vector<int> bondsI(m_bondsMatrix[indexTranslation]);
+
+        oldEnergyParticle = energyParticlePolymer(indexTranslation, m_positionArray[indexTranslation],
+                                                  m_positionArray, neighborIList, m_diameterArray, bondsI,
+                                                  m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+        newEnergyParticle = energyParticlePolymer(indexTranslation, positionParticleTranslation,
+                                                  m_positionArray, neighborIList, m_diameterArray, bondsI,
+                                                  m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+
+    }
+    else
+    {
+        oldEnergyParticle = energyParticle(indexTranslation, m_positionArray[indexTranslation], m_positionArray,
+                                           neighborIList, m_diameterArray, m_squareRc, m_lengthCube);
+        newEnergyParticle = energyParticle(indexTranslation, positionParticleTranslation, m_positionArray,
+                                           neighborIList, m_diameterArray, m_squareRc, m_lengthCube);
+    }
+    double diff_energy {newEnergyParticle - oldEnergyParticle};
+
+    // Metropolis criterion
+    bool acceptMove{ metropolis(diff_energy) };
+
+    // If the move is accepted, then the energy, the position array and the displacement array can be updated.
+    // If the m_calculatePressure is set to True, then the pressure is calculated.
+    if (acceptMove)
+    {
+        generalUpdate(diff_energy);
+
+        if (m_calculatePressure)
+        {
+            double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube)};
+            double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube)};
+            m_pressure += newPressureParticle - oldPressureParticle;
+        }
+
+        m_stepDisplacementMatrix[indexTranslation] = vectorSum(m_stepDisplacementMatrix[indexTranslation],
+                                                               randomVector);
+        m_positionArray[indexTranslation] = positionParticleTranslation;
+    }
+}
+
+/*******************************************************************************
+ * This function returns a tentative new particle position.
+ *
+ * @param indexTranslation Translated particle's index.
+ *        randomVector Random vector of size 3. The components of the vector are
+ *                     taken from a uniform distribution U(-m_rBox, m_rBox).
+ * @return Tentative new particle position.
+ ******************************************************************************/
+void MonteCarlo::mcSwap()
+{
+    int indexTranslation1 { randomIntGenerator(0, m_nParticles - 1) };
+    int indexTranslation2 { randomIntGenerator(0, m_nParticles - 1) };
+    // !!!! THIS NEXT PART IS ONLY BECAUSE WE STUDY TRIMERS VERY SPECIFIC!!!
+    indexTranslation1 -= indexTranslation1 % 3;
+    indexTranslation2 = indexTranslation1 + 2;
+
+    double sigma1 = m_diameterArray[indexTranslation1];
+    double sigma2 = m_diameterArray[indexTranslation2];
+    double energyParticle1;
+    double energyParticle2;
+    double energyParticleSwap1;
+    double energyParticleSwap2;
+    std::vector<int> neighborIList1 = m_neighborList[indexTranslation1];
+    std::vector<int> neighborIList2 = m_neighborList[indexTranslation2];
+
+
+    if (m_simulationMol == "polymer")
+    {
+
+        std::vector<int> bondsI1(m_bondsMatrix[indexTranslation1]);
+        std::vector<int> bondsI2(m_bondsMatrix[indexTranslation2]);
+
+        energyParticle1 = energyParticlePolymer(indexTranslation1, m_positionArray[indexTranslation1],
+                                                m_positionArray, neighborIList1, m_diameterArray, bondsI1,
+                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+
+        energyParticle2 = energyParticlePolymer(indexTranslation2, m_positionArray[indexTranslation2],
+                                                m_positionArray, neighborIList2, m_diameterArray, bondsI2,
+                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+
+        m_diameterArray[indexTranslation1] = sigma2;
+        m_diameterArray[indexTranslation2] = sigma1;
+
+        energyParticleSwap1 = energyParticlePolymer(indexTranslation1, m_positionArray[indexTranslation1],
+                                                    m_positionArray, neighborIList1, m_diameterArray, bondsI1,
+                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+
+        energyParticleSwap2 = energyParticlePolymer(indexTranslation2, m_positionArray[indexTranslation2],
+                                                    m_positionArray, neighborIList2, m_diameterArray, bondsI2,
+                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+
+    }
+    else
+    {
+        energyParticle1 = energyParticle(indexTranslation1, m_positionArray[indexTranslation1],
+                                         m_positionArray, neighborIList1, m_diameterArray,
+                                         m_squareRc, m_lengthCube);
+
+        energyParticle2 = energyParticle(indexTranslation2, m_positionArray[indexTranslation2],
+                                         m_positionArray, neighborIList2, m_diameterArray,
+                                         m_squareRc, m_lengthCube);
+
+        m_diameterArray[indexTranslation1] = sigma2;
+        m_diameterArray[indexTranslation2] = sigma1;
+
+        energyParticleSwap1 = energyParticle(indexTranslation1, m_positionArray[indexTranslation1],
+                                             m_positionArray, neighborIList1, m_diameterArray,
+                                             m_squareRc, m_lengthCube);
+
+        energyParticleSwap2 = energyParticle(indexTranslation2, m_positionArray[indexTranslation2],
+                                             m_positionArray, neighborIList2, m_diameterArray,
+                                             m_squareRc, m_lengthCube);
+    }
+    double diff_energy{ energyParticleSwap1 + energyParticleSwap2 - energyParticle1 - energyParticle2 };
+
+    // Metropolis criterion
+    bool acceptMove{ metropolis( diff_energy) };
+
+    // If the move is accepted, then the energy, the position array and the displacement array can be updated.
+    // If the m_calculatePressure is set to True, then the pressure is calculated.
+    if (acceptMove)
+    {
+        generalUpdate( diff_energy );
+
+        if (m_calculatePressure)
+        {
+            double pressureParticleSwap1 {pressureParticle(m_temp, indexTranslation1,
+                                                           m_positionArray[indexTranslation1],
+                                                           m_positionArray, neighborIList1,
+                                                           m_diameterArray, m_squareRc,
+                                                           m_lengthCube)};
+
+            double pressureParticleSwap2 {pressureParticle(m_temp, indexTranslation2,
+                                                           m_positionArray[indexTranslation2],
+                                                           m_positionArray, neighborIList2,
+                                                           m_diameterArray, m_squareRc,
+                                                           m_lengthCube)};
+
+            m_diameterArray[indexTranslation1] = sigma1;
+            m_diameterArray[indexTranslation2] = sigma2;
+
+            double pressureParticle1 {pressureParticle(m_temp, indexTranslation1,
+                                                           m_positionArray[indexTranslation1],
+                                                           m_positionArray, neighborIList1,
+                                                           m_diameterArray, m_squareRc,
+                                                           m_lengthCube)};
+
+
+            double pressureParticle2 {pressureParticle(m_temp, indexTranslation2,
+                                                           m_positionArray[indexTranslation2],
+                                                           m_positionArray, neighborIList2,
+                                                           m_diameterArray, m_squareRc,
+                                                           m_lengthCube)};
+            m_diameterArray[indexTranslation1] = sigma2;
+            m_diameterArray[indexTranslation2] = sigma1;
+
+            m_pressure += pressureParticleSwap1 + pressureParticleSwap2 - pressureParticle1 - pressureParticle2;
+        }
+    }
+    else
+    {
+        m_diameterArray[indexTranslation1] = sigma1;
+        m_diameterArray[indexTranslation2] = sigma2;
+    }
 }
 
 
+void MonteCarlo::generalUpdate(double diff_energy)
+{
+
+    double newEnergy {m_energy + diff_energy};
+    m_energy = newEnergy;
+    m_acceptanceRate += 1. / m_nParticles; // increment of the acceptance rate.
+
+}
+
+
+std::vector<int> MonteCarlo::findNeighborIList(int indexTranslation)
+{
+    std::vector<int> neighborIList { };
+
+    if ( m_neighMethod == "verlet" )
+    {
+        neighborIList = m_neighborList[indexTranslation]; // particle's neighbor list
+    }
+
+    else
+    {
+        neighborIList.resize ( m_nParticles );
+        std::iota (std::begin(neighborIList), std::end(neighborIList), 0);
+    }
+    return neighborIList;
+}
 
 /*******************************************************************************
  * This function is an implementation of the Metropolis algorithm.
@@ -390,27 +543,26 @@ std::vector<double> MonteCarlo::mcTranslation(int indexTranslation, const std::v
  * - if newEnergy > energy the the move is accepted at a certain probability
  *   proportional to exp((energy-newEnergy)/kT).
  *
- * @param newEnergy New tentative configuration's energy.
- *        energy Old configuration's energy.
+ * @param diff_energy New tentative configuration's energy minus old configuration's energy.
  *
  * @return Returns true if the move is accepted and False otherwise.
  ******************************************************************************/
-bool MonteCarlo::metropolis(double newEnergy, double energy)
+bool MonteCarlo::metropolis(double diff_energy) const
 {
-	if (newEnergy < energy)
+	if (diff_energy < 0)
 		return true;
 
 	else
 	{
 		double randomDouble { randomDoubleGenerator(0., 1.) } ;
-		double threshold { exp((energy - newEnergy) / m_temp) }; // we consider k=1
+		double threshold { exp(( - diff_energy ) / m_temp) }; // we consider k=1
 		return threshold > randomDouble;
 	}
 }
 
 /*******************************************************************************
  * This function checks if the maximum displacement of one particle is superior
- * than m_squareRdiff. If this is true, then the neighbor list is updated and
+ * than m_squareRDiff. If this is true, then the neighbor list is updated and
  * m_interDisplacementMatrix is reinitialized to zero. The criterion shouldn't
  * allow for any errors?
  ******************************************************************************/
@@ -418,7 +570,7 @@ void MonteCarlo::checkStepDisplacement()
 {
 	std::vector<double> squareDispVector = getSquareNormRowMatrix(m_interDisplacementMatrix);
 
-	if (getMaxVector ( squareDispVector ) > m_squareRdiff)
+	if (getMaxVector ( squareDispVector ) > m_squareRDiff)
 	{
 		createNeighborList();
 		std::fill(m_interDisplacementMatrix.begin(), m_interDisplacementMatrix.end(), std::vector<double>(3, 0));
