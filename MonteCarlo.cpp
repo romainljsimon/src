@@ -220,7 +220,7 @@ void MonteCarlo::mcMove()
     if ( m_swap )
     {
         double randomDouble { randomDoubleGenerator(0., 1.) } ;
-        bool swapped {randomDouble < 0.1};
+        bool swapped {randomDouble < 0.2};
 
         if ( swapped )
         {
