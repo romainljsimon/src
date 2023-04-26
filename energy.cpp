@@ -230,9 +230,20 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
         if ((realIndex == indexParticle) || (realIndex == -1)) {
             continue;
         }
+        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
 
-        double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
-        energy += fenePotential(squareDistance, particleDiameter, diameterArray[realIndex], squareR0, feneK);
+        if (((( indexParticle % 3 ) == 0) && (realIndex == indexParticle + 2)) || (( indexParticle == realIndex + 2 ) && ( (realIndex % 3 ) == 0)))
+        {
+            double sigma_factor = 1.35;
+            energy -= ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25);
+            energy += ljPotential(squareDistance, particleDiameter * sigma_factor, diameterArray[realIndex] * sigma_factor, squareRc, 0.25);
+            energy += fenePotential(squareDistance, particleDiameter * sigma_factor, diameterArray[realIndex] * sigma_factor, squareR0, feneK);
+        }
+        else
+        {
+            energy += fenePotential(squareDistance, particleDiameter, diameterArray[realIndex], squareR0, feneK);
+        }
+
     }
         return energy;
 }
