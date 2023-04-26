@@ -127,7 +127,7 @@ void MonteCarlo::mcTotal()
 			++save_index;
 		}
 
-		if (i % 5 == 0)
+		if (i % 50 == 0)
 		{
 			saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt"); //Energy is saved at each time step.
 		}
@@ -139,10 +139,13 @@ void MonteCarlo::mcTotal()
 	}
     radiusArray = divideVectorByScalar(m_diameterArray, 2);
 	m_acceptanceRate /= m_timeSteps;
+    m_acceptanceRateSwap /= m_timeSteps;
+    m_acceptanceRateSwap /= 0.2;
+
 	saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(m_timeSteps) + extname );
 	saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(m_timeSteps) + extnameDisp);
 	saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
-
+    std::cout << " swap MC move acceptance rate: " << m_acceptanceRateSwap << "\n";
 	std::cout << "MC move acceptance rate: " << m_acceptanceRate << "\n";
 	std::cout << "Neighbor list update rate: " << m_updateRate / m_timeSteps << "\n";
 	std::cout << "Number of neighbor list errors: " << m_errors << "\n";
@@ -462,7 +465,7 @@ void MonteCarlo::mcSwap()
     if (acceptMove)
     {
         generalUpdate( diff_energy );
-
+        m_acceptanceRateSwap += 1. / m_nParticles;
         if (m_calculatePressure)
         {
             double pressureParticleSwap1 {pressureParticle(m_temp, indexTranslation1,

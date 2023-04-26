@@ -24,7 +24,8 @@ private:
 	std::vector<std::vector<double>> m_interDisplacementMatrix {};  // Inter neighbor list update displacement matrix.
 	std::vector<std::vector<double>> m_stepDisplacementMatrix {};   // Step displacement matrix.
 	double m_acceptanceRate { 0. };                                 // Monte Carlo acceptance rate.
-	double m_updateRate { -1. };                                     // Monte Carle neighbor list update rate.
+    double m_acceptanceRateSwap { 0. };                                 // Monte Carlo acceptance rate.
+    double m_updateRate { -1. };                                     // Monte Carlo neighbor list update rate.
 	bool m_calculatePressure {false};                               // Boolean that decides if the pressure is calculated or not.
     bool m_swap { true };
 	std::string m_simulationMol {};                       			// Type of system: can be either "polymer" or "atomic".
