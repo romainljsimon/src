@@ -7,20 +7,14 @@
 //============================================================================
 
 #include <iostream>
-#include <math.h>
-#include <fstream>
+#include <cmath>
 #include <string>
 #include <vector>
-#include <cassert>
-#include "unittests.h"
 #include "readSaveFile.h"
-#include "random.h"
-#include "energy.h"
 #include "util.h"
 #include "MonteCarlo.h"
-// #include <filesystem>
+#include <filesystem>
 #include <chrono>
-#include <limits.h>
 
 int main()
 {

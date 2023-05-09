@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 #include <numeric>
-
+#include <algorithm>
 //Boundary conditions
 
 std::vector<double> periodicBC(std::vector<double> positionParticle, const double& lengthCube)

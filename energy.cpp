@@ -7,7 +7,7 @@
 #include <vector>
 #include <cmath>
 #include <limits>
-#include <algorithm>
+#include <iostream>
 
 /*******************************************************************************
  * This function calculates the Lennard-Jones potential energy between two
@@ -123,7 +123,8 @@ double squareDistancePair(const std::vector<double>& positionA,  const std::vect
  ******************************************************************************/
 double energyParticle(const int& indexParticle, const std::vector<double>& positionParticle,
 		      const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
-              const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube)
+              const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube,
+              const int& indexSkip = -1)
 {
 	double energy { 0. };
 	double particleDiameter = diameterArray[indexParticle];
@@ -132,14 +133,17 @@ double energyParticle(const int& indexParticle, const std::vector<double>& posit
 	for (int i = 0; i < neighborIListSize; i++)
 	{
 		int realIndex = neighborIList[i];
-		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
 
-		if (realIndex == indexParticle)
-		{
-			continue;
-		}
+        if (realIndex != indexSkip)
+        {
+            if (realIndex == indexParticle)
+            {
+                continue;
+            }
 
-		energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.);
+            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
+            energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.);
+        }
 	}
 	return energy;
 }
@@ -202,9 +206,11 @@ double energySystem(const std::vector<std::vector<double>>& positionArray, const
  * @return Polymeric particle's total energy.
  ******************************************************************************/
 double energyParticlePolymer (const int& indexParticle, const std::vector<double>& positionParticle,
-							  const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
+							  const std::vector<std::vector<double>>& positionArray,
+                              const std::vector<int>& neighborIList,
 							  const std::vector<double>& diameterArray, const std::vector<int>& bondsI,
-							  const double& squareRc, const double& lengthCube, const double& squareR0, const double& feneK)
+							  const double& squareRc, const double& lengthCube, const double& squareR0,
+                              const double& feneK, const int& indexSkip = -1)
 {
 	double energy { 0. };
 	double particleDiameter = diameterArray[indexParticle];
@@ -214,27 +220,34 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
     for (int i = 0; i < neighborIListSize; i++)
     {
         int realIndex = neighborIList[i];
-        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
 
-        if (realIndex == indexParticle)
+        if (realIndex != indexSkip)
         {
-            continue;
+            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
+            if (realIndex == indexParticle) {
+                continue;
+            }
+
+            energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc,
+                                  0.25); //127. / 4096);
         }
-
-        energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25); //127. / 4096);
     }
-
-    for (int i = 0; i < bondsISize; i++) {
+    for (int i = 0; i < bondsISize; i++)
+    {
         int realIndex = bondsI[i];
 
-        if ((realIndex == indexParticle) || (realIndex == -1)) {
-            continue;
-        }
+        if (realIndex != indexSkip)
+        {
+            if ((realIndex == indexParticle) || (realIndex == -1))
+            {
+                continue;
+            }
 
-        double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
-        energy += fenePotential(squareDistance, particleDiameter, diameterArray[realIndex], squareR0, feneK);
+            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
+            energy += fenePotential(squareDistance, particleDiameter, diameterArray[realIndex], squareR0, feneK);
+        }
     }
-        return energy;
+    return energy;
 }
 
 
