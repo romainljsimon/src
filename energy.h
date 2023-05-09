@@ -18,14 +18,15 @@ double energySystem(const std::vector<std::vector<double>>& positionArray, const
                     const double& lengthCube);
 
 double energyParticle(const int& indexParticle, const std::vector<double>& positionParticle,
-		              const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
-					  const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube);
+                      const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
+                      const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube,
+                      const int& indexSkip = -1);
 
 double energyParticlePolymer (const int& indexParticle, const std::vector<double>& positionParticle,
                               const std::vector<std::vector<double>>& positionArray,
                               const std::vector<int>& neighborIList, const std::vector<double>& diameterArray,
                               const std::vector<int>& bondsI, const double& squareRc, const double& lengthCube,
-                              const double& squareR0, const double& feneK);
+                              const double& squareR0, const double& feneK, const int& indexSkip = -1);
 
 double energySystemPolymer(const std::vector<std::vector<double>>& positionArray,
                            const std::vector<double>& diameterArray,

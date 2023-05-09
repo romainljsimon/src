@@ -122,8 +122,9 @@ double squareDistancePair(const std::vector<double>& positionA,  const std::vect
  * @return Particle's total energy.
  ******************************************************************************/
 double energyParticle(const int& indexParticle, const std::vector<double>& positionParticle,
-		      const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
-              const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube)
+                      const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
+                      const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube,
+                      const int& indexSkip = -1)
 {
 	double energy { 0. };
 	double particleDiameter = diameterArray[indexParticle];
@@ -132,14 +133,15 @@ double energyParticle(const int& indexParticle, const std::vector<double>& posit
 	for (int i = 0; i < neighborIListSize; i++)
 	{
 		int realIndex = neighborIList[i];
-		double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-
-		if (realIndex == indexParticle)
-		{
-			continue;
-		}
-
-		energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.);
+        if (realIndex != indexSkip)
+        {
+            if (realIndex == indexParticle)
+            {
+                continue;
+            }
+        double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
+        energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.);
+        }
 	}
 	return energy;
 }
@@ -202,9 +204,11 @@ double energySystem(const std::vector<std::vector<double>>& positionArray, const
  * @return Polymeric particle's total energy.
  ******************************************************************************/
 double energyParticlePolymer (const int& indexParticle, const std::vector<double>& positionParticle,
-							  const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
-							  const std::vector<double>& diameterArray, const std::vector<int>& bondsI,
-							  const double& squareRc, const double& lengthCube, const double& squareR0, const double& feneK)
+                              const std::vector<std::vector<double>>& positionArray,
+                              const std::vector<int>& neighborIList,
+                              const std::vector<double>& diameterArray, const std::vector<int>& bondsI,
+                              const double& squareRc, const double& lengthCube, const double& squareR0,
+                              const double& feneK, const int& indexSkip = -1)
 {
 	double energy { 0. };
 	double particleDiameter = diameterArray[indexParticle];
@@ -214,36 +218,46 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
     for (int i = 0; i < neighborIListSize; i++)
     {
         int realIndex = neighborIList[i];
-        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-
-        if (realIndex == indexParticle)
+        if (realIndex != indexSkip)
         {
-            continue;
-        }
+            if (realIndex == indexParticle)
+            {
+                continue;
+            }
+            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
 
-        energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25); //127. / 4096);
+
+
+            energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc,
+                                  0.25); //127. / 4096);
+        }
     }
-
-    for (int i = 0; i < bondsISize; i++) {
+    for (int i = 0; i < bondsISize; i++)
+    {
         int realIndex = bondsI[i];
-
-        if ((realIndex == indexParticle) || (realIndex == -1)) {
-            continue;
-        }
-        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-
-        if (((( indexParticle % 3 ) == 0) && (realIndex == indexParticle + 2)) || (( indexParticle == realIndex + 2 ) && ( (realIndex % 3 ) == 0)))
+        if (realIndex != indexSkip)
         {
-            double sigma_factor = 1.35;
-            energy -= ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25);
-            energy += ljPotential(squareDistance, particleDiameter * sigma_factor, diameterArray[realIndex] * sigma_factor, squareRc, 0.25);
-            energy += fenePotential(squareDistance, particleDiameter * sigma_factor, diameterArray[realIndex] * sigma_factor, squareR0, feneK);
-        }
-        else
-        {
-            energy += fenePotential(squareDistance, particleDiameter, diameterArray[realIndex], squareR0, feneK);
-        }
+            if ((realIndex == indexParticle) || (realIndex == -1))
+            {
+                continue;
+            }
+            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
 
+            if ((((indexParticle % 3) == 0) && (realIndex == indexParticle + 2)) ||
+                ((indexParticle == realIndex + 2) && ((realIndex % 3) == 0)))
+            {
+                double sigma_factor = 1.35;
+                energy -= ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25);
+                energy += ljPotential(squareDistance, particleDiameter * sigma_factor,
+                                      diameterArray[realIndex] * sigma_factor, squareRc, 0.25);
+                energy += fenePotential(squareDistance, particleDiameter * sigma_factor,
+                                        diameterArray[realIndex] * sigma_factor, squareR0, feneK);
+            }
+            else
+            {
+                energy += fenePotential(squareDistance, particleDiameter, diameterArray[realIndex], squareR0, feneK);
+            }
+        }
     }
         return energy;
 }

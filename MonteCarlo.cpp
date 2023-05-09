@@ -384,76 +384,72 @@ void MonteCarlo::mcTranslation() {
 
 /*******************************************************************************
  * This function returns a tentative new particle position.
- *
- * @param indexTranslation Translated particle's index.
- *        randomVector Random vector of size 3. The components of the vector are
- *                     taken from a uniform distribution U(-m_rBox, m_rBox).
- * @return Tentative new particle position.
+
  ******************************************************************************/
 void MonteCarlo::mcSwap()
 {
-    int indexTranslation1 { randomIntGenerator(0, m_nParticles - 1) };
-    int indexTranslation2 { randomIntGenerator(0, m_nParticles - 1) };
+    int indexSwap1 { randomIntGenerator(0, m_nParticles - 1) };
+    int indexSwap2;
     // !!!! THIS NEXT PART IS ONLY BECAUSE WE STUDY TRIMERS VERY SPECIFIC!!!
-    indexTranslation1 -= indexTranslation1 % 3;
-    indexTranslation2 = indexTranslation1 + 2;
+    indexSwap1 -= indexSwap1 % 3;
+    indexSwap2 = indexSwap1 + 2;
 
-    double sigma1 = m_diameterArray[indexTranslation1];
-    double sigma2 = m_diameterArray[indexTranslation2];
+    double sigma1 = m_diameterArray[indexSwap1];
+    double sigma2 = m_diameterArray[indexSwap2];
     double energyParticle1;
     double energyParticle2;
     double energyParticleSwap1;
     double energyParticleSwap2;
-    std::vector<int> neighborIList1 = m_neighborList[indexTranslation1];
-    std::vector<int> neighborIList2 = m_neighborList[indexTranslation2];
+    std::vector<int> neighborIList1 = m_neighborList[indexSwap1];
+    std::vector<int> neighborIList2 = m_neighborList[indexSwap2];
 
 
     if (m_simulationMol == "polymer")
     {
 
-        std::vector<int> bondsI1(m_bondsMatrix[indexTranslation1]);
-        std::vector<int> bondsI2(m_bondsMatrix[indexTranslation2]);
+        std::vector<int> bondsI1(m_bondsMatrix[indexSwap1]);
+        std::vector<int> bondsI2(m_bondsMatrix[indexSwap2]);
 
-        energyParticle1 = energyParticlePolymer(indexTranslation1, m_positionArray[indexTranslation1],
+        energyParticle1 = energyParticlePolymer(indexSwap1, m_positionArray[indexSwap1],
                                                 m_positionArray, neighborIList1, m_diameterArray, bondsI1,
                                                 m_squareRc, m_lengthCube, m_squareR0, m_feneK);
 
-        energyParticle2 = energyParticlePolymer(indexTranslation2, m_positionArray[indexTranslation2],
+        energyParticle2 = energyParticlePolymer(indexSwap2, m_positionArray[indexSwap2],
                                                 m_positionArray, neighborIList2, m_diameterArray, bondsI2,
-                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK, indexSwap1);
 
-        m_diameterArray[indexTranslation1] = sigma2;
-        m_diameterArray[indexTranslation2] = sigma1;
+        m_diameterArray[indexSwap1] = sigma2;
+        m_diameterArray[indexSwap2] = sigma1;
 
-        energyParticleSwap1 = energyParticlePolymer(indexTranslation1, m_positionArray[indexTranslation1],
+        energyParticleSwap1 = energyParticlePolymer(indexSwap1, m_positionArray[indexSwap1],
                                                     m_positionArray, neighborIList1, m_diameterArray, bondsI1,
                                                     m_squareRc, m_lengthCube, m_squareR0, m_feneK);
 
-        energyParticleSwap2 = energyParticlePolymer(indexTranslation2, m_positionArray[indexTranslation2],
+        energyParticleSwap2 = energyParticlePolymer(indexSwap2, m_positionArray[indexSwap2],
                                                     m_positionArray, neighborIList2, m_diameterArray, bondsI2,
-                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK, indexSwap1);
 
     }
     else
     {
-        energyParticle1 = energyParticle(indexTranslation1, m_positionArray[indexTranslation1],
+        energyParticle1 = energyParticle(indexSwap1, m_positionArray[indexSwap1],
                                          m_positionArray, neighborIList1, m_diameterArray,
                                          m_squareRc, m_lengthCube);
 
-        energyParticle2 = energyParticle(indexTranslation2, m_positionArray[indexTranslation2],
+        energyParticle2 = energyParticle(indexSwap2, m_positionArray[indexSwap2],
                                          m_positionArray, neighborIList2, m_diameterArray,
-                                         m_squareRc, m_lengthCube);
+                                         m_squareRc, m_lengthCube, indexSwap1);
 
-        m_diameterArray[indexTranslation1] = sigma2;
-        m_diameterArray[indexTranslation2] = sigma1;
+        m_diameterArray[indexSwap1] = sigma2;
+        m_diameterArray[indexSwap2] = sigma1;
 
-        energyParticleSwap1 = energyParticle(indexTranslation1, m_positionArray[indexTranslation1],
+        energyParticleSwap1 = energyParticle(indexSwap1, m_positionArray[indexSwap1],
                                              m_positionArray, neighborIList1, m_diameterArray,
                                              m_squareRc, m_lengthCube);
 
-        energyParticleSwap2 = energyParticle(indexTranslation2, m_positionArray[indexTranslation2],
+        energyParticleSwap2 = energyParticle(indexSwap2, m_positionArray[indexSwap2],
                                              m_positionArray, neighborIList2, m_diameterArray,
-                                             m_squareRc, m_lengthCube);
+                                             m_squareRc, m_lengthCube, indexSwap1);
     }
     double diff_energy{ energyParticleSwap1 + energyParticleSwap2 - energyParticle1 - energyParticle2 };
 
@@ -468,43 +464,43 @@ void MonteCarlo::mcSwap()
         m_acceptanceRateSwap += 1. / m_nParticles;
         if (m_calculatePressure)
         {
-            double pressureParticleSwap1 {pressureParticle(m_temp, indexTranslation1,
-                                                           m_positionArray[indexTranslation1],
+            double pressureParticleSwap1 {pressureParticle(m_temp, indexSwap1,
+                                                           m_positionArray[indexSwap1],
                                                            m_positionArray, neighborIList1,
                                                            m_diameterArray, m_squareRc,
                                                            m_lengthCube)};
 
-            double pressureParticleSwap2 {pressureParticle(m_temp, indexTranslation2,
-                                                           m_positionArray[indexTranslation2],
+            double pressureParticleSwap2 {pressureParticle(m_temp, indexSwap2,
+                                                           m_positionArray[indexSwap2],
                                                            m_positionArray, neighborIList2,
                                                            m_diameterArray, m_squareRc,
                                                            m_lengthCube)};
 
-            m_diameterArray[indexTranslation1] = sigma1;
-            m_diameterArray[indexTranslation2] = sigma2;
+            m_diameterArray[indexSwap1] = sigma1;
+            m_diameterArray[indexSwap2] = sigma2;
 
-            double pressureParticle1 {pressureParticle(m_temp, indexTranslation1,
-                                                           m_positionArray[indexTranslation1],
+            double pressureParticle1 {pressureParticle(m_temp, indexSwap1,
+                                                           m_positionArray[indexSwap1],
                                                            m_positionArray, neighborIList1,
                                                            m_diameterArray, m_squareRc,
                                                            m_lengthCube)};
 
 
-            double pressureParticle2 {pressureParticle(m_temp, indexTranslation2,
-                                                           m_positionArray[indexTranslation2],
+            double pressureParticle2 {pressureParticle(m_temp, indexSwap2,
+                                                           m_positionArray[indexSwap2],
                                                            m_positionArray, neighborIList2,
                                                            m_diameterArray, m_squareRc,
                                                            m_lengthCube)};
-            m_diameterArray[indexTranslation1] = sigma2;
-            m_diameterArray[indexTranslation2] = sigma1;
+            m_diameterArray[indexSwap1] = sigma2;
+            m_diameterArray[indexSwap2] = sigma1;
 
             m_pressure += pressureParticleSwap1 + pressureParticleSwap2 - pressureParticle1 - pressureParticle2;
         }
     }
     else
     {
-        m_diameterArray[indexTranslation1] = sigma1;
-        m_diameterArray[indexTranslation2] = sigma2;
+        m_diameterArray[indexSwap1] = sigma1;
+        m_diameterArray[indexSwap2] = sigma2;
     }
 }
 
