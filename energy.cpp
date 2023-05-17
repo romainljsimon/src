@@ -179,60 +179,31 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
 	double particleDiameter = diameterArray[indexParticle];
 	int neighborIListSize { static_cast<int>(neighborIList.size()) };
 	int bondsISize { static_cast<int>(bondsI.size()) };
-<<<<<<< HEAD
-    std::vector<int> alreadyCalculated {};
-    double sigmaFactor { 1.35 };
+    	for (int i = 0; i < neighborIListSize; i++)
+    	{	
+        	int realIndex = neighborIList[i];
+        	double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
 
-    for (int i = 0; i < bondsISize; i++)
-    {
-        int realIndex = bondsI[i];
-        alreadyCalculated.push_back(realIndex);
-        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
+        	if (realIndex == indexParticle)
+        	{
+            	continue;
+        	}
 
-        if (((( indexParticle % 3 ) == 0) && (realIndex == indexParticle + 2)) || (( indexParticle == realIndex + 2 ) && ( (realIndex % 3 ) == 0)))
-        {
+        	energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25); //127. / 4096);
+    	}
 
-            energy += ljPotential(squareDistance, particleDiameter * sigmaFactor,
-                                  diameterArray[realIndex] * sigmaFactor, squareRc, 0.25);
-            energy += fenePotential(squareDistance, particleDiameter * sigmaFactor,
-                                    diameterArray[realIndex] * sigmaFactor, squareR0, feneK);
-        }
-        else
-        {
-            energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex],
-                                  squareRc, 0.25);
-            energy += fenePotential(squareDistance, particleDiameter,diameterArray[realIndex],
-                                    squareR0, feneK);
-        }
+    	for (int i = 0; i < bondsISize; i++) 
+	{
+        	int realIndex = bondsI[i];
 
+        	if ((realIndex == indexParticle) || (realIndex == -1)) 
+		{
+            		continue;
+        	}	
 
-    }
-=======
->>>>>>> master
-
-    for (int i = 0; i < neighborIListSize; i++)
-    {
-        int realIndex = neighborIList[i];
-        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube)};
-
-        if (realIndex == indexParticle)
-        {
-            continue;
-        }
-
-        energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.25); //127. / 4096);
-    }
-
-    for (int i = 0; i < bondsISize; i++) {
-        int realIndex = bondsI[i];
-
-        if ((realIndex == indexParticle) || (realIndex == -1)) {
-            continue;
-        }
-
-        double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
-        energy += fenePotential(squareDistance, particleDiameter, diameterArray[realIndex], squareR0, feneK);
-    }
+        	double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
+        	energy += fenePotential(squareDistance, particleDiameter, diameterArray[realIndex], squareR0, feneK);
+    	}	
         return energy;
 }
 
