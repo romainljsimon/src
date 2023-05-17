@@ -4,6 +4,7 @@
  *  Created on: 17 apr. 2023
  *      Author: Romain Simon
  */
+/***
 #include <string>
 #include "Parameter.h"
 
@@ -48,3 +49,4 @@ double param::Parameter::get(std::string key)
     check_key(key);
     return get<double>(key, 0.0);
 }
+***/

@@ -55,24 +55,26 @@ public:
                 std::vector<std::vector<int>> bondsMatrix, std::string folderPath)
 
 
-            : m_simulationMol (param.get<std::string>("simType"))
-            , m_calculatePressure(param.get<bool>("calcPressure", false))
+            : m_simulationMol (param.get_string((std::string &) "simType"))
+            , m_calculatePressure(param.get_bool((std::string &) "calcPressure", false))
             , m_positionArray (std::move( positionArray ))
             , m_diameterArray (std::move( diameterArray ))
             , m_moleculeType (std::move( moleculeType ))
             , m_bondsMatrix (std::move(bondsMatrix))
-            , m_squareRc { pow ( param.get<double>("rc"), 2 ) }
-            , m_lengthCube { pow (static_cast<double>(positionArray.size()) / param.get<double>("rho"), 1./3)}
-            , m_temp { param.get<double>("temp"), }
-            , m_rBox { param.get<double>("rBox") }
-            , m_squareRSkin {pow (param.get<double>("rSkin"), 2 ) }
-            , m_saveUpdate { param.get<int>("waitingTime") }
+            , m_squareRc { pow (param.get_double((std::string &) "rc"), 2 ) }
+            , m_lengthCube { pow (static_cast<double>(positionArray.size()) / param.get_double(
+                    (std::string &) "density"), 1. / 3)}
+            , m_temp { param.get_double((std::string &) "temp") }
+            , m_rBox { param.get_double((std::string &) "rBox") }
+            , m_squareRSkin {pow (param.get_double((std::string &) "rSkin"), 2 ) }
+            , m_saveUpdate { param.get_int((std::string &) "waitingTime") }
             , m_folderPath (std::move( folderPath ))
-            , m_neighMethod (param.get<std::string>("neighMethod"))
-            , m_timeSteps { param.get<int>("timeSteps") }
-            , m_squareR0 { pow ( param.get<double>("r0", 1.5), 2 ) }
-            , m_feneK { param.get<double>("feneK", 30.)}
-            , m_squareRDiff{pow ((param.get<double>("rSkin") - param.get<double>("rc")) / 2, 2)}
+            , m_neighMethod (param.get_string((std::string &) "neighMethod", "verlet"))
+            , m_timeSteps { param.get_int((std::string &) "timeSteps") }
+            , m_squareR0 { pow (param.get_double((std::string &) "r0", 1.5), 2 ) }
+            , m_feneK { param.get_double((std::string &) "feneK", 30.)}
+            , m_squareRDiff{pow ((param.get_double((std::string &) "rSkin") - param.get_double(
+                    (std::string &) "rc")) / 2, 2)}
             , m_nParticles {static_cast<int>( positionArray.size() )}
 
     {
@@ -96,21 +98,25 @@ public:
                 std::vector<double> diameterArray, std::vector<int> moleculeType, std::string folderPath)
 
 
-            : m_simulationMol (param.get<std::string>("simType"))
-            , m_calculatePressure(param.get<bool>("calcPressure", false))
+            : m_simulationMol (param.get_string((std::string &) "simType"))
+            , m_calculatePressure(param.get_bool((std::string &) "calcPressure", false))
             , m_positionArray (std::move( positionArray ))
             , m_diameterArray (std::move( diameterArray ))
             , m_moleculeType (std::move( moleculeType ))
-            , m_squareRc { pow ( param.get<double>("rc"), 2 ) }
-            , m_lengthCube { pow (static_cast<double>(positionArray.size()) / param.get<double>("rho"), 1./3)}
-            , m_temp { param.get<double>("temp"), }
-            , m_rBox { param.get<double>("rBox") }
-            , m_squareRSkin {pow (param.get<double>("rSkin"), 2 ) }
-            , m_saveUpdate { param.get<int>("waitingTime") }
+            , m_squareRc { pow (param.get_double((std::string &) "rc"), 2 ) }
+            , m_lengthCube { pow (static_cast<double>(positionArray.size()) / param.get_double(
+                    (std::string &) "density"), 1. / 3)}
+            , m_temp { param.get_double((std::string &) "temp") }
+            , m_rBox { param.get_double((std::string &) "rBox") }
+            , m_squareRSkin {pow (param.get_double((std::string &) "rSkin"), 2 ) }
+            , m_saveUpdate { param.get_int((std::string &) "waitingTime") }
             , m_folderPath (std::move( folderPath ))
-            , m_neighMethod (param.get<std::string>("neighMethod"))
-            , m_timeSteps { param.get<int>("timeSteps") }
-            , m_squareRDiff{pow ((param.get<double>("rSkin") - param.get<double>("rc")) / 2, 2)}
+            , m_neighMethod (param.get_string((std::string &) "neighMethod", "verlet"))
+            , m_timeSteps { param.get_int((std::string &) "timeSteps") }
+            , m_squareR0 { pow (param.get_double((std::string &) "r0", 1.5), 2 ) }
+            , m_feneK { param.get_double((std::string &) "feneK", 30.)}
+            , m_squareRDiff{pow ((param.get_double((std::string &) "rSkin") - param.get_double(
+                    (std::string &) "rc")) / 2, 2)}
             , m_nParticles {static_cast<int>( positionArray.size() )}
 
     {

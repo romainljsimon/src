@@ -48,7 +48,7 @@ int main()
 	std::clock_t c_start = std::clock();
 	auto t_start = std::chrono::high_resolution_clock::now();
 
-    std::string simType { param.get<std::string>("simType") };
+    std::string simType { param.get_string((std::string &) "simType") };
 
     if (simType == "polymer")
     {
