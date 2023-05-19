@@ -1,0 +1,11 @@
+polymer  // Molecular_simulation
+verlet   // neighbor_method
+2 // Temperature
+1.2       // Density
+1.1225      // Cut-off_radius
+2.5       // Skin_radius
+0.06      // Length_of_translation_box
+500    // update
+1000 // number_of_iterations
+1.5      // fene_R0
+30      // fene_k
