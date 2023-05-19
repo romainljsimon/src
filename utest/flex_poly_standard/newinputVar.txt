@@ -1,0 +1,9 @@
+# This is the parameter file for the simulation
+simType=polymer
+rc=1.1225
+density=1.2
+temp=2
+rSkin=2.5
+rBox=0.06
+timeSteps=1000
+waitingTime=500
