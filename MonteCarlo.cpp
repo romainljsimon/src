@@ -8,7 +8,6 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-
 #include <string>
 #include <numeric>
 #include <algorithm>
@@ -71,7 +70,7 @@ void MonteCarlo::mcTotal()
 			++save_index;
 		}
 
-		if (i % 50 == 0)
+		if (i % m_saveRate == 0)
 		{
 			saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt"); //Energy is saved at each time step.
 		}
@@ -81,16 +80,22 @@ void MonteCarlo::mcTotal()
 		}
 
 	}
+
     radiusArray = divideVectorByScalar(m_diameterArray, 2);
 	m_acceptanceRate /= m_timeSteps;
-    m_acceptanceRateSwap /= m_timeSteps;
-    m_acceptanceRateSwap /= 0.2;
+    saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(m_timeSteps) + extname );
+    saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(m_timeSteps) + extnameDisp);
+    saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
+    std::cout << "Translation MC move acceptance rate: " << m_acceptanceRate - m_pSwap * m_acceptanceRate << "\n";
 
-	saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(m_timeSteps) + extname );
-	saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(m_timeSteps) + extnameDisp);
-	saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
-    std::cout << " swap MC move acceptance rate: " << m_acceptanceRateSwap << "\n";
-	std::cout << "MC move acceptance rate: " << m_acceptanceRate << "\n";
+    if ( m_swap )
+    {
+        m_acceptanceRateSwap /= m_timeSteps;
+        m_acceptanceRateSwap /= m_pSwap;
+        std::cout << "Swap MC move acceptance rate: " << m_acceptanceRateSwap << "\n";
+        std::cout << "Total MC move acceptance rate: " << m_acceptanceRate << "\n";
+    }
+
 	std::cout << "Neighbor list update rate: " << m_updateRate / m_timeSteps << "\n";
 	std::cout << "Number of neighbor list errors: " << m_errors << "\n";
 
@@ -168,7 +173,7 @@ void MonteCarlo::mcMove()
     if ( m_swap )
     {
         double randomDouble { randomDoubleGenerator(0., 1.) } ;
-        bool swapped {randomDouble < 0.8};
+        bool swapped {randomDouble < m_pSwap};
 
         if ( swapped )
         {
@@ -402,13 +407,12 @@ void MonteCarlo::mcSwap()
                                              m_squareRc, m_lengthCube, indexSwap1);
     }
     double diff_energy{ energyParticleSwap1 + energyParticleSwap2 - energyParticle1 - energyParticle2 };
-
     // Metropolis criterion
-    bool acceptMove{ metropolis( diff_energy) };
+    bool acceptMove { metropolis( diff_energy) };
 
     // If the move is accepted, then the energy, the position array and the displacement array can be updated.
     // If the m_calculatePressure is set to True, then the pressure is calculated.
-    if (acceptMove)
+    if ( acceptMove )
     {
         generalUpdate( diff_energy );
         m_acceptanceRateSwap += 1. / m_nParticles;
@@ -518,11 +522,16 @@ bool MonteCarlo::metropolis(double diff_energy) const
  ******************************************************************************/
 void MonteCarlo::checkStepDisplacement()
 {
-	std::vector<double> squareDispVector = getSquareNormRowMatrix(m_interDisplacementMatrix);
+    std::vector<double> squareDispVector = getSquareNormRowMatrix(m_interDisplacementMatrix);
 
-	if (getMaxVector ( squareDispVector ) > m_squareRDiff)
-	{
-		createNeighborList();
-		std::fill(m_interDisplacementMatrix.begin(), m_interDisplacementMatrix.end(), std::vector<double>(3, 0));
-	}
-}
+    for (int i=0; i < m_nParticles; i++)
+    {
+        double thresh = { pow ( (m_rSkin - m_diameterArray[i] * m_rC) / 2, 2)};
+        if ( squareDispVector[i] > thresh)
+        {
+            createNeighborList();
+            std::fill(m_interDisplacementMatrix.begin(), m_interDisplacementMatrix.end(), std::vector<double>(3, 0));
+            break;
+        }
+    }
+}@

@@ -32,10 +32,13 @@ double squareDistancePair(const std::vector<double>& positionA,  const std::vect
         double diff { positionA[i] - positionB[i] };
 
         if (diff > halfLengthCube)
+        {
             diff -= lengthCube;
-
+        }
         else if (diff < - halfLengthCube)
+        {
             diff += lengthCube;
+        }
 
         squareDistance += std::pow(diff, 2);
     }

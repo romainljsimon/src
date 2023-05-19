@@ -28,14 +28,18 @@ private:
 	double m_acceptanceRate { 0. };                                 // Monte Carlo acceptance rate.
     double m_acceptanceRateSwap { 0. };                                 // Monte Carlo acceptance rate.
     double m_updateRate { -1. };                                     // Monte Carlo neighbor list update rate.
+    const int m_saveRate {};
 	const bool m_calculatePressure {};                               // Boolean that decides if the pressure is calculated or not.
     const bool m_swap {};
+    const double m_pSwap {};
 	const std::string m_simulationMol {};                       			// Type of system: can be either "polymer" or "atomic".
-    const double m_lengthCube {};                         			// Length of the simulation box.
+    const double m_lengthCube {};                                   // Length of the simulation box.
+    const double m_rC {};
 	const double m_squareRc {};                           			// Cut off radius squared.
 
 	const double m_temp {};                                     	// Temperature.
 	const double m_rBox{};                               			// Length of the translation box.
+    const double m_rSkin {};
 	const double m_squareRSkin {};                        			// Skin radius squared.
 	const int m_saveUpdate {};                           			// save xyz update frequency.
 	const std::string m_neighMethod {};                   			// Neighbor list method: "verlet" for verlet neighbor list. Any other value: no neighbor list.
@@ -59,14 +63,18 @@ public:
             : m_simulationMol (param.get_string("simType"))
             , m_calculatePressure(param.get_bool("calcPressure", false))
             , m_swap (param.get_bool("swap", false))
+            , m_pSwap (param.get_double("pSwap", 0.2))
+            , m_rC { param.get_double( "rc") }
             , m_squareRc { pow (param.get_double( "rc"), 2 ) }
             , m_lengthCube { pow (static_cast<double>( positionArray.size()) / param.get_double("density"), 1. / 3.)}
             , m_temp { param.get_double( "temp") }
             , m_rBox { param.get_double( "rBox") }
+            , m_rSkin { param.get_double( "rSkin") }
             , m_squareRSkin {pow (param.get_double( "rSkin"), 2 ) }
             , m_saveUpdate { param.get_int( "waitingTime") }
             , m_neighMethod (param.get_string( "neighMethod", "verlet"))
             , m_timeSteps { param.get_int( "timeSteps") }
+            , m_saveRate { param.get_int("saveRate", 50)}
             , m_squareR0 { pow (param.get_double( "r0", 1.5), 2 ) }
             , m_feneK { param.get_double( "feneK", 30.)}
             , m_squareRDiff{pow ((param.get_double( "rSkin") - param.get_double(
@@ -102,20 +110,22 @@ public:
 
             : m_simulationMol (param.get_string( "simType"))
             , m_calculatePressure(param.get_bool("calcPressure", false))
-
+            , m_swap (param.get_bool("swap", false))
+            , m_pSwap (param.get_double("pSwap", 0.2))
+            , m_rC { param.get_double( "rc") }
             , m_squareRc { pow (param.get_double( "rc"), 2 ) }
             , m_lengthCube { pow (static_cast<double>(positionArray.size()) / param.get_double(
                      "density"), 1. / 3)}
             , m_temp { param.get_double( "temp") }
             , m_rBox { param.get_double( "rBox") }
+            , m_rSkin { param.get_double( "rSkin") }
             , m_squareRSkin {pow (param.get_double( "rSkin"), 2 ) }
             , m_saveUpdate { param.get_int( "waitingTime") }
             , m_neighMethod (param.get_string( "neighMethod", "verlet"))
             , m_timeSteps { param.get_int( "timeSteps") }
+            , m_saveRate { param.get_int("saveRate", 50)}
             , m_squareR0 { pow (param.get_double( "r0", 1.5), 2 ) }
             , m_feneK { param.get_double( "feneK", 30.)}
-            , m_squareRDiff{pow ((param.get_double( "rSkin") - param.get_double(
-                     "rc")) / 2, 2)}
             , m_nParticles {static_cast<int>( positionArray.size() )}
             , m_positionArray (std::move( positionArray ))
             , m_diameterArray (std::move( diameterArray ))
