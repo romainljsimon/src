@@ -1,0 +1,2 @@
+All the simulations are run with the same seed for the RNG.
+This allows to check newer versions of the code.
