@@ -83,15 +83,15 @@ namespace param {
                 }
             }
         }
-        void check_key(std::string& key) {
+        void check_key(const std::string& key) {
             if (!contains(key))
             {
-                std::cerr << "No such key: " << key << std::endl;
+                std::cerr << "No such key: " << key << "\n";
                 std::abort();
             }
         }
 
-        bool get_bool(std::string& key, bool value)
+        bool get_bool(const std::string& key, bool value)
         {
             if (!contains(key))
             {
@@ -100,13 +100,13 @@ namespace param {
             return ("yes" == params[key] || "Yes" == params[key]);
         }
 
-        bool get_bool(std::string& key)
+        bool get_bool(const std::string& key)
         {
             check_key(key);
             return get_bool(key, false);
         }
 
-        int get_int(std::string& key, int value)
+        int get_int(const std::string& key, int value)
         {
             if (!contains(key))
             {
@@ -115,13 +115,13 @@ namespace param {
             return std::stoi(params[key]);
         }
 
-        int get_int(std::string& key)
+        int get_int(const std::string& key)
         {
             check_key(key);
             return get_int(key, 0);
         }
 
-        double get_double(std::string& key, double value)
+        double get_double(const std::string& key, double value)
         {
             if (!contains(key)) {
                 return value;
@@ -129,13 +129,13 @@ namespace param {
             return std::stod(params[key]);
         }
 
-        double get_double(std::string& key)
+        double get_double(const std::string& key)
         {
             check_key(key);
             return get_double(key, 0.0);
         }
 
-        std::string get_string(std::string& key, std::string value)
+        std::string get_string(const std::string& key, std::string value)
         {
             if (!contains(key))
             {
@@ -144,7 +144,7 @@ namespace param {
             return params[key];
         }
 
-        std::string get_string(std::string& key)
+        std::string get_string(const std::string& key)
         {
             check_key(key);
             return get_string(key, "");

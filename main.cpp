@@ -25,6 +25,8 @@ int main()
 	//Opening input variables file
     param::Parameter param(folderPath + "/inputVar.txt" );
 	posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz");
+
+    // double density =  param.get_double("density");
 	// std::filesystem::create_directory (folderPath + "/outXYZ" );
 	// std::filesystem::create_directory (folderPath + "/disp" );
 
@@ -47,8 +49,8 @@ int main()
 	//mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rBox, number);
 	std::clock_t c_start = std::clock();
 	auto t_start = std::chrono::high_resolution_clock::now();
-
-    std::string simType { param.get_string((std::string &) "simType") };
+    std::string key { "simType" };
+    std::string simType { param.get_string(key) };
 
     if (simType == "polymer")
     {
@@ -68,7 +70,7 @@ int main()
     }
     else
     {
-        std::cout << "The simType variable is not 'atomic' or 'polymer'";
+        std::cout << "The simType variable is not 'atomic' or 'polymer' \n";
         std::cout << "Please define the simulation type as one of the two\n";
     }
 
