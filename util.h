@@ -2,11 +2,14 @@
  * util.h
  *
  *  Created on: 13 oct. 2022
- *      Author: rsimon
+ *      Author: Romain Simon
  */
 
 #ifndef UTIL_H_
 #define UTIL_H_
+
+double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB,
+                          const double& lengthCube);
 
 std::vector<double> periodicBC(std::vector<double> positionParticle, const double& lengthCube);
 
@@ -32,7 +35,7 @@ std::vector<std::vector<double>> matrixDiffWithVector(std::vector<std::vector<do
 
 std::vector<std::vector<double>> multiplyMatrixByScalar(std::vector<std::vector<double>> mat, const double& scalar);
 
-std::vector<std::vector<double>> rescaleMatrix(std::vector<std::vector<double>> mat, const double& rescaler);
+std::vector<std::vector<double>> rescaleMatrix(std::vector<std::vector<double>> mat, const double& rescale);
 
 std::vector<double> getSquareNormRowMatrix(std::vector<std::vector<double>> mat);
 

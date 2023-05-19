@@ -2,21 +2,20 @@
  * unittests.cpp
  *
  *  Created on: 6 oct. 2022
- *      Author: romainsimon
+ *      Author: Romain Simon
  */
 
 #include <iostream>
 #include <vector>
-#include "energy.h"
 #include "random.h"
-
+#include "util.h"
 
 int squareDistancePairTest()
 {
 	std::vector<std::vector<double>> positionArrayB { { 0., 0., 0. }, { 1., 1., 1. }, { 1., 0., 0. }, { 0., 1., 0. },
-																									 { 0., 0., 1. }, { 1., 0., 1. }, { 0., 1., 1. }, { 1., 1., 0. },
-																									 { 0.5, 0., 0. }, { 0., 0.5, 0. }, { 0., 0., 0.5 }, { 0., 0.5, 0.5 },
-																									 { 0.5, 0., 0.5 }, { 0.5, 0.5, 0. }, { 0.5, 0.5, 0.5 }};
+														{ 0., 0., 1. }, { 1., 0., 1. }, { 0., 1., 1. }, { 1., 1., 0. },
+                                                        { 0.5, 0., 0. }, { 0., 0.5, 0. }, { 0., 0., 0.5 }, { 0., 0.5, 0.5 },
+                                                            { 0.5, 0., 0.5 }, { 0.5, 0.5, 0. }, { 0.5, 0.5, 0.5 }};
 
 	std::vector<double> positionA { 0., 0., 0. };
 	std::vector<double> distanceArray { 0., 0., 0., 0.,
