@@ -526,6 +526,7 @@ void MonteCarlo::checkStepDisplacement()
 
     for (int i=0; i < m_nParticles; i++)
     {
+        double max_rc {( m_maxDiam - m_diameterArray[i]) / 2 * m_rC};
         double thresh = { pow ( (m_rSkin - m_diameterArray[i] * m_rC) / 2, 2)};
         if ( squareDispVector[i] > thresh)
         {

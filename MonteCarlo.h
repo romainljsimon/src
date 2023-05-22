@@ -12,6 +12,7 @@
 #include "energy.h"
 #include "pressure.h"
 #include "input/Parameter.h"
+#include "util.h"
 
 class MonteCarlo
 {
@@ -36,7 +37,7 @@ private:
     const double m_lengthCube {};                                   // Length of the simulation box.
     const double m_rC {};
 	const double m_squareRc {};                           			// Cut off radius squared.
-
+    const double m_maxDiam {};
 	const double m_temp {};                                     	// Temperature.
 	const double m_rBox{};                               			// Length of the translation box.
     const double m_rSkin {};
@@ -46,7 +47,6 @@ private:
 	const int m_timeSteps {};                             			// Number of time steps.
 	const double m_squareR0 {};                           			// If the simulation is polymeric: max length of a bond.
 	const double m_feneK {};                              			// If the simulation is polymeric: stiffness of a bond.
-	const double m_squareRDiff {};                        			// squared difference of skin - cut off.
     std::vector<std::vector<double>> m_positionArray {};
     const std::vector<std::vector<int>> m_bondsMatrix {};           // If the simulation is polymeric: matrix of bonded nearest-neighbors.// Particles positions array of size (N, 3).
     std::vector<double> m_diameterArray {};                 		// Particles diameters array of size (N, 1).
@@ -75,10 +75,9 @@ public:
             , m_neighMethod (param.get_string( "neighMethod", "verlet"))
             , m_timeSteps { param.get_int( "timeSteps") }
             , m_saveRate { param.get_int("saveRate", 50)}
+            , m_maxDiam { getMaxVector(diameterArray) }
             , m_squareR0 { pow (param.get_double( "r0", 1.5), 2 ) }
             , m_feneK { param.get_double( "feneK", 30.)}
-            , m_squareRDiff{pow ((param.get_double( "rSkin") - param.get_double(
-                     "rc")) / 2, 2)}
             , m_nParticles {static_cast<int>( positionArray.size() )}
             , m_positionArray (std::move( positionArray ))
             , m_diameterArray (std::move( diameterArray ))
@@ -124,6 +123,7 @@ public:
             , m_neighMethod (param.get_string( "neighMethod", "verlet"))
             , m_timeSteps { param.get_int( "timeSteps") }
             , m_saveRate { param.get_int("saveRate", 50)}
+            , m_maxDiam { getMaxVector(diameterArray) }
             , m_squareR0 { pow (param.get_double( "r0", 1.5), 2 ) }
             , m_feneK { param.get_double( "feneK", 30.)}
             , m_nParticles {static_cast<int>( positionArray.size() )}
@@ -143,6 +143,7 @@ public:
 
         m_energy = energySystem( m_positionArray, m_diameterArray,
                                  m_neighborList, m_squareRc, m_lengthCube);
+
         if (m_calculatePressure)
         {
             m_pressure = pressureSystem(m_temp, m_positionArray, m_diameterArray,
