@@ -8,7 +8,27 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include "cnpy.h"
 #include "readSaveFile.h"
+#include <iomanip>
+
+std::string quote( const std::string& s )
+{
+    std::ostringstream ss;
+    ss << std::quoted( s );
+    return ss.str();
+}
+
+template<typename T>
+std::vector<T> flatten(std::vector<std::vector<T>> const &vec)
+{
+    std::vector<T> flattened;
+    for (auto const &v: vec) {
+        flattened.insert(flattened.end(), v.begin(), v.end());
+    }
+    return flattened;
+}
+
 
 posRad readXYZ(const std::string& path)
 {
@@ -94,59 +114,17 @@ void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std:
 			   const std::vector<int>& moleculeType, const double& lengthCube,  const std::string& path)
 {
 
-	/*
-	 * This function saves in a .xyz file the radius and the position of each particle.
-	  */
+    /*
+     * This function saves in a .xyz file the radius and the position of each particle.
+      */
 
-
-	std::ofstream fOut(path);
-    fOut << positionArray.size();
-	fOut << "\n";
-	std::string lengthStr = std::to_string(lengthCube);
-    fOut << "Lattice=";
-    fOut << '"';
-    fOut << lengthStr;
-    fOut << " 0.0 0.0 0.0 ";
-    fOut << lengthStr;
-    fOut << " 0.0 0.0 0.0 ";
-    fOut << lengthStr;
-    fOut << '"';
-    fOut << " Properties=type:I:1:radius:R:1:pos:R:3";
-    fOut << "\n";
-    int it {0};
-	for(auto const& x : positionArray)
-	{
-
-		int j { 0 };
-		for(auto const& i : x)
-		{
-
-			if (j == 2)
-			{
-				fOut << i;
-				fOut << "\n";
-			}
-			else if (j==0)
-			{
-				fOut << moleculeType[it];
-				fOut << " ";
-				fOut << radiusArray[it];
-				fOut << " ";
-				fOut << i;
-				fOut << " ";
-			}
-			else
-			{
-				fOut << i;
-				fOut << " ";
-			}
-
-			j += 1;
-
-		}
-		it += 1;
-	}
-	fOut.close();
+    int sizeArray{static_cast<int>(radiusArray.size())};
+    long unsigned int uSizeArray{radiusArray.size()};
+    cnpy::npz_save(path, "n_particles", &sizeArray, {1}, "w");
+    cnpy::npz_save(path, "length_cube", &lengthCube, {1}, "a");
+    cnpy::npz_save(path, "arr_radius", &radiusArray[0], {uSizeArray}, "a");
+    cnpy::npz_save(path, "arr_molecule_type", &moleculeType[0], {uSizeArray}, "a");
+    cnpy::npz_save(path, "arr_position", &flatten(positionArray)[0], {uSizeArray, 3}, "a");
 }
 
 void saveDoubleTXT(const double& number, const std::string& path)
@@ -159,41 +137,10 @@ void saveDoubleTXT(const double& number, const std::string& path)
 	fOut << number;
 	fOut << "\n";
 	fOut.close();
-
 }
 
 void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const std::string& path)
 {
-	std::ofstream fOut(path);
-
-	for(auto const& x : dispMatrix)
-	{
-		int j { 0 };
-		for(auto const& i : x)
-		{
-			fOut << i;
-			fOut << " ";
-			if (j == 2)
-			{
-				fOut << "\n";
-			}
-
-			j += 1;
-
-		}
-	}
-	fOut.close();
+    long unsigned int uSizeArray{dispMatrix.size()};
+    cnpy::npy_save(path, &flatten(dispMatrix)[0], {uSizeArray, 3}, "w");
 }
-
-void printing(const std::vector<std::vector<double>>& matrix)
-/*
- * This function prints a two-dimensional array (matrix).
- */
-{
-	for (const auto& i: matrix)
-	{
-		for (auto j: i)
-			std::cout << j << " " ;
-	}
-}
-

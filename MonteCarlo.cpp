@@ -29,7 +29,7 @@ void MonteCarlo::mcTotal()
 
 {
 	std::string preName (m_folderPath + "/outXYZ/position");
-	std::string extname {".xyz"};
+	std::string extname {".npz"};
 	std::string preNameDisp (m_folderPath + "/disp/displacement");
 	std::string extnameDisp {".txt"};
     std::vector<double> radiusArray (divideVectorByScalar(m_diameterArray, 2));
