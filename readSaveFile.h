@@ -7,7 +7,7 @@
 
 #ifndef READSAVEFILE_H_
 #define READSAVEFILE_H_
-
+#include <map>
 struct posRad
 {
 	std::vector<std::vector<double>> posMatrix;
@@ -19,7 +19,7 @@ struct posRad
 
 posRad readXYZ(const std::string& path);
 void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& radiusArray,
-			   const std::vector<int>& moleculeType, const double& lengthCube,  const std::string& path);
+               const std::vector<int>& moleculeType, const double& lengthCube,const std::map<double, int>& uniqueRadius, const std::string& path);
 void saveDoubleTXT(const double& number, const std::string& path);
 void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const std::string& path);
 std::vector<std::vector<int>> readBondsTXT(const std::string& path);

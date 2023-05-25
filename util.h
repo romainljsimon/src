@@ -7,6 +7,7 @@
 
 #ifndef UTIL_H_
 #define UTIL_H_
+#include <map>
 
 double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB,
                           const double& lengthCube);
@@ -22,6 +23,8 @@ std::vector<double> vectorNormalization(const std::vector<double>& vec);
 std::vector<double> vectorSum(const std::vector<double>& vec1, const std::vector<double>& vec2);
 
 std::vector<double> vectorDiff(std::vector<double> vec1, std::vector<double> vec2);
+
+std::map<double, int> getMapUniqueValues(const std::vector<double>& vec);
 
 double getMaxVector(const std::vector<double>& vec);
 

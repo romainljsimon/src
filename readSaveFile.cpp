@@ -11,6 +11,7 @@
 #include "cnpy.h"
 #include "readSaveFile.h"
 #include <iomanip>
+#include <map>
 
 std::string quote( const std::string& s )
 {
@@ -111,7 +112,7 @@ std::vector<std::vector<int>> readBondsTXT(const std::string& path)
 }
 
 void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& radiusArray,
-			   const std::vector<int>& moleculeType, const double& lengthCube,  const std::string& path)
+			   const std::vector<int>& moleculeType, const double& lengthCube,const std::map<double, int>& uniqueRadius, const std::string& path)
 {
 
     /*
@@ -120,9 +121,18 @@ void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std:
 
     int sizeArray{static_cast<int>(radiusArray.size())};
     long unsigned int uSizeArray{radiusArray.size()};
+    std::vector<int> radiusType {};
+
+    for (auto const &elt: radiusArray)
+    {
+        auto search { uniqueRadius.find(elt) };
+        int type { search->second };
+        radiusType.push_back(type);
+    }
+
     cnpy::npz_save(path, "n_particles", &sizeArray, {1}, "w");
     cnpy::npz_save(path, "length_cube", &lengthCube, {1}, "a");
-    cnpy::npz_save(path, "arr_radius", &radiusArray[0], {uSizeArray}, "a");
+    cnpy::npz_save(path, "arr_radius_type", &radiusType[0], {uSizeArray}, "a");
     cnpy::npz_save(path, "arr_molecule_type", &moleculeType[0], {uSizeArray}, "a");
     cnpy::npz_save(path, "arr_position", &flatten(positionArray)[0], {uSizeArray, 3}, "a");
 }
