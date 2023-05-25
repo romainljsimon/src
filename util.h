@@ -23,8 +23,6 @@ std::vector<double> vectorSum(const std::vector<double>& vec1, const std::vector
 
 std::vector<double> vectorDiff(std::vector<double> vec1, std::vector<double> vec2);
 
-std::map<double, int> getMapUniqueValues(const std::vector<double>& vec);
-
 double getMaxVector(const std::vector<double>& vec);
 
 double getSquareNormVector(const std::vector<double>& vec);

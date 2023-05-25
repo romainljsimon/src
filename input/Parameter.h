@@ -31,7 +31,6 @@ SOFTWARE.
 #include <string>
 
 namespace param {
-
     typedef std::map<std::string, std::string> pType;
     class Parameter {
     private:
