@@ -16,7 +16,7 @@
 #include "energy.h"
 #include "readSaveFile.h"
 #include "util.h"
-#include <map>
+
 
 /*******************************************************************************
  * This function is the core of the Monte Carlo program. It iterates over
@@ -30,13 +30,12 @@ void MonteCarlo::mcTotal()
 
 {
 	std::string preName (m_folderPath + "/outXYZ/position");
-	std::string extname {".npz"};
+	std::string extname {".xyz"};
 	std::string preNameDisp (m_folderPath + "/disp/displacement");
 	std::string extnameDisp {".txt"};
     std::vector<double> radiusArray (divideVectorByScalar(m_diameterArray, 2));
 
-    std::map<double, int> uniqueRadius {getMapUniqueValues(radiusArray) };
-	saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube, uniqueRadius,preName + std::to_string(0) + extname );
+	saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube,preName + std::to_string(0) + extname );
 	saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
 	saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(0) + extnameDisp);
 
@@ -67,7 +66,7 @@ void MonteCarlo::mcTotal()
 		if (saveTimeStepArray[save_index] == i)
 		{
 			radiusArray = divideVectorByScalar(m_diameterArray, 2);
-            saveInXYZ (m_positionArray, radiusArray, m_moleculeType, m_lengthCube, uniqueRadius, preName + std::to_string(i + 1) + extname );
+            saveInXYZ (m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(i + 1) + extname );
 			saveDisplacement (m_totalDisplacementMatrix, preNameDisp + std::to_string(i + 1) + extnameDisp );
 			++save_index;
 		}
@@ -85,7 +84,7 @@ void MonteCarlo::mcTotal()
 
     radiusArray = divideVectorByScalar(m_diameterArray, 2);
 	m_acceptanceRate /= m_timeSteps;
-    saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube, uniqueRadius, preName + std::to_string(m_timeSteps) + extname );
+    saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(m_timeSteps) + extname );
     saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(m_timeSteps) + extnameDisp);
     saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
     std::cout << "Translation MC move acceptance rate: " << m_acceptanceRate - m_pSwap * m_acceptanceRate << "\n";

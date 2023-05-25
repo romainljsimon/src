@@ -10,9 +10,6 @@
 #include <numeric>
 #include <algorithm>
 #include <valarray>
-#include <map>
-#include <set>
-
 
 /*******************************************************************************
  * This function calculates the distance between two particles considering the
@@ -70,22 +67,6 @@ std::vector<double> periodicBC(std::vector<double> positionParticle, const doubl
 
 // Vector Operators
 
-std::map<double, int> getMapUniqueValues(const std::vector<double>& vec)
-{
-    std::set<double> uniqueValues{};
-    std::map<double, int> mapUniqueValues{};
-    for (auto const &elt: vec)
-    {
-        uniqueValues.insert(elt);
-    }
-    int i = 0;
-    for (auto const &elt: uniqueValues)
-    {
-        mapUniqueValues.insert({elt, i});
-        ++i;
-    }
-    return mapUniqueValues;
-}
 double meanVector(const std::vector<double>& vec)
 {
 	double sum { 0 };

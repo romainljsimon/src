@@ -7,7 +7,6 @@
 
 #ifndef UTIL_H_
 #define UTIL_H_
-#include <map>
 
 double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB,
                           const double& lengthCube);
