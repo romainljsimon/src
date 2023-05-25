@@ -19,6 +19,7 @@ class MonteCarlo
 
 private:
 	std::vector<std::vector<int>> m_neighborList {};                // Neighbor list.
+    const std::string m_bondType {};
 	int m_errors { 0 };                                             // Errors of the neighbor list.
 	double m_energy {};                                             // System's energy.
 	double m_pressure {};                                           // System's pressure.
@@ -61,6 +62,7 @@ public:
                 std::vector<std::vector<int>> bondsMatrix, std::string folderPath)
 
             : m_simulationMol (param.get_string("simType"))
+            , m_bondType (param.get_string("bondType", "flexible"))
             , m_calculatePressure(param.get_bool("calcPressure", false))
             , m_swap (param.get_bool("swap", false))
             , m_pSwap (param.get_double("pSwap", 0.2))
@@ -95,7 +97,7 @@ public:
         createNeighborList();
 
         m_energy = energySystemPolymer(m_positionArray, m_diameterArray, m_bondsMatrix,
-                                           m_neighborList, m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+                                       m_neighborList, m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
         if (m_calculatePressure)
         {
             m_pressure = pressureSystem(m_temp, m_positionArray, m_diameterArray, m_squareRc, m_lengthCube); //+ corrPressure;

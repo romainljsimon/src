@@ -151,7 +151,8 @@ void MonteCarlo::createNeighborList()
 
 					if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j))
 					{
-						if (squareDistance < m_squareRc)
+                        double max_rc {( m_maxDiam + m_diameterArray[i]) / 2 * m_rC};
+						if (squareDistance < pow (max_rc, 2))
 						{
 							++m_errors;
 						}
@@ -297,10 +298,10 @@ void MonteCarlo::mcTranslation() {
 
         oldEnergyParticle = energyParticlePolymer(indexTranslation, m_positionArray[indexTranslation],
                                                   m_positionArray, neighborIList, m_diameterArray, bondsI,
-                                                  m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+                                                  m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
         newEnergyParticle = energyParticlePolymer(indexTranslation, positionParticleTranslation,
                                                   m_positionArray, neighborIList, m_diameterArray, bondsI,
-                                                  m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+                                                  m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
 
     }
     else
@@ -369,22 +370,22 @@ void MonteCarlo::mcSwap()
 
         energyParticle1 = energyParticlePolymer(indexSwap1, m_positionArray[indexSwap1],
                                                 m_positionArray, neighborIList1, m_diameterArray, bondsI1,
-                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
 
         energyParticle2 = energyParticlePolymer(indexSwap2, m_positionArray[indexSwap2],
                                                 m_positionArray, neighborIList2, m_diameterArray, bondsI2,
-                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK, indexSwap1);
+                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType, indexSwap1);
 
         m_diameterArray[indexSwap1] = sigma2;
         m_diameterArray[indexSwap2] = sigma1;
 
         energyParticleSwap1 = energyParticlePolymer(indexSwap1, m_positionArray[indexSwap1],
                                                     m_positionArray, neighborIList1, m_diameterArray, bondsI1,
-                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK);
+                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
 
         energyParticleSwap2 = energyParticlePolymer(indexSwap2, m_positionArray[indexSwap2],
                                                     m_positionArray, neighborIList2, m_diameterArray, bondsI2,
-                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK, indexSwap1);
+                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType, indexSwap1);
 
     }
     else

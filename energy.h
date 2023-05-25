@@ -24,13 +24,14 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
                               const std::vector<std::vector<double>>& positionArray,
                               const std::vector<int>& neighborIList, const std::vector<double>& diameterArray,
                               const std::vector<int>& bondsI, const double& squareRc, const double& lengthCube,
-                              const double& squareR0, const double& feneK, const int& indexSkip = -1);
+                              const double& squareR0, const double& feneK, const std::string& bondType,
+                              const int& indexSkip = -1);
 
 double energySystemPolymer(const std::vector<std::vector<double>>& positionArray,
                            const std::vector<double>& diameterArray,
 						   const std::vector<std::vector<int>>& bondsMatrix,
                            const std::vector<std::vector<int>>& neighborList,
 						   const double& squareRc, const double& lengthCube,
-                           const double& squareR0, const double& feneK);
+                           const double& squareR0, const double& feneK, const std::string& bond_Type);
 
 #endif /* ENERGY_H_ */
