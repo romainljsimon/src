@@ -9,7 +9,7 @@
 #define UTIL_H_
 
 double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB,
-                          const double& lengthCube);
+                          const double& lengthCube, const double& halfLengthCube);
 
 std::vector<double> periodicBC(std::vector<double> positionParticle, const double& lengthCube);
 

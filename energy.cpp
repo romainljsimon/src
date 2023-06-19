@@ -93,7 +93,7 @@ double fenePotential(const double& squareDistance, const double& sigmaA, const d
 double energyParticle(const int& indexParticle, const std::vector<double>& positionParticle,
 		      const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
               const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube,
-              const int& indexSkip = -1)
+              const double& halfLengthCube, const int& indexSkip = -1)
 {
 	double energy { 0. };
 	double particleDiameter = diameterArray[indexParticle];
@@ -110,7 +110,7 @@ double energyParticle(const int& indexParticle, const std::vector<double>& posit
                 continue;
             }
 
-            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
+            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube, halfLengthCube)};
             energy += ljPotential(squareDistance, particleDiameter, diameterArray[realIndex], squareRc, 0.);
         }
 	}
@@ -131,7 +131,7 @@ double energyParticle(const int& indexParticle, const std::vector<double>& posit
  ******************************************************************************/
 double energySystem(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& diameterArray,
 		            const std::vector<std::vector<int>>& neighborList, const double& squareRc,
-					const double& lengthCube)
+					const double& lengthCube, const double& halfLengthCube)
 {
 	double energy { 0. };
 	int positionArraySize {static_cast<int>( positionArray.size() )};
@@ -141,7 +141,7 @@ double energySystem(const std::vector<std::vector<double>>& positionArray, const
     	const std::vector<int>& neighborIList ( neighborList[i] );
 
     	energy += energyParticle (i, positionArray[i], positionArray, neighborIList,
-				  diameterArray, squareRc, lengthCube) / 2;
+				  diameterArray, squareRc, lengthCube, halfLengthCube) / 2;
 
     }
 	return energy;
@@ -150,12 +150,13 @@ double energySystem(const std::vector<std::vector<double>>& positionArray, const
 double pedersenBonds(const int& indexParticle, const std::vector<double>& positionParticle,
                      const std::vector<std::vector<double>>& positionArray,
                      const std::vector<double>& diameterArray, const std::vector<int>& bondsI,
-                     const double& squareRc, const double& lengthCube, const double& squareR0,
-                     const double& feneK, const int& indexSkip = -1)
+                     const double& squareRc, const double& lengthCube, const double& halfLengthCube,
+                     const double& squareR0, const double& feneK, const int& indexSkip = -1)
 {
     double energy { 0. };
     double particleDiameter = diameterArray[indexParticle];
     int bondsISize { static_cast<int>(bondsI.size()) };
+
     for (int i = 0; i < bondsISize; i++)
     {
         int realIndex = bondsI[i];
@@ -165,7 +166,8 @@ double pedersenBonds(const int& indexParticle, const std::vector<double>& positi
             {
                 continue;
             }
-            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
+            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex],
+                                                     lengthCube, halfLengthCube)};
 
             if ((((indexParticle % 3) == 0) && (realIndex == indexParticle + 2)) ||
                 ((indexParticle == realIndex + 2) && ((realIndex % 3) == 0)))
@@ -190,12 +192,13 @@ double pedersenBonds(const int& indexParticle, const std::vector<double>& positi
 double flexibleBonds(const int& indexParticle, const std::vector<double>& positionParticle,
                      const std::vector<std::vector<double>>& positionArray,
                      const std::vector<double>& diameterArray, const std::vector<int>& bondsI,
-                     const double& lengthCube, const double& squareR0,
+                     const double& lengthCube, const double& halfLengthCube, const double& squareR0,
                      const double& feneK, const int& indexSkip = -1)
 {
     double energy { 0. };
     double particleDiameter = diameterArray[indexParticle];
     int bondsISize { static_cast<int>(bondsI.size()) };
+
     for (int i = 0; i < bondsISize; i++)
     {
         int realIndex = bondsI[i];
@@ -207,7 +210,7 @@ double flexibleBonds(const int& indexParticle, const std::vector<double>& positi
                 continue;
             }
 
-            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
+            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube, halfLengthCube)};
             energy += fenePotential(squareDistance, particleDiameter, diameterArray[realIndex], squareR0, feneK);
         }
     }
@@ -237,7 +240,7 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
 							  const std::vector<std::vector<double>>& positionArray,
                               const std::vector<int>& neighborIList,
 							  const std::vector<double>& diameterArray, const std::vector<int>& bondsI,
-							  const double& squareRc, const double& lengthCube, const double& squareR0,
+							  const double& squareRc, const double& lengthCube, const double& halfLengthCube, const double& squareR0,
                               const double& feneK, const std::string& bondType, const int& indexSkip = -1)
 {
 	double energy { 0. };
@@ -250,7 +253,7 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
 
         if (realIndex != indexSkip)
         {
-            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube)};
+            double squareDistance{squareDistancePair(positionParticle, positionArray[realIndex], lengthCube, halfLengthCube)};
             if (realIndex == indexParticle) {
                 continue;
             }
@@ -290,7 +293,7 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
  ***********************************************************position65000.xyz*******************/
 double energySystemPolymer(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& diameterArray,
 						   const std::vector<std::vector<int>>& bondsMatrix, const std::vector<std::vector<int>>& neighborList,
-						   const double& squareRc, const double& lengthCube, const double& squareR0, const double& feneK, const std::string& bondType)
+						   const double& squareRc, const double& lengthCube, const double& halfLengthCube,const double& squareR0, const double& feneK, const std::string& bondType)
 {
 	double energy { 0. };
 	int positionArraySize {static_cast<int>(positionArray.size())};
@@ -302,7 +305,7 @@ double energySystemPolymer(const std::vector<std::vector<double>>& positionArray
     	const std::vector<int>& neighborIList ( neighborList[i] );
 
     	energy += energyParticlePolymer (i, positionArray[i], positionArray, neighborIList,
-				  diameterArray, bondsI, squareRc, lengthCube, squareR0, feneK, bondType) / 2.;
+				  diameterArray, bondsI, squareRc, lengthCube, halfLengthCube, squareR0, feneK, bondType) / 2.;
 
     }
 	return energy;

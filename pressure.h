@@ -11,9 +11,11 @@
 
 double pressureParticle(const double& temp, int indexParticle, const std::vector<double>& positionParticle,
                         const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
-                        const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube);
+                        const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube,
+                        const double& halfLengthCube);
 
 double pressureSystem(const double& temp, const std::vector<std::vector<double>>& positionArray,
-                      const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube);
+                      const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube,
+                      const double& halfLengthCube);
 
 #endif /* PRESSURE_H */

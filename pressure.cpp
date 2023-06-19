@@ -25,7 +25,8 @@ double rForce(double squareDistance, double sigmaA, double sigmaB, double square
 
 double pressureParticle(const double& temp, const int indexParticle, const std::vector<double>& positionParticle,
                         const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
-                        const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube)
+                        const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube,
+                        const double& halfLengthCube)
 {
     double pressure { 0. };
     double particleDiameter = diameterArray[indexParticle];
@@ -35,7 +36,7 @@ double pressureParticle(const double& temp, const int indexParticle, const std::
     for (int i = 0; i < neighborIListSize; i++)
     {
         int realIndex = neighborIList[i];
-        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube) };
+        double squareDistance { squareDistancePair (positionParticle, positionArray[realIndex], lengthCube, halfLengthCube) };
 
         if (realIndex == indexParticle)
         {
@@ -49,7 +50,7 @@ double pressureParticle(const double& temp, const int indexParticle, const std::
 
 
 double pressureSystem(const double& temp, const std::vector<std::vector<double>>& positionArray,
-                      const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube)
+                      const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube, const double& halfLengthCube)
 {
     double sum { 0 };
     int positionArraySize {static_cast<int>(positionArray.size())};
@@ -57,7 +58,7 @@ double pressureSystem(const double& temp, const std::vector<std::vector<double>>
     {
         for (int j = i + 1; j < positionArraySize; j++) //inner loop for columns
         {
-            double squareDistance { squareDistancePair (positionArray[i], positionArray[j], lengthCube)};
+            double squareDistance { squareDistancePair (positionArray[i], positionArray[j], lengthCube, halfLengthCube)};
             sum += rForce(squareDistance, 2. * diameterArray[i], 2. * diameterArray[j], squareRc);
         }
 

@@ -36,6 +36,7 @@ private:
     const double m_pSwap {};
 	const std::string m_simulationMol {};                       			// Type of system: can be either "polymer" or "atomic".
     const double m_lengthCube {};                                   // Length of the simulation box.
+    const double m_halfLengthCube {};
     const double m_rC {};
 	const double m_squareRc {};                           			// Cut off radius squared.
     const double m_maxDiam {};
@@ -68,7 +69,10 @@ public:
             , m_pSwap (param.get_double("pSwap", 0.2))
             , m_rC { param.get_double( "rc") }
             , m_squareRc { pow (param.get_double( "rc"), 2 ) }
-            , m_lengthCube { pow (static_cast<double>( positionArray.size()) / param.get_double("density"), 1. / 3.)}
+            , m_lengthCube { pow (static_cast<double>( positionArray.size()) / param.get_double("density"),
+                                  1. / 3.)}
+            , m_halfLengthCube { 0.5 * pow (static_cast<double>( positionArray.size()) / param.get_double("density"),
+                                          1. / 3.)}
             , m_temp { param.get_double( "temp") }
             , m_rBox { param.get_double( "rBox") }
             , m_rSkin { param.get_double( "rSkin") }
@@ -97,10 +101,11 @@ public:
         createNeighborList();
 
         m_energy = energySystemPolymer(m_positionArray, m_diameterArray, m_bondsMatrix,
-                                       m_neighborList, m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
+                                       m_neighborList, m_squareRc, m_lengthCube,
+                                       m_halfLengthCube, m_squareR0, m_feneK, m_bondType);
         if (m_calculatePressure)
         {
-            m_pressure = pressureSystem(m_temp, m_positionArray, m_diameterArray, m_squareRc, m_lengthCube); //+ corrPressure;
+            m_pressure = pressureSystem(m_temp, m_positionArray, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube); //+ corrPressure;
         }
 
     }
@@ -117,6 +122,8 @@ public:
             , m_squareRc { pow (param.get_double( "rc"), 2 ) }
             , m_lengthCube { pow (static_cast<double>(positionArray.size()) / param.get_double(
                      "density"), 1. / 3)}
+            , m_halfLengthCube { 1. / pow (static_cast<double>( positionArray.size()) / param.get_double("density"),
+                                          1. / 3.)}
             , m_temp { param.get_double( "temp") }
             , m_rBox { param.get_double( "rBox") }
             , m_rSkin { param.get_double( "rSkin") }
@@ -144,12 +151,13 @@ public:
         createNeighborList();
 
         m_energy = energySystem( m_positionArray, m_diameterArray,
-                                 m_neighborList, m_squareRc, m_lengthCube);
+                                 m_neighborList, m_squareRc, m_lengthCube,
+                                 m_halfLengthCube);
 
         if (m_calculatePressure)
         {
             m_pressure = pressureSystem(m_temp, m_positionArray, m_diameterArray,
-                                        m_squareRc, m_lengthCube); //+ corrPressure;
+                                        m_squareRc, m_lengthCube, m_halfLengthCube); //+ corrPressure;
         }
 
     }

@@ -24,10 +24,11 @@ int squareDistancePairTest()
 										0.5, 0.5, 0.75};
 
 	constexpr double lengthCube { 1. };
+    constexpr double halfLengthCube { 1. };
 
 	for (int i = 0; i < static_cast<int>(distanceArray.size()); i++)
 	{
-		double squareDistance {squareDistancePair(positionA, positionArrayB[i], lengthCube)};
+		double squareDistance {squareDistancePair(positionA, positionArrayB[i], lengthCube, halfLengthCube)};
 
 		if (squareDistance != distanceArray[i])
 		{
@@ -36,7 +37,6 @@ int squareDistancePairTest()
 		}
 
 	}
-
 	return 0;
 }
 

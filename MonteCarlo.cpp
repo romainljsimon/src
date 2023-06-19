@@ -29,9 +29,9 @@
 void MonteCarlo::mcTotal()
 
 {
-	std::string preName (m_folderPath + "/outXYZ/position");
+	std::string preName ("./outXYZ/position");
 	std::string extname {".xyz"};
-	std::string preNameDisp (m_folderPath + "/disp/displacement");
+	std::string preNameDisp ("./disp/displacement");
 	std::string extnameDisp {".txt"};
     std::vector<double> radiusArray (divideVectorByScalar(m_diameterArray, 2));
 
@@ -134,7 +134,7 @@ void MonteCarlo::createNeighborList()
 		for (int j = i + 1; j < m_nParticles; j++)
 		{
 
-			double squareDistance { squareDistancePair (positionParticle, m_positionArray[j], m_lengthCube) };
+			double squareDistance { squareDistancePair (positionParticle, m_positionArray[j], m_lengthCube, m_halfLengthCube) };
 
 			if (squareDistance < m_squareRSkin)
 			{
@@ -297,18 +297,18 @@ void MonteCarlo::mcTranslation() {
 
         oldEnergyParticle = energyParticlePolymer(indexTranslation, m_positionArray[indexTranslation],
                                                   m_positionArray, neighborIList, m_diameterArray, bondsI,
-                                                  m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
+                                                  m_squareRc, m_lengthCube, m_halfLengthCube,m_squareR0, m_feneK, m_bondType);
         newEnergyParticle = energyParticlePolymer(indexTranslation, positionParticleTranslation,
                                                   m_positionArray, neighborIList, m_diameterArray, bondsI,
-                                                  m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
+                                                  m_squareRc, m_lengthCube, m_halfLengthCube, m_squareR0, m_feneK, m_bondType);
 
     }
     else
     {
         oldEnergyParticle = energyParticle(indexTranslation, m_positionArray[indexTranslation], m_positionArray,
-                                           neighborIList, m_diameterArray, m_squareRc, m_lengthCube);
+                                           neighborIList, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube);
         newEnergyParticle = energyParticle(indexTranslation, positionParticleTranslation, m_positionArray,
-                                           neighborIList, m_diameterArray, m_squareRc, m_lengthCube);
+                                           neighborIList, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube);
     }
     double diff_energy {newEnergyParticle - oldEnergyParticle};
 
@@ -323,8 +323,8 @@ void MonteCarlo::mcTranslation() {
 
         if (m_calculatePressure)
         {
-            double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube)};
-            double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube)};
+            double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
+            double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
             m_pressure += newPressureParticle - oldPressureParticle;
         }
 
@@ -369,44 +369,44 @@ void MonteCarlo::mcSwap()
 
         energyParticle1 = energyParticlePolymer(indexSwap1, m_positionArray[indexSwap1],
                                                 m_positionArray, neighborIList1, m_diameterArray, bondsI1,
-                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
+                                                m_squareRc, m_lengthCube, m_halfLengthCube, m_squareR0, m_feneK, m_bondType);
 
         energyParticle2 = energyParticlePolymer(indexSwap2, m_positionArray[indexSwap2],
                                                 m_positionArray, neighborIList2, m_diameterArray, bondsI2,
-                                                m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType, indexSwap1);
+                                                m_squareRc, m_lengthCube, m_halfLengthCube, m_squareR0, m_feneK, m_bondType, indexSwap1);
 
         m_diameterArray[indexSwap1] = sigma2;
         m_diameterArray[indexSwap2] = sigma1;
 
         energyParticleSwap1 = energyParticlePolymer(indexSwap1, m_positionArray[indexSwap1],
                                                     m_positionArray, neighborIList1, m_diameterArray, bondsI1,
-                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType);
+                                                    m_squareRc, m_lengthCube, m_halfLengthCube, m_squareR0, m_feneK, m_bondType);
 
         energyParticleSwap2 = energyParticlePolymer(indexSwap2, m_positionArray[indexSwap2],
                                                     m_positionArray, neighborIList2, m_diameterArray, bondsI2,
-                                                    m_squareRc, m_lengthCube, m_squareR0, m_feneK, m_bondType, indexSwap1);
+                                                    m_squareRc, m_lengthCube, m_halfLengthCube, m_squareR0, m_feneK, m_bondType, indexSwap1);
 
     }
     else
     {
         energyParticle1 = energyParticle(indexSwap1, m_positionArray[indexSwap1],
                                          m_positionArray, neighborIList1, m_diameterArray,
-                                         m_squareRc, m_lengthCube);
+                                         m_squareRc, m_lengthCube, m_halfLengthCube);
 
         energyParticle2 = energyParticle(indexSwap2, m_positionArray[indexSwap2],
                                          m_positionArray, neighborIList2, m_diameterArray,
-                                         m_squareRc, m_lengthCube, indexSwap1);
+                                         m_squareRc, m_lengthCube, m_halfLengthCube, indexSwap1);
 
         m_diameterArray[indexSwap1] = sigma2;
         m_diameterArray[indexSwap2] = sigma1;
 
         energyParticleSwap1 = energyParticle(indexSwap1, m_positionArray[indexSwap1],
                                              m_positionArray, neighborIList1, m_diameterArray,
-                                             m_squareRc, m_lengthCube);
+                                             m_squareRc, m_lengthCube, m_halfLengthCube);
 
         energyParticleSwap2 = energyParticle(indexSwap2, m_positionArray[indexSwap2],
                                              m_positionArray, neighborIList2, m_diameterArray,
-                                             m_squareRc, m_lengthCube, indexSwap1);
+                                             m_squareRc, m_lengthCube, m_halfLengthCube,indexSwap1);
     }
     double diff_energy{ energyParticleSwap1 + energyParticleSwap2 - energyParticle1 - energyParticle2 };
     // Metropolis criterion
@@ -424,13 +424,13 @@ void MonteCarlo::mcSwap()
                                                            m_positionArray[indexSwap1],
                                                            m_positionArray, neighborIList1,
                                                            m_diameterArray, m_squareRc,
-                                                           m_lengthCube)};
+                                                           m_lengthCube, m_halfLengthCube)};
 
             double pressureParticleSwap2 {pressureParticle(m_temp, indexSwap2,
                                                            m_positionArray[indexSwap2],
                                                            m_positionArray, neighborIList2,
                                                            m_diameterArray, m_squareRc,
-                                                           m_lengthCube)};
+                                                           m_lengthCube, m_halfLengthCube)};
 
             m_diameterArray[indexSwap1] = sigma1;
             m_diameterArray[indexSwap2] = sigma2;
@@ -439,14 +439,14 @@ void MonteCarlo::mcSwap()
                                                            m_positionArray[indexSwap1],
                                                            m_positionArray, neighborIList1,
                                                            m_diameterArray, m_squareRc,
-                                                           m_lengthCube)};
+                                                           m_lengthCube, m_halfLengthCube)};
 
 
             double pressureParticle2 {pressureParticle(m_temp, indexSwap2,
                                                            m_positionArray[indexSwap2],
                                                            m_positionArray, neighborIList2,
                                                            m_diameterArray, m_squareRc,
-                                                           m_lengthCube)};
+                                                           m_lengthCube, m_halfLengthCube)};
 
             m_diameterArray[indexSwap1] = sigma2;
             m_diameterArray[indexSwap2] = sigma1;

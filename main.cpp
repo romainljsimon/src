@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include "unittests.h"
 #include "readSaveFile.h"
 #include "util.h"
 #include "MonteCarlo.h"
@@ -19,7 +20,7 @@
 int main()
 {
 	std::string folderPath ( "." );
-
+//squareDistancePairTest();
 
 	//Opening input variables file
     param::Parameter param(folderPath + "/inputVar.txt" );
@@ -50,7 +51,6 @@ int main()
 	auto t_start = std::chrono::high_resolution_clock::now();
     std::string key { "simType" };
     std::string simType { param.get_string(key) };
-
     if (simType == "polymer")
     {
         std::vector<std::vector<int>> bondsMatrix = readBondsTXT(folderPath + "/bonds.txt");

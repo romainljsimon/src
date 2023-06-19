@@ -21,11 +21,10 @@
  *
  * @return distance between two particles.
  ******************************************************************************/
-double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB, const double& lengthCube)
+double squareDistancePair(const std::vector<double>& positionA, const std::vector<double>& positionB,
+                          const double& lengthCube, const double& halfLengthCube)
 {
     double squareDistance { 0. };
-    double halfLengthCube { lengthCube / 2. };
-
     for (int i = 0; i < 3; i++)
     {
         double diff { positionA[i] - positionB[i] };
@@ -39,8 +38,10 @@ double squareDistancePair(const std::vector<double>& positionA,  const std::vect
             diff += lengthCube;
         }
 
-        squareDistance += std::pow(diff, 2);
+        squareDistance += diff * diff;
     }
+
+
 
     return squareDistance;
 }
