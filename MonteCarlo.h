@@ -194,17 +194,26 @@ public:
     void mcSwap();
     [[nodiscard]] bool metropolis(double diff_energy) const;
 
-    void createCellNeighbors(const std::vector<std::vector<int>>& oldNeighborList,
-                             const std::vector<std::vector<std::vector<std::vector<int>>>>& cellList,
-                             int xCell, int yCell, int zCell);
     [[nodiscard]] int cellTest(int indexCell) const;
 
     void createDiffPairCellNeighbor(const std::vector<std::vector<int>> &oldNeighborList, const std::vector<int> &cellParticles,
-                           const std::vector<int> &testNeighbors);
+                           const std::vector<int> &testNeighbors, const bool &checkNeigh);
 
     void
     createSamePairCellNeighbor(const std::vector<std::vector<int>> &oldNeighborList,
-                               const std::vector<int> &cellParticles);
+                               const std::vector<int> &cellParticles, const bool &checkNeigh);
+
+    void createCellNeighbors(const std::vector<std::vector<int>> &oldNeighborList,
+                             const std::vector<std::vector<std::vector<std::vector<int>>>> &cellList, int xCell,
+                             int yCell,
+                             int zCell, const bool &checkNeigh);
+
+    void checkNeighborError(const std::vector<std::vector<int>> &oldNeighborList, const double &squareDistance,
+                            const int &indexI, const int &indexJ);
+
+    void
+    updateIJNeighbor(const std::vector<std::vector<int>> &oldNeighborList, const std::vector<double> &positionParticle,
+                     const int &indexI, const int &indexJ, const bool &checkNeigh);
 };
 
 

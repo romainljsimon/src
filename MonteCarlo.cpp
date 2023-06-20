@@ -27,7 +27,6 @@
  * (optional) are written in files.
  ******************************************************************************/
 void MonteCarlo::mcTotal()
-
 {
 	std::string preName ("./outXYZ/position");
 	std::string extname {".xyz"};
@@ -39,7 +38,7 @@ void MonteCarlo::mcTotal()
 	saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
 	saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(0) + extnameDisp);
 
-	std::vector<int> saveTimeStepArray ( createSaveTime(m_timeSteps, m_saveUpdate, 1.1));
+	const std::vector<int> saveTimeStepArray ( createSaveTime(m_timeSteps, m_saveUpdate, 1.1));
 
 	int save_index { 0 };
 
@@ -110,9 +109,9 @@ std::vector<std::vector<std::vector<std::vector<int>>>> MonteCarlo::createCellLi
 
     for (int i = 0; i < m_nParticles; i++)
     {
-        int xCell{static_cast<int>(floor(m_positionArray[i][0] / m_cellLength))};
-        int yCell{static_cast<int>(floor(m_positionArray[i][1] / m_cellLength))};
-        int zCell{static_cast<int>(floor(m_positionArray[i][2] / m_cellLength))};
+        const int xCell{static_cast<int>(floor(m_positionArray[i][0] / m_cellLength))};
+        const int yCell{static_cast<int>(floor(m_positionArray[i][1] / m_cellLength))};
+        const int zCell{static_cast<int>(floor(m_positionArray[i][2] / m_cellLength))};
         cellList[xCell][yCell][zCell].push_back(i);
     }
 
@@ -134,126 +133,93 @@ int MonteCarlo::cellTest(int indexCell) const
         return indexCell;
     }
 }
-
-void MonteCarlo::createSamePairCellNeighbor(const std::vector<std::vector<int>>& oldNeighborList, const std::vector<int>& cellParticles)
+void MonteCarlo::checkNeighborError(const std::vector<std::vector<int>>& oldNeighborList, const double& squareDistance, const int& indexI, const int& indexJ)
 {
-    int cellParticlesSize{static_cast<int>(cellParticles.size())};
-
-    for (int i = 0; i < cellParticlesSize - 1; i++)
+    if (static_cast<int>(oldNeighborList[indexI].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
     {
-        int realIIndex {cellParticles[i]};
-        std::vector<double> positionParticle{m_positionArray[realIIndex]};
-
-        for (int j = i+1; j < cellParticlesSize; j++)
+        // Compare the new neighbor list with the new neighbor list
+        if (!std::binary_search(oldNeighborList[indexI].begin(), oldNeighborList[indexI].end(), indexJ))
         {
-            int realJIndex {cellParticles[j]};
-            double squareDistance{
-                    squareDistancePair(positionParticle, m_positionArray[realJIndex], m_lengthCube, m_halfLengthCube)};
+            double max_rc{(m_maxDiam + m_diameterArray[indexI]) / 2 * m_rC};
 
-            if (squareDistance < m_squareRSkin)
+            if (squareDistance < pow(max_rc, 2))
             {
-                // j and i are neighbors
-                /***
-                if (!std::binary_search(m_neighborList[realJIndex].begin(), m_neighborList[realJIndex].end(), realIIndex))
-                {
-                    m_neighborList[realJIndex].push_back(realIIndex); // i is on row j
-                }
-                if (!std::binary_search(m_neighborList[realIIndex].begin(), m_neighborList[realIIndex].end(), realJIndex))
-                {
-                    m_neighborList[realIIndex].push_back(realJIndex); // j is on row i
-                }
-                 ***/
-                m_neighborList[realIIndex].push_back(realJIndex); // j is on row i
-                m_neighborList[realJIndex].push_back(realIIndex); // i is on row j
-
-                if (static_cast<int>(oldNeighborList[realIIndex].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
-                {
-
-                    // Compare the new neighbor list with the new neighbor list
-
-                    if (!std::binary_search(oldNeighborList[realIIndex].begin(), oldNeighborList[realIIndex].end(), j)) {
-
-                        double max_rc{(m_maxDiam + m_diameterArray[realIIndex]) / 2 * m_rC};
-                        if (squareDistance < pow(max_rc, 2))
-                        {
-                            ++m_errors;
-                        }
-                    }
-                }
+                ++m_errors;
             }
         }
     }
 }
+void MonteCarlo::updateIJNeighbor(const std::vector<std::vector<int>>& oldNeighborList, const std::vector<double>& positionParticle, const int& indexI, const int& indexJ, const bool& checkNeigh)
+{
+    const double squareDistance{
+            squareDistancePair(positionParticle, m_positionArray[indexJ], m_lengthCube, m_halfLengthCube)};
 
-void MonteCarlo::createDiffPairCellNeighbor(const std::vector<std::vector<int>>& oldNeighborList, const std::vector<int>& cellParticles, const std::vector<int>& testNeighbors)
+    if (squareDistance < m_squareRSkin)
+    {
+        // j and i are neighbors
+        m_neighborList[indexI].push_back(indexJ); // j is on row i
+        m_neighborList[indexJ].push_back(indexI); // i is on row j
+        if (checkNeigh)
+        {
+            checkNeighborError(oldNeighborList, squareDistance, indexI, indexJ);
+        }
+    }
+}
+
+void MonteCarlo::createSamePairCellNeighbor(const std::vector<std::vector<int>>& oldNeighborList,
+                                            const std::vector<int>& cellParticles, const bool& checkNeigh)
+{
+    const int cellParticlesSize{static_cast<int>(cellParticles.size())};
+
+    for (int i = 0; i < cellParticlesSize - 1; i++)
+    {
+        const int realIIndex {cellParticles[i]};
+        const std::vector<double> positionParticle{m_positionArray[realIIndex]};
+
+        for (int j = i+1; j < cellParticlesSize; j++)
+        {
+            const int realJIndex {cellParticles[j]};
+            updateIJNeighbor(oldNeighborList, positionParticle, realIIndex, realJIndex, checkNeigh);
+
+        }
+    }
+}
+
+void MonteCarlo::createDiffPairCellNeighbor(const std::vector<std::vector<int>>& oldNeighborList,
+                                            const std::vector<int>& cellParticles,
+                                            const std::vector<int>& testNeighbors, const bool& checkNeigh)
 {
     for (auto const &i: cellParticles)
     {
-        std::vector<double> positionParticle{m_positionArray[i]};
+        const std::vector<double> positionParticle{m_positionArray[i]};
 
         for (auto const &j: testNeighbors)
         {
-            double squareDistance{
-                    squareDistancePair(positionParticle, m_positionArray[j], m_lengthCube, m_halfLengthCube)};
-
-            if (squareDistance < m_squareRSkin)
-            {
-                // j and i are neighbors
-                /***
-                if (((i == 2) & (j==167)) || ((j == 2) & (i==167)))
-                {
-                    int wtf{};
-                }
-                if (!std::binary_search(m_neighborList[j].begin(), m_neighborList[j].end(), i))
-                {
-
-                }
-                if (!std::binary_search(m_neighborList[i].begin(), m_neighborList[i].end(), j))
-                {
-
-                }
-                ***/
-                m_neighborList[j].push_back(i); // i is on row j
-                m_neighborList[i].push_back(j); // j is on row i
-                if (static_cast<int>(oldNeighborList[i].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
-                {
-
-                    // Compare the new neighbor list with the new neighbor list
-
-                    if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j))
-                    {
-
-                        double max_rc{(m_maxDiam + m_diameterArray[i]) / 2 * m_rC};
-                        if (squareDistance < pow(max_rc, 2)) {
-                            ++m_errors;
-                        }
-                    }
-                }
-            }
+            updateIJNeighbor(oldNeighborList, positionParticle, i, j, checkNeigh);
         }
     }
 }
 
 void MonteCarlo::createCellNeighbors(const std::vector<std::vector<int>>& oldNeighborList,
                                      const std::vector<std::vector<std::vector<std::vector<int>>>>& cellList,
-                                     int xCell, int yCell, int zCell)
+                                     int xCell, int yCell, int zCell, const bool& checkNeigh)
 {
-    std::vector<int> xyzCellParticles{cellList[xCell][yCell][zCell]};
-    createSamePairCellNeighbor(oldNeighborList, xyzCellParticles);
-    int xyzInt {xCell * 100 + yCell * 10 + zCell};
+    const std::vector<int> xyzCellParticles{cellList[xCell][yCell][zCell]};
+    createSamePairCellNeighbor(oldNeighborList, xyzCellParticles, checkNeigh);
+    const int xyzInt {xCell * 100 + yCell * 10 + zCell};
     for (int xCellDiff = -1; xCellDiff < 2; xCellDiff++)
     {
-        int testXCell {cellTest(xCell + xCellDiff)};
+        const int testXCell {cellTest(xCell + xCellDiff)};
 
         for (int yCellDiff = -1; yCellDiff < 2; yCellDiff++)
         {
-            int testYCell {cellTest(yCell + yCellDiff)};
+            const int testYCell {cellTest(yCell + yCellDiff)};
 
             for (int zCellDiff = -1; zCellDiff < 2; zCellDiff++)
             {
-                int testZCell {cellTest(zCell + zCellDiff)};
+                const int testZCell {cellTest(zCell + zCellDiff)};
 
-                int testInt {testXCell * 100 + testYCell * 10 + testZCell};
+                const int testInt {testXCell * 100 + testYCell * 10 + testZCell};
 
                 if (testInt  > xyzInt)
                 {
@@ -261,7 +227,7 @@ void MonteCarlo::createCellNeighbors(const std::vector<std::vector<int>>& oldNei
                     // std::cout << yCell << "  " << testYCell << "\n";
                     // std::cout << zCell << "  " << testZCell << "\n";
                     createDiffPairCellNeighbor(oldNeighborList, xyzCellParticles,
-                                               cellList[testXCell][testYCell][testZCell]);
+                                               cellList[testXCell][testYCell][testZCell], checkNeigh);
                 }
 
 
@@ -291,17 +257,18 @@ void MonteCarlo::createNeighborList()
 {
     // Be careful with the swaps and poly dispersity. Solution for now is to take rSkin big enough.
 	++m_updateRate;
-	std::vector<std::vector<int>> oldNeighborList = m_neighborList;
+	const std::vector<std::vector<int>> oldNeighborList = m_neighborList;
 	m_neighborList.clear();
 	m_neighborList.resize(m_nParticles);
-    std::vector<std::vector<std::vector<std::vector<int>>>> cellList{createCellList()};
+    const std::vector<std::vector<std::vector<std::vector<int>>>> cellList { createCellList() };
+    const bool checkNeigh { m_updateRate > 0};
 	for (int xCell = 0; xCell < m_numCell; xCell++)
 	{
         for (int yCell = 0; yCell < m_numCell; yCell++)
         {
             for (int zCell = 0; zCell < m_numCell; zCell++)
             {
-                createCellNeighbors(oldNeighborList, cellList, xCell, yCell, zCell);
+                createCellNeighbors(oldNeighborList, cellList, xCell, yCell, zCell, checkNeigh);
             }
 		}
 	}
@@ -323,8 +290,8 @@ void MonteCarlo::mcMove()
 {
     if ( m_swap )
     {
-        double randomDouble { randomDoubleGenerator(0., 1.) } ;
-        bool swapped {randomDouble < m_pSwap};
+        const double randomDouble { randomDoubleGenerator(0., 1.) } ;
+        const bool swapped {randomDouble < m_pSwap};
 
         if ( swapped )
         {
@@ -429,20 +396,20 @@ void MonteCarlo::mcAllMove()
  * @return Tentative new particle position.
  ******************************************************************************/
 void MonteCarlo::mcTranslation() {
-    int indexTranslation{randomIntGenerator(0, m_nParticles - 1)}; // randomly chosen particle
-    std::vector<double> randomVector(randomVectorDoubleGenerator(3, -m_rBox, m_rBox));
+    const int indexTranslation{randomIntGenerator(0, m_nParticles - 1)}; // randomly chosen particle
+    const std::vector<double> randomVector(randomVectorDoubleGenerator(3, -m_rBox, m_rBox));
     std::vector<double> positionParticleTranslation = m_positionArray[indexTranslation];
     positionParticleTranslation = vectorSum(positionParticleTranslation, randomVector);
     positionParticleTranslation = periodicBC(positionParticleTranslation, m_lengthCube);
 
-    std::vector<int> neighborIList{findNeighborIList( indexTranslation )};
+    const std::vector<int> neighborIList{findNeighborIList( indexTranslation )};
 
     double oldEnergyParticle;
     double newEnergyParticle;
 
     if (m_simulationMol == "polymer")
     {
-        std::vector<int> bondsI(m_bondsMatrix[indexTranslation]);
+        const std::vector<int> bondsI(m_bondsMatrix[indexTranslation]);
 
         oldEnergyParticle = energyParticlePolymer(indexTranslation, m_positionArray[indexTranslation],
                                                   m_positionArray, neighborIList, m_diameterArray, bondsI,
@@ -459,10 +426,10 @@ void MonteCarlo::mcTranslation() {
         newEnergyParticle = energyParticle(indexTranslation, positionParticleTranslation, m_positionArray,
                                            neighborIList, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube);
     }
-    double diff_energy {newEnergyParticle - oldEnergyParticle};
+    const double diff_energy {newEnergyParticle - oldEnergyParticle};
 
     // Metropolis criterion
-    bool acceptMove{ metropolis(diff_energy) };
+    const bool acceptMove{ metropolis(diff_energy) };
 
     // If the move is accepted, then the energy, the position array and the displacement array can be updated.
     // If the m_calculatePressure is set to True, then the pressure is calculated.
@@ -472,8 +439,8 @@ void MonteCarlo::mcTranslation() {
 
         if (m_calculatePressure)
         {
-            double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
-            double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
+            const double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
+            const double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_diameterArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
             m_pressure += newPressureParticle - oldPressureParticle;
         }
 
@@ -500,21 +467,21 @@ void MonteCarlo::mcSwap()
     indexSwap1 -= indexSwap1 % 3;
     indexSwap2 = indexSwap1 + 2;
 
-    double sigma1 = m_diameterArray[indexSwap1];
-    double sigma2 = m_diameterArray[indexSwap2];
+    const double sigma1 { m_diameterArray[indexSwap1] };
+    const double sigma2 { m_diameterArray[indexSwap2] };
     double energyParticle1;
     double energyParticle2;
     double energyParticleSwap1;
     double energyParticleSwap2;
-    std::vector<int> neighborIList1 = m_neighborList[indexSwap1];
-    std::vector<int> neighborIList2 = m_neighborList[indexSwap2];
+    const std::vector<int> neighborIList1 { m_neighborList[indexSwap1] };
+    const std::vector<int> neighborIList2 { m_neighborList[indexSwap2] };
 
 
     if (m_simulationMol == "polymer")
     {
 
-        std::vector<int> bondsI1(m_bondsMatrix[indexSwap1]);
-        std::vector<int> bondsI2(m_bondsMatrix[indexSwap2]);
+        const std::vector<int> bondsI1 { m_bondsMatrix[indexSwap1] };
+        const std::vector<int> bondsI2 { m_bondsMatrix[indexSwap2] };
 
         energyParticle1 = energyParticlePolymer(indexSwap1, m_positionArray[indexSwap1],
                                                 m_positionArray, neighborIList1, m_diameterArray, bondsI1,
@@ -557,9 +524,9 @@ void MonteCarlo::mcSwap()
                                              m_positionArray, neighborIList2, m_diameterArray,
                                              m_squareRc, m_lengthCube, m_halfLengthCube,indexSwap1);
     }
-    double diff_energy{ energyParticleSwap1 + energyParticleSwap2 - energyParticle1 - energyParticle2 };
+    const double diff_energy{ energyParticleSwap1 + energyParticleSwap2 - energyParticle1 - energyParticle2 };
     // Metropolis criterion
-    bool acceptMove { metropolis( diff_energy) };
+    const bool acceptMove { metropolis( diff_energy) };
 
     // If the move is accepted, then the energy, the position array and the displacement array can be updated.
     // If the m_calculatePressure is set to True, then the pressure is calculated.
@@ -569,13 +536,13 @@ void MonteCarlo::mcSwap()
         m_acceptanceRateSwap += 1. / m_nParticles;
         if (m_calculatePressure)
         {
-            double pressureParticleSwap1 {pressureParticle(m_temp, indexSwap1,
+            const double pressureParticleSwap1 {pressureParticle(m_temp, indexSwap1,
                                                            m_positionArray[indexSwap1],
                                                            m_positionArray, neighborIList1,
                                                            m_diameterArray, m_squareRc,
                                                            m_lengthCube, m_halfLengthCube)};
 
-            double pressureParticleSwap2 {pressureParticle(m_temp, indexSwap2,
+            const double pressureParticleSwap2 {pressureParticle(m_temp, indexSwap2,
                                                            m_positionArray[indexSwap2],
                                                            m_positionArray, neighborIList2,
                                                            m_diameterArray, m_squareRc,
@@ -584,14 +551,14 @@ void MonteCarlo::mcSwap()
             m_diameterArray[indexSwap1] = sigma1;
             m_diameterArray[indexSwap2] = sigma2;
 
-            double pressureParticle1 {pressureParticle(m_temp, indexSwap1,
+            const double pressureParticle1 {pressureParticle(m_temp, indexSwap1,
                                                            m_positionArray[indexSwap1],
                                                            m_positionArray, neighborIList1,
                                                            m_diameterArray, m_squareRc,
                                                            m_lengthCube, m_halfLengthCube)};
 
 
-            double pressureParticle2 {pressureParticle(m_temp, indexSwap2,
+            const double pressureParticle2 {pressureParticle(m_temp, indexSwap2,
                                                            m_positionArray[indexSwap2],
                                                            m_positionArray, neighborIList2,
                                                            m_diameterArray, m_squareRc,
@@ -614,7 +581,7 @@ void MonteCarlo::mcSwap()
 void MonteCarlo::generalUpdate(double diff_energy)
 {
 
-    double newEnergy {m_energy + diff_energy};
+    const double newEnergy {m_energy + diff_energy};
     m_energy = newEnergy;
     m_acceptanceRate += 1. / m_nParticles; // increment of the acceptance rate.
 
@@ -659,8 +626,8 @@ bool MonteCarlo::metropolis(double diff_energy) const
 
 	else
 	{
-		double randomDouble { randomDoubleGenerator(0., 1.) } ;
-		double threshold { exp(( - diff_energy ) / m_temp) }; // we consider k=1
+		const double randomDouble { randomDoubleGenerator(0., 1.) } ;
+		const double threshold { exp(( - diff_energy ) / m_temp) }; // we consider k=1
 		return threshold > randomDouble;
 	}
 }
@@ -673,12 +640,12 @@ bool MonteCarlo::metropolis(double diff_energy) const
  ******************************************************************************/
 void MonteCarlo::checkStepDisplacement()
 {
-    std::vector<double> squareDispVector = getSquareNormRowMatrix(m_interDisplacementMatrix);
+   const  std::vector<double> squareDispVector = getSquareNormRowMatrix(m_interDisplacementMatrix);
 
     for (int i=0; i < m_nParticles; i++)
     {
-        double max_rc {( m_maxDiam + m_diameterArray[i]) / 2 * m_rC};
-        double thresh = { pow ( (m_rSkin - max_rc) / 2, 2)};
+        const double max_rc {( m_maxDiam + m_diameterArray[i]) / 2 * m_rC};
+        const double thresh = { pow ( (m_rSkin - max_rc) / 2, 2)};
         if ( squareDispVector[i] > thresh)
         {
             createNeighborList();
