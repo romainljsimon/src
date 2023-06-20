@@ -23,7 +23,7 @@ class MonteCarlo
 
 private:
 	std::vector<std::vector<int>> m_neighborList {};                // Neighbor list.
-    std::vector<std::vector<std::vector<std::vector<int>>>> m_cellList {};
+    // std::vector<std::vector<std::vector<std::vector<int>>>> m_cellList {};
     int m_numCell {};
     double m_cellLength {};
     const std::string m_bondType {};
@@ -106,16 +106,18 @@ public:
 
         m_neighborList.resize(m_nParticles);
         m_numCell = static_cast<int>(m_lengthCube / m_rSkin);
-        m_cellList.resize(m_numCell, std::vector<std::vector<std::vector<int>>>(m_numCell, std::vector<std::vector<int>>(m_numCell)));
+        // m_cellList.resize(m_numCell, std::vector<std::vector<std::vector<int>>>(m_numCell, std::vector<std::vector<int>>(m_numCell)));
         m_cellLength = m_lengthCube / static_cast<double>(m_numCell);
 
         // createCellList();
         createNeighborList();
+        /***
         for(const auto& vt : m_neighborList) {
             std::copy(vt.cbegin(), vt.cend(),
                       std::ostream_iterator<int>(std::cout, " "));
             std::cout << '\n';
         }
+         ***/
         m_energy = energySystemPolymer(m_positionArray, m_diameterArray, m_bondsMatrix,
                                        m_neighborList, m_squareRc, m_lengthCube,
                                        m_halfLengthCube, m_squareR0, m_feneK, m_bondType);
@@ -164,7 +166,9 @@ public:
         m_totalDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_stepDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_neighborList.resize(m_nParticles);
-
+        m_numCell = static_cast<int>(m_lengthCube / m_rSkin);
+        //m_cellList.resize(m_numCell, std::vector<std::vector<std::vector<int>>>(m_numCell, std::vector<std::vector<int>>(m_numCell)));
+        m_cellLength = m_lengthCube / static_cast<double>(m_numCell);
         createNeighborList();
 
         m_energy = energySystem( m_positionArray, m_diameterArray,
@@ -180,7 +184,7 @@ public:
     }
 
 	void mcTotal();
-    void createCellList();
+    std::vector<std::vector<std::vector<std::vector<int>>>> createCellList();
 	void createNeighborList();
 	void mcMove();
 	void checkStepDisplacement();
@@ -190,7 +194,9 @@ public:
     void mcSwap();
     [[nodiscard]] bool metropolis(double diff_energy) const;
 
-    void createCellNeighbors(const std::vector<std::vector<int>>& oldNeighborList, int xCell, int yCell, int zCell);
+    void createCellNeighbors(const std::vector<std::vector<int>>& oldNeighborList,
+                             const std::vector<std::vector<std::vector<std::vector<int>>>>& cellList,
+                             int xCell, int yCell, int zCell);
     [[nodiscard]] int cellTest(int indexCell) const;
 
     void createDiffPairCellNeighbor(const std::vector<std::vector<int>> &oldNeighborList, const std::vector<int> &cellParticles,

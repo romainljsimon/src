@@ -265,12 +265,12 @@ double energyParticlePolymer (const int& indexParticle, const std::vector<double
     if ( bondType == "flexible")
     {
         energy += flexibleBonds(indexParticle, positionParticle, positionArray, diameterArray, bondsI, lengthCube,
-                                squareR0, feneK, indexSkip);
+                                halfLengthCube, squareR0, feneK, indexSkip);
     }
     else if ( bondType == "pedersen")
     {
         energy += pedersenBonds(indexParticle, positionParticle, positionArray, diameterArray, bondsI,
-                                squareRc, lengthCube, squareR0, feneK, indexSkip);
+                                squareRc, lengthCube, halfLengthCube, squareR0,feneK, indexSkip);
     }
     return energy;
 }

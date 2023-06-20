@@ -103,17 +103,20 @@ void MonteCarlo::mcTotal()
 }
 
 
-void MonteCarlo::createCellList()
+std::vector<std::vector<std::vector<std::vector<int>>>> MonteCarlo::createCellList()
 {
-    m_cellList.clear();
-    m_cellList.resize(m_numCell, std::vector<std::vector<std::vector<int>>>(m_numCell, std::vector<std::vector<int>>(m_numCell)));
+    std::vector<std::vector<std::vector<std::vector<int>>>> cellList{};
+    cellList.resize(m_numCell, std::vector<std::vector<std::vector<int>>>(m_numCell, std::vector<std::vector<int>>(m_numCell)));
+
     for (int i = 0; i < m_nParticles; i++)
     {
         int xCell{static_cast<int>(floor(m_positionArray[i][0] / m_cellLength))};
         int yCell{static_cast<int>(floor(m_positionArray[i][1] / m_cellLength))};
         int zCell{static_cast<int>(floor(m_positionArray[i][2] / m_cellLength))};
-        m_cellList[xCell][yCell][zCell].push_back(i);
+        cellList[xCell][yCell][zCell].push_back(i);
     }
+
+    return cellList;
 }
 
 int MonteCarlo::cellTest(int indexCell) const
@@ -217,7 +220,8 @@ void MonteCarlo::createDiffPairCellNeighbor(const std::vector<std::vector<int>>&
 
                     // Compare the new neighbor list with the new neighbor list
 
-                    if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j)) {
+                    if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j))
+                    {
 
                         double max_rc{(m_maxDiam + m_diameterArray[i]) / 2 * m_rC};
                         if (squareDistance < pow(max_rc, 2)) {
@@ -230,9 +234,11 @@ void MonteCarlo::createDiffPairCellNeighbor(const std::vector<std::vector<int>>&
     }
 }
 
-void MonteCarlo::createCellNeighbors(const std::vector<std::vector<int>>& oldNeighborList, int xCell, int yCell, int zCell)
+void MonteCarlo::createCellNeighbors(const std::vector<std::vector<int>>& oldNeighborList,
+                                     const std::vector<std::vector<std::vector<std::vector<int>>>>& cellList,
+                                     int xCell, int yCell, int zCell)
 {
-    std::vector<int> xyzCellParticles{m_cellList[xCell][yCell][zCell]};
+    std::vector<int> xyzCellParticles{cellList[xCell][yCell][zCell]};
     createSamePairCellNeighbor(oldNeighborList, xyzCellParticles);
     int xyzInt {xCell * 100 + yCell * 10 + zCell};
     for (int xCellDiff = -1; xCellDiff < 2; xCellDiff++)
@@ -255,7 +261,7 @@ void MonteCarlo::createCellNeighbors(const std::vector<std::vector<int>>& oldNei
                     // std::cout << yCell << "  " << testYCell << "\n";
                     // std::cout << zCell << "  " << testZCell << "\n";
                     createDiffPairCellNeighbor(oldNeighborList, xyzCellParticles,
-                                               m_cellList[testXCell][testYCell][testZCell]);
+                                               cellList[testXCell][testYCell][testZCell]);
                 }
 
 
@@ -288,14 +294,14 @@ void MonteCarlo::createNeighborList()
 	std::vector<std::vector<int>> oldNeighborList = m_neighborList;
 	m_neighborList.clear();
 	m_neighborList.resize(m_nParticles);
-    createCellList();
+    std::vector<std::vector<std::vector<std::vector<int>>>> cellList{createCellList()};
 	for (int xCell = 0; xCell < m_numCell; xCell++)
 	{
         for (int yCell = 0; yCell < m_numCell; yCell++)
         {
             for (int zCell = 0; zCell < m_numCell; zCell++)
             {
-                createCellNeighbors(oldNeighborList, xCell, yCell, zCell);
+                createCellNeighbors(oldNeighborList, cellList, xCell, yCell, zCell);
             }
 		}
 	}
