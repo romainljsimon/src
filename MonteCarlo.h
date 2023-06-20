@@ -9,16 +9,23 @@
 #define MONTECARLO_H_
 
 #include <utility>
+#include <iterator>
+#include <fstream>
+#include <vector>
 #include "energy.h"
 #include "pressure.h"
 #include "input/Parameter.h"
 #include "util.h"
+
 
 class MonteCarlo
 {
 
 private:
 	std::vector<std::vector<int>> m_neighborList {};                // Neighbor list.
+    std::vector<std::vector<std::vector<std::vector<int>>>> m_cellList {};
+    int m_numCell {};
+    double m_cellLength {};
     const std::string m_bondType {};
 	int m_errors { 0 };                                             // Errors of the neighbor list.
 	double m_energy {};                                             // System's energy.
@@ -96,8 +103,13 @@ public:
         m_interDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_totalDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_stepDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
-        m_neighborList.resize(m_nParticles);
 
+        m_neighborList.resize(m_nParticles);
+        m_numCell = static_cast<int>(m_lengthCube / m_rSkin);
+        m_cellList.resize(m_numCell, std::vector<std::vector<std::vector<int>>>(m_numCell, std::vector<std::vector<int>>(m_numCell)));
+        m_cellLength = m_lengthCube / static_cast<double>(m_numCell);
+
+        // createCellList();
         createNeighborList();
 
         m_energy = energySystemPolymer(m_positionArray, m_diameterArray, m_bondsMatrix,
@@ -127,6 +139,7 @@ public:
             , m_temp { param.get_double( "temp") }
             , m_rBox { param.get_double( "rBox") }
             , m_rSkin { param.get_double( "rSkin") }
+
             , m_squareRSkin {pow (param.get_double( "rSkin"), 2 ) }
             , m_saveUpdate { param.get_int( "waitingTime") }
             , m_neighMethod (param.get_string( "neighMethod", "verlet"))
@@ -163,6 +176,7 @@ public:
     }
 
 	void mcTotal();
+    void createCellList();
 	void createNeighborList();
 	void mcMove();
 	void checkStepDisplacement();
@@ -171,6 +185,16 @@ public:
     void generalUpdate(double diff_energy);
     void mcSwap();
     [[nodiscard]] bool metropolis(double diff_energy) const;
+
+    void createCellNeighbors(const std::vector<std::vector<int>>& oldNeighborList, int xCell, int yCell, int zCell);
+    [[nodiscard]] int cellTest(int indexCell) const;
+
+    void createDiffPairCellNeighbor(const std::vector<std::vector<int>> &oldNeighborList, const std::vector<int> &cellParticles,
+                           const std::vector<int> &testNeighbors);
+
+    void
+    createSamePairCellNeighbor(const std::vector<std::vector<int>> &oldNeighborList,
+                               const std::vector<int> &cellParticles);
 };
 
 

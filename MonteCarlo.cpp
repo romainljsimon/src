@@ -103,6 +103,144 @@ void MonteCarlo::mcTotal()
 }
 
 
+void MonteCarlo::createCellList()
+{
+    m_cellList.clear();
+    m_cellList.resize(m_numCell, std::vector<std::vector<std::vector<int>>>(m_numCell, std::vector<std::vector<int>>(m_numCell)));
+    for (int i = 0; i < m_nParticles; i++)
+    {
+        int xCell{static_cast<int>(floor(m_positionArray[i][0] / m_cellLength))};
+        int yCell{static_cast<int>(floor(m_positionArray[i][1] / m_cellLength))};
+        int zCell{static_cast<int>(floor(m_positionArray[i][2] / m_cellLength))};
+        m_cellList[xCell][yCell][zCell].push_back(i);
+    }
+}
+
+int MonteCarlo::cellTest(int indexCell) const
+{
+    if (indexCell < 0)
+    {
+        return m_numCell - 1;
+    }
+    else if (indexCell == m_numCell)
+    {
+        return 0;
+    }
+    else
+    {
+        return indexCell;
+    }
+}
+
+void MonteCarlo::createSamePairCellNeighbor(const std::vector<std::vector<int>>& oldNeighborList, const std::vector<int>& cellParticles)
+{
+    int cellParticlesSize{static_cast<int>(cellParticles.size())};
+
+    for (int i = 0; i < cellParticlesSize - 1; i++)
+    {
+        int realIIndex {cellParticles[i]};
+        std::vector<double> positionParticle{m_positionArray[realIIndex]};
+
+        for (int j = i+1; j < cellParticlesSize; j++)
+        {
+            int realJIndex {cellParticles[j]};
+            double squareDistance{
+                    squareDistancePair(positionParticle, m_positionArray[realJIndex], m_lengthCube, m_halfLengthCube)};
+
+            if (squareDistance < m_squareRSkin)
+            {
+                // j and i are neighbors
+
+                m_neighborList[realIIndex].push_back(realJIndex); // j is on row i
+                m_neighborList[realJIndex].push_back(realIIndex); // i is on row j
+
+                if (static_cast<int>(oldNeighborList[realIIndex].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
+                {
+
+                    // Compare the new neighbor list with the new neighbor list
+
+                    if (!std::binary_search(oldNeighborList[realIIndex].begin(), oldNeighborList[realIIndex].end(), j)) {
+
+                        double max_rc{(m_maxDiam + m_diameterArray[realIIndex]) / 2 * m_rC};
+                        if (squareDistance < pow(max_rc, 2))
+                        {
+                            ++m_errors;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void MonteCarlo::createDiffPairCellNeighbor(const std::vector<std::vector<int>>& oldNeighborList, const std::vector<int>& cellParticles, const std::vector<int>& testNeighbors)
+{
+    for (auto const &i: cellParticles)
+    {
+        std::vector<double> positionParticle{m_positionArray[i]};
+
+        for (auto const &j: testNeighbors)
+        {
+            double squareDistance{
+                    squareDistancePair(positionParticle, m_positionArray[j], m_lengthCube, m_halfLengthCube)};
+
+            if (squareDistance < m_squareRSkin)
+            {
+                // j and i are neighbors
+
+                m_neighborList[i].push_back(j); // j is on row i
+                m_neighborList[j].push_back(i); // i is on row j
+
+                if (static_cast<int>(oldNeighborList[i].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
+                {
+
+                    // Compare the new neighbor list with the new neighbor list
+
+                    if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j)) {
+
+                        double max_rc{(m_maxDiam + m_diameterArray[i]) / 2 * m_rC};
+                        if (squareDistance < pow(max_rc, 2)) {
+                            ++m_errors;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void MonteCarlo::createCellNeighbors(const std::vector<std::vector<int>>& oldNeighborList, int xCell, int yCell, int zCell)
+{
+    std::vector<int> xyzCellParticles{m_cellList[xCell][yCell][zCell]};
+    createSamePairCellNeighbor(oldNeighborList, xyzCellParticles);
+
+    for (int xCellDiff = -1; xCellDiff < 2; xCellDiff++)
+    {
+        int testXCell {cellTest(xCell + xCellDiff)};
+
+        for (int yCellDiff = -1; yCellDiff < 2; yCellDiff++)
+        {
+            int testYCell {cellTest(yCell + yCellDiff)};
+
+            for (int zCellDiff = -1; zCellDiff < 2; zCellDiff++)
+            {
+                int testZCell {cellTest(zCell + zCellDiff)};
+
+                if ((testXCell > xCell) || (testYCell > yCell) || (testZCell > zCell))
+                {
+                    //std::cout << xCell << "  " << testXCell << "\n";
+                    // std::cout << yCell << "  " << testYCell << "\n";
+                    // std::cout << zCell << "  " << testZCell << "\n";
+                    createDiffPairCellNeighbor(oldNeighborList, xyzCellParticles, m_cellList[testXCell][testYCell][testZCell]);
+                }
+
+
+            }
+        }
+
+
+    }
+}
 /*******************************************************************************
  * Creation or update of the Verlet neighbor list. The neighbor list is
  * implemented as an 2d array such as row i of the array is particle i's
@@ -126,41 +264,16 @@ void MonteCarlo::createNeighborList()
 	std::vector<std::vector<int>> oldNeighborList = m_neighborList;
 	m_neighborList.clear();
 	m_neighborList.resize(m_nParticles);
-
-	for (int i = 0; i < m_nParticles - 1; i++)
+    createCellList();
+	for (int xCell = 0; xCell < m_numCell; xCell++)
 	{
-		std::vector<double> positionParticle = m_positionArray[i];
-
-		for (int j = i + 1; j < m_nParticles; j++)
-		{
-
-			double squareDistance { squareDistancePair (positionParticle, m_positionArray[j], m_lengthCube, m_halfLengthCube) };
-
-			if (squareDistance < m_squareRSkin)
-			{
-				// j and i are neighbors
-
-				m_neighborList[i].push_back(j); // j is on row i
-				m_neighborList[j].push_back(i); // i is on row j
-
-				if (static_cast<int>(oldNeighborList[i].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
-				{
-
-					// Compare the new neighbor list with the new neighbor list
-
-					if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j))
-					{
-                        double max_rc {( m_maxDiam + m_diameterArray[i]) / 2 * m_rC};
-						if (squareDistance < pow (max_rc, 2))
-						{
-							++m_errors;
-						}
-					}
-				}
-
-			}
+        for (int yCell = 0; yCell < m_numCell; yCell++)
+        {
+            for (int zCell = 0; zCell < m_numCell; zCell++)
+            {
+                createCellNeighbors(oldNeighborList, xCell, yCell, zCell);
+            }
 		}
-
 	}
 }
 
