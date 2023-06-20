@@ -111,7 +111,11 @@ public:
 
         // createCellList();
         createNeighborList();
-
+        for(const auto& vt : m_neighborList) {
+            std::copy(vt.cbegin(), vt.cend(),
+                      std::ostream_iterator<int>(std::cout, " "));
+            std::cout << '\n';
+        }
         m_energy = energySystemPolymer(m_positionArray, m_diameterArray, m_bondsMatrix,
                                        m_neighborList, m_squareRc, m_lengthCube,
                                        m_halfLengthCube, m_squareR0, m_feneK, m_bondType);
