@@ -32,6 +32,8 @@ void MonteCarlo::mcTotal()
 	std::string extname {".xyz"};
 	std::string preNameDisp ("./disp/displacement");
 	std::string extnameDisp {".txt"};
+    std::string energyFilePath{m_folderPath + "/outE.txt"};
+    std::string pressureFilePath {m_folderPath + "/outP.txt"};
     std::vector<double> radiusArray (divideVectorByScalar(m_diameterArray, 2));
 
 	saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube,preName + std::to_string(0) + extname );
@@ -65,18 +67,22 @@ void MonteCarlo::mcTotal()
 		if (saveTimeStepArray[save_index] == i)
 		{
 			radiusArray = divideVectorByScalar(m_diameterArray, 2);
-            saveInXYZ (m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(i + 1) + extname );
-			saveDisplacement (m_totalDisplacementMatrix, preNameDisp + std::to_string(i + 1) + extnameDisp );
+            std::string nameXYZ {preName};
+            nameXYZ.append(std::to_string(i + 1)).append(extname);
+            std::string nameDisp {preNameDisp};
+            nameDisp.append(std::to_string(i + 1)).append(extnameDisp);
+            saveInXYZ (m_positionArray, radiusArray, m_moleculeType, m_lengthCube, nameXYZ);
+			saveDisplacement (m_totalDisplacementMatrix, nameDisp);
 			++save_index;
 		}
 
 		if (i % m_saveRate == 0)
 		{
-			saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt"); //Energy is saved at each time step.
+			saveDoubleTXT(m_energy / m_nParticles, energyFilePath); //Energy is saved at each time step.
 		}
 		if (m_calculatePressure) // Saves pressure if m_calculatePressure is True
 		{
-			saveDoubleTXT( m_pressure, m_folderPath + "/outP.txt");
+			saveDoubleTXT( m_pressure, pressureFilePath);
 		}
 
 	}
@@ -387,6 +393,7 @@ void MonteCarlo::mcAllMove()
 
 }
 ***/
+
 /*******************************************************************************
  * This function returns a tentative new particle position.
  *
@@ -404,8 +411,8 @@ void MonteCarlo::mcTranslation() {
 
     const std::vector<int> neighborIList{findNeighborIList( indexTranslation )};
 
-    double oldEnergyParticle;
-    double newEnergyParticle;
+    double oldEnergyParticle {};
+    double newEnergyParticle {};
 
     if (m_simulationMol == "polymer")
     {
@@ -644,8 +651,8 @@ void MonteCarlo::checkStepDisplacement()
 
     for (int i=0; i < m_nParticles; i++)
     {
-        const double max_rc {( m_maxDiam + m_diameterArray[i]) / 2 * m_rC};
-        const double thresh = { pow ( (m_rSkin - max_rc) / 2, 2)};
+        const double maxRc {( m_maxDiam + m_diameterArray[i]) / 2 * m_rC};
+        const double thresh = { pow ( (m_rSkin - maxRc) / 2, 2)};
         if ( squareDispVector[i] > thresh)
         {
             createNeighborList();
