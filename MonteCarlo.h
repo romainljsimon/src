@@ -16,6 +16,8 @@
 #include "pressure.h"
 #include "input/Parameter.h"
 #include "util.h"
+#include "input/Potentials.h"
+#include "input/Bonds.h"
 
 
 class MonteCarlo
@@ -31,6 +33,15 @@ private:
 	double m_energy {};                                             // System's energy.
 	double m_pressure {};                                           // System's pressure.
 	const int m_nParticles {};                                            // System's number of particles.
+    const int m_particleTypes {};
+    std::vector<double> m_epsilonIJArray {};
+    std::vector<double> m_sigmaIJArray {};
+    std::vector<double> m_rcIJArray {};
+    std::vector<double> m_bondKIArray {};
+    std::vector<double> m_bondR0IArray {};
+    std::vector<double> m_bondEpsilonIArray {};
+    std::vector<double> m_bondSigmaIArray {};
+    std::vector<double> m_bondRcIArray {};
 	std::vector<std::vector<double>> m_totalDisplacementMatrix {};  // Total displacement Matrix.
 	std::vector<std::vector<double>> m_interDisplacementMatrix {};  // Inter neighbor list update displacement matrix.
 	std::vector<std::vector<double>> m_stepDisplacementMatrix {};   // Step displacement matrix.
@@ -65,9 +76,9 @@ private:
 
 public:
     // Polymer constructor
-    MonteCarlo (param::Parameter param, std::vector<std::vector<double>> positionArray,
+    MonteCarlo (param::Parameter param, const Potentials& pairPotentials, std::vector<std::vector<double>> positionArray,
                 std::vector<double> diameterArray, std::vector<int> moleculeType,
-                std::vector<std::vector<int>> bondsMatrix, std::string folderPath)
+                std::vector<std::vector<int>> bondsMatrix, Bonds bondPotentials, std::string folderPath)
 
             : m_simulationMol (param.get_string("simType"))
             , m_bondType (param.get_string("bondType", "flexible"))
@@ -75,15 +86,14 @@ public:
             , m_swap (param.get_bool("swap", false))
             , m_pSwap (param.get_double("pSwap", 0.2))
             , m_rC { param.get_double( "rc") }
-            , m_squareRc { pow (param.get_double( "rc"), 2 ) }
+            , m_squareRc { pow (m_rC, 2 ) }
             , m_lengthCube { pow (static_cast<double>( positionArray.size()) / param.get_double("density"),
                                   1. / 3.)}
-            , m_halfLengthCube { 0.5 * pow (static_cast<double>( positionArray.size()) / param.get_double("density"),
-                                          1. / 3.)}
+            , m_halfLengthCube { 0.5 * m_lengthCube }
             , m_temp { param.get_double( "temp") }
             , m_rBox { param.get_double( "rBox") }
             , m_rSkin { param.get_double( "rSkin") }
-            , m_squareRSkin {pow (param.get_double( "rSkin"), 2 ) }
+            , m_squareRSkin {pow (m_rSkin, 2 ) }
             , m_saveUpdate { param.get_int( "waitingTime") }
             , m_neighMethod (param.get_string( "neighMethod", "verlet"))
             , m_timeSteps { param.get_int( "timeSteps") }
@@ -91,6 +101,7 @@ public:
             , m_maxDiam { getMaxVector(diameterArray) }
             , m_squareR0 { pow (param.get_double( "r0", 1.5), 2 ) }
             , m_feneK { param.get_double( "feneK", 30.)}
+            , m_particleTypes { param.get_int("particleTypes")}
             , m_nParticles {static_cast<int>( positionArray.size() )}
             , m_positionArray (std::move( positionArray ))
             , m_diameterArray (std::move( diameterArray ))
@@ -100,6 +111,8 @@ public:
 
 
     {
+        // Potential Initializations
+
         m_interDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_totalDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_stepDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
@@ -128,7 +141,7 @@ public:
 
     }
     // Atomic constructor
-    MonteCarlo (param::Parameter param, std::vector<std::vector<double>> positionArray,
+    MonteCarlo (param::Parameter param, Potentials pairPotentials, std::vector<std::vector<double>> positionArray,
                 std::vector<double> diameterArray, std::vector<int> moleculeType, std::string folderPath)
 
 
@@ -162,6 +175,7 @@ public:
 
 
     {
+
         m_interDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_totalDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_stepDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
@@ -214,6 +228,8 @@ public:
     void
     updateIJNeighbor(const std::vector<std::vector<int>> &oldNeighborList, const std::vector<double> &positionParticle,
                      const int &indexI, const int &indexJ, const bool &checkNeigh);
+
+
 };
 
 

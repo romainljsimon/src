@@ -15,7 +15,10 @@
 #include "readSaveFile.h"
 #include "util.h"
 #include "MonteCarlo.h"
-#include <input/Parameter.h>
+#include "input/Potentials.h"
+#include "input/Bonds.h"
+#include "input/Parameter.h"
+
 
 int main()
 {
@@ -51,18 +54,21 @@ int main()
 	auto t_start = std::chrono::high_resolution_clock::now();
     std::string key { "simType" };
     std::string simType { param.get_string(key) };
+
     if (simType == "polymer")
     {
         std::vector<std::vector<int>> bondsMatrix = readBondsTXT(folderPath + "/bonds.txt");
-
-        MonteCarlo system {param, initPosRad.posMatrix, initPosRad.radVector,
-                          initPosRad.moleculeType, bondsMatrix, folderPath};
+        Bonds bondPotentials { param };
+        Potentials pairPotentials { param };
+        MonteCarlo system {param, pairPotentials, initPosRad.posMatrix, initPosRad.radVector,
+                          initPosRad.moleculeType, bondsMatrix, bondPotentials, folderPath};
 
         system.mcTotal();
     }
     else if (simType == "atomic")
     {
-        MonteCarlo system {param,initPosRad.posMatrix,initPosRad.radVector,
+        Potentials pairPotentials { param };
+        MonteCarlo system {param, pairPotentials, initPosRad.posMatrix,initPosRad.radVector,
                           initPosRad.moleculeType, folderPath};
 
         system.mcTotal();
