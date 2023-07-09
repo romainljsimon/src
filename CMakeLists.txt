@@ -23,4 +23,4 @@ add_executable(swapMC
         util.h
         pressure.cpp
         pressure.h
-        input/Parameter.h input/Potentials.h input/Bonds.h)
+        INPUT/Parameter.h POTENTIALS/PairPotentials.h POTENTIALS/BondPotentials.h POTENTIALS/PairPotentials.cpp POTENTIALS/BondPotentials.cpp NEIGHBORS/Neighbors.cpp PARTICLES/Particles.h PARTICLES/Particles.cpp)

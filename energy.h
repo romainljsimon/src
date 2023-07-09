@@ -9,27 +9,31 @@
 #define ENERGY_H_
 
 
-double energySystem(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& diameterArray,
-                    const std::vector<std::vector<int>>& neighborList, const double& squareRc,
-                    const double& lengthCube, const double& halfLengthCube);
+#include "NEIGHBORS/Neighbors.h"
+#include "POTENTIALS/BondPotentials.h"
+#include "POTENTIALS/PairPotentials.h"
 
 double energyParticle(const int& indexParticle, const std::vector<double>& positionParticle,
-		              const std::vector<std::vector<double>>& positionArray, const std::vector<int>& neighborIList,
-					  const std::vector<double>& diameterArray, const double& squareRc, const double& lengthCube,
-                      const double& halfLengthCube, const int& indexSkip = -1);
+                      const Particles& systemParticles, const std::vector<int>& neighborIList,
+                      const PairPotentials& pairPotentials);
+
+double energyParticle(const int& indexParticle, const std::vector<double>& positionParticle,
+                      const Particles& systemParticles, const std::vector<int>& neighborIList,
+                      const PairPotentials& pairPotentials, const int& indexSkip);
+
+double energySystem(const Particles& systemParticles, const Neighbors& systemNeighbors,
+                    const PairPotentials& pairPotentials);
 
 double energyParticlePolymer (const int& indexParticle, const std::vector<double>& positionParticle,
-                              const std::vector<std::vector<double>>& positionArray,
-                              const std::vector<int>& neighborIList, const std::vector<double>& diameterArray,
-                              const std::vector<int>& bondsI, const double& squareRc, const double& lengthCube,
-                              const double& halfLengthCube, const double& squareR0, const double& feneK,
-                              const std::string& bondType, const int& indexSkip = -1);
+                              const Particles& systemParticles, const std::vector<int>& neighborIList,
+                              const PairPotentials& pairPotentials, const BondPotentials& bondPotentials,
+                              const int& indexSkip);
 
-double energySystemPolymer(const std::vector<std::vector<double>>& positionArray,
-                           const std::vector<double>& diameterArray,
-						   const std::vector<std::vector<int>>& bondsMatrix,
-                           const std::vector<std::vector<int>>& neighborList,
-						   const double& squareRc, const double& lengthCube, const double& halfLengthCube,
-                           const double& squareR0, const double& feneK, const std::string& bond_Type);
+double energyParticlePolymer (const int& indexParticle, const std::vector<double>& positionParticle,
+                              const Particles& systemParticles, const std::vector<int>& neighborIList,
+                              const PairPotentials& pairPotentials, const BondPotentials& bondPotentials);
+
+double energySystemPolymer(const Particles& systemParticles, const Neighbors& systemNeighbors,
+                           const PairPotentials& pairPotentials, const BondPotentials& bondPotentials);
 
 #endif /* ENERGY_H_ */

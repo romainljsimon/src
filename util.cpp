@@ -11,40 +11,6 @@
 #include <algorithm>
 #include <valarray>
 
-/*******************************************************************************
- * This function calculates the distance between two particles considering the
- * periodic boundary conditions.
- *
- * @param positionA particle A's position.
- *        particleB particle B's position.
- *        lengthCube simulation box length.
- *
- * @return distance between two particles.
- ******************************************************************************/
-double squareDistancePair(const std::vector<double>& positionA, const std::vector<double>& positionB,
-                          const double& lengthCube, const double& halfLengthCube)
-{
-    double squareDistance { 0. };
-    for (int i = 0; i < 3; i++)
-    {
-        double diff { positionA[i] - positionB[i] };
-
-        if (diff > halfLengthCube)
-        {
-            diff -= lengthCube;
-        }
-        else if (diff < - halfLengthCube)
-        {
-            diff += lengthCube;
-        }
-
-        squareDistance += diff * diff;
-    }
-
-
-
-    return squareDistance;
-}
 
 //Boundary conditions
 

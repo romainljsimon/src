@@ -7,27 +7,28 @@
 //============================================================================
 
 #include <iostream>
-#include <cmath>
 #include <string>
-#include <vector>
 #include <chrono>
 #include "unittests.h"
 #include "readSaveFile.h"
 #include "util.h"
 #include "MonteCarlo.h"
-#include "input/Potentials.h"
-#include "input/Bonds.h"
-#include "input/Parameter.h"
-
+#include "POTENTIALS/PairPotentials.h"
+#include "POTENTIALS/BondPotentials.h"
+#include "INPUT/Parameter.h"
+#include "PARTICLES/Particles.h"
+#include "NEIGHBORS/Neighbors.h"
 
 int main()
 {
-	std::string folderPath ( "." );
-//squareDistancePairTest();
 
-	//Opening input variables file
+    std::string folderPath ( "." );
+//squareDistancePairTest();
+    std::cout << std::unitbuf;
+
+	//Opening INPUT variables file
     param::Parameter param(folderPath + "/inputVar.txt" );
-	posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz");
+	//posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz");
 
     // double density =  param.get_double("density");
 	// std::filesystem::create_directory (folderPath + "/outXYZ" );
@@ -35,7 +36,7 @@ int main()
 
 
     //Opening position file
-	initPosRad.radVector = vectorNormalization(initPosRad.radVector);
+	//initPosRad.radVector = vectorNormalization(initPosRad.radVector);
     // We define the lengths cale of the system as <sigma>. radVector is now the diameterVector
 	// initPosRad.radVector = divideVectorByScalar(initPosRad.radVector, 2);
 
@@ -52,24 +53,31 @@ int main()
 	//mcTotal(initPosRad.posMatrix, initPosRad.radVector,  rc, lengthCube, temp, rBox, number);
 	std::clock_t c_start = std::clock();
 	auto t_start = std::chrono::high_resolution_clock::now();
+
     std::string key { "simType" };
     std::string simType { param.get_string(key) };
 
+    PairPotentials systemPairPotentials { param };
+
+    Particles systemParticles {param, "./initPosition.xyz"};
+
+
+
     if (simType == "polymer")
     {
-        std::vector<std::vector<int>> bondsMatrix = readBondsTXT(folderPath + "/bonds.txt");
-        Bonds bondPotentials { param };
-        Potentials pairPotentials { param };
-        MonteCarlo system {param, pairPotentials, initPosRad.posMatrix, initPosRad.radVector,
-                          initPosRad.moleculeType, bondsMatrix, bondPotentials, folderPath};
+        BondPotentials systemBondPotentials { param, "./bonds.txt" };
+
+        Neighbors systemNeighbors {param, systemParticles, systemPairPotentials, systemBondPotentials};
+
+        MonteCarlo system {param,  systemParticles, systemPairPotentials,  systemBondPotentials, systemNeighbors, folderPath};
 
         system.mcTotal();
     }
     else if (simType == "atomic")
     {
-        Potentials pairPotentials { param };
-        MonteCarlo system {param, pairPotentials, initPosRad.posMatrix,initPosRad.radVector,
-                          initPosRad.moleculeType, folderPath};
+        Neighbors systemNeighbors {param, systemParticles, systemPairPotentials};
+
+        MonteCarlo system {param,  systemParticles, systemPairPotentials,  systemNeighbors, folderPath};
 
         system.mcTotal();
     }

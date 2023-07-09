@@ -31,7 +31,7 @@ posRad readXYZ(const std::string& path)
     std::vector<int> moleculeType (row , 1);
 
 
-    //Defining the loop for getting input from the file
+    //Defining the loop for getting INPUT from the file
 
     for (int r = 0; r < row; r++) //Outer loop for rows
     {
@@ -48,7 +48,7 @@ posRad readXYZ(const std::string& path)
 
             else
             {
-                infile >> positionArray[r][c - (col - 3)]; //Take input from file and put into positionArray
+                infile >> positionArray[r][c - (col - 3)]; //Take INPUT from file and put into positionArray
             }
         }
 
@@ -79,7 +79,7 @@ std::vector<std::vector<int>> readBondsTXT(const std::string& path)
     {
         for (int c = 0; c < col; c++) //inner loop for columns
         {
-            infile >> bondsMatrix[r][c]; //Take input from file and put into bondsMatrix
+            infile >> bondsMatrix[r][c]; //Take INPUT from file and put into bondsMatrix
 
         }
 
