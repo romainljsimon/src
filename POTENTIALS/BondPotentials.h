@@ -78,8 +78,9 @@ public:
 
                 bondPotentials[indexIJ][5] = std::stod(coeffList[5]); // Shift constant for bond i
 
-                std::cout << i << " "<< j << " "<< indexIJ << " "<< bondPotentials[indexIJ][0] << " "
-                          << bondPotentials[indexIJ][1] << " "<< bondPotentials[indexIJ][2] << " "<< bondPotentials[indexIJ][3] << "\n" ;
+                //std::cout << i << " "<< j << " "<< indexIJ << " "<< bondPotentials[indexIJ][0] << " "
+                //          << bondPotentials[indexIJ][1] << " "<< bondPotentials[indexIJ][2] << " "<< bondPotentials[indexIJ][3] << "\n" ;
+
             }
         }
 

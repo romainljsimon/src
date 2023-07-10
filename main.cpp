@@ -24,7 +24,7 @@ int main()
 
     std::string folderPath ( "." );
 //squareDistancePairTest();
-    std::cout << std::unitbuf;
+    //std::cout << std::unitbuf;
 
 	//Opening INPUT variables file
     param::Parameter param(folderPath + "/inputVar.txt" );
