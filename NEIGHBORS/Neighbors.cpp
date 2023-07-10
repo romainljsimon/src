@@ -32,6 +32,57 @@
  * neighbor list to detect potential errors. Normally, the code has been made
  * such as there are no errors.
  ******************************************************************************/
+
+void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const BondPotentials& systemBondPotentials)
+{
+    // Be careful with the swaps and poly dispersity. Solution for now is to take rSkin big enough.
+    ++m_updateRate;
+    std::vector<std::vector<int>> oldNeighborList = m_neighborList;
+    m_neighborList.clear();
+    m_neighborList.resize(m_nParticles);
+
+    for (int i = 0; i < m_nParticles - 1; i++)
+    {
+        std::vector<double> positionParticle = systemParticles.getPositionI(i);
+
+        for (int j = i + 1; j < m_nParticles; j++)
+        {
+
+            std::vector<int> bondsI {systemBondPotentials.getBondsI(i)};
+            if (std::binary_search(bondsI.begin(), bondsI.end(), j))
+            {
+                continue;
+            }
+
+            double squareDistance {systemParticles.squareDistancePair(positionParticle, j)};
+
+            if (squareDistance < m_squareRSkin)
+            {
+                // j and i are neighbors
+
+                m_neighborList[i].push_back(j); // j is on row i
+                m_neighborList[j].push_back(i); // i is on row j
+
+                if (static_cast<int>(oldNeighborList[i].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
+                {
+
+                    // Compare the new neighbor list with the new neighbor list
+
+                    if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j))
+                    {
+                        if (squareDistance <  m_maxSquareRcArray[i])
+                        {
+                            ++m_errors;
+                        }
+                    }
+                }
+
+            }
+        }
+
+    }
+}
+
 void Neighbors::createNeighborList(const Particles& systemParticles)
 {
     // Be careful with the swaps and poly dispersity. Solution for now is to take rSkin big enough.
@@ -370,7 +421,7 @@ void Neighbors::checkInterDisplacement(const Particles& systemParticles, const B
         //const double thresh = { pow ( (m_rSkin - maxRc) / 2, 2)};
         if ( squareDispVector[i] > m_threshArray[particleTypeIndex])
         {
-            createNeighborList(systemParticles, systemBondPotentials);
+            WOWcreateNeighborList(systemParticles, systemBondPotentials);
             std::fill(m_interDisplacementMatrix.begin(), m_interDisplacementMatrix.end(),
                       std::vector<double>(3, 0));
             break;
