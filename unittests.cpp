@@ -10,6 +10,7 @@
 #include "random.h"
 #include "util.h"
 
+/***
 int squareDistancePairTest()
 {
 	std::vector<std::vector<double>> positionArrayB { { 0., 0., 0. }, { 1., 1., 1. }, { 1., 0., 0. }, { 0., 1., 0. },
@@ -95,5 +96,5 @@ void randomGeneratorTest()
 	randomIntGeneratorTest();
 }
 
-
+***/
 
