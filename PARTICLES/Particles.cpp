@@ -46,10 +46,15 @@ void Particles::swapParticleTypesIJ(const int& i, const int& j, const int& typeI
 
 void Particles::swapParticleTypesIJ(const int& i, const int& j)
 {
-    int typeJ {getParticleTypeI(i)};
-    m_particleTypeArray[j] = m_particleTypeArray[i];
-    m_particleTypeArray[i] = typeJ;
+    //std::cout << i << "  " << j << "\n";
+    //std::cout << m_particleTypeArray[i] << "  " << m_particleTypeArray[j] << "\n";
 
+    int typeJ {getParticleTypeI(j)};
+    //std::cout << m_particleTypeArray[i] << m_particleTypeArray[j] << "\n";
+    m_particleTypeArray[j] = m_particleTypeArray[i];
+    //std::cout << m_particleTypeArray[i] << m_particleTypeArray[j] << "\n";
+    m_particleTypeArray[i] = typeJ;
+    //std::cout << m_particleTypeArray[i] << m_particleTypeArray[j] << "\n";
 }
 
 

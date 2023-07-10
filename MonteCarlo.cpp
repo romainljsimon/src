@@ -60,7 +60,7 @@ void MonteCarlo::mcTotal()
 		{
             if (m_simulationMol == "polymer")
             {
-                m_systemNeighbors.checkInterDisplacement(m_systemParticles, m_bondPotentials);
+                m_systemNeighbors.checkInterDisplacement(m_systemParticles,m_bondPotentials);
             }
             else
             {
@@ -308,7 +308,7 @@ void MonteCarlo::mcSwap()
     double energyParticleSwap1;
     double energyParticleSwap2;
     const std::vector<int> neighborIList1 { m_systemNeighbors.getNeighborIList(indexSwap1) };
-    const std::vector<int> neighborIList2 { m_systemNeighbors.getNeighborIList(indexSwap1) };
+    const std::vector<int> neighborIList2 { m_systemNeighbors.getNeighborIList(indexSwap2) };
 
 
     if (m_simulationMol == "polymer")

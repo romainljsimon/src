@@ -33,25 +33,25 @@ public:
 
     static std::vector<std::vector<double>> initializeBondPotentials(int particleTypes) {
 
-        std::vector<std::vector<double>> bondPotentials((particleTypes * (particleTypes - 1)) / 2,
+        std::vector<std::vector<double>> bondPotentials((particleTypes * (particleTypes + 1)) / 2,
                                                         std::vector<double>(6));
-        param::Parameter potentials("./POTENTIALS.txt");
+        param::Parameter potentials("./potentials.txt");
         std::string keyBond{"bondCoeff"};
         std::string delimiter{"|"};
 
-        for (int i = 1; i < particleTypes; i++)
+        for (int i = 1; i <= particleTypes; i++)
         {
             std::string strI{std::to_string(i)};
 
-            for (int j = i + 1; j <= particleTypes; j++)
+            for (int j = i; j <= particleTypes; j++)
             {
 
                 std::string strJ{std::to_string(j)};
                 std::string keyIJ{keyBond};
                 keyIJ.append(strI).append(strJ);
                 std::string bondCoeff{potentials.get_string(keyIJ, "0.|0.|0.|0.|0.|0.|")};
-                const int indexIJ{j - i - 1 + particleTypes * (i - 1) - ((i - 1) * i) / 2};
-                size_t pos = 0;
+                const int indexIJ {j - i + particleTypes * (i - 1) - ((i - 2) * (i-1)) / 2};
+                size_t pos;
                 std::string token;
                 std::vector<std::string> coeffList{};
 
@@ -77,6 +77,9 @@ public:
                 bondPotentials[indexIJ][4] = rc * rc; // Rc constant for bond i
 
                 bondPotentials[indexIJ][5] = std::stod(coeffList[5]); // Shift constant for bond i
+
+                std::cout << i << " "<< j << " "<< indexIJ << " "<< bondPotentials[indexIJ][0] << " "
+                          << bondPotentials[indexIJ][1] << " "<< bondPotentials[indexIJ][2] << " "<< bondPotentials[indexIJ][3] << "\n" ;
             }
         }
 

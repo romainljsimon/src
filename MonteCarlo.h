@@ -26,8 +26,8 @@ class MonteCarlo
 {
 
 private:
-    BondPotentials m_bondPotentials;
-    PairPotentials m_pairPotentials;
+    const BondPotentials m_bondPotentials;
+    const PairPotentials m_pairPotentials;
     Particles m_systemParticles;
     Neighbors m_systemNeighbors;
 	int m_errors { 0 };                                             // Errors of the neighbor list.

@@ -47,8 +47,8 @@ public:
                 std::string keyIJ {keyPair};
                 keyIJ.append(strI).append(strJ);
                 std::string potentialCoeff {potentials.get_string(keyIJ)};
-                const int indexIJ {j - i + nParticleTypes * (i - 1) - ((i - 1) * i) / 2};
-                size_t pos = 0;
+                const int indexIJ {j - i + nParticleTypes * (i - 1) - ((i - 2) * (i-1)) / 2};
+                size_t pos;
                 std::string token;
                 std::vector<std::string> coeffList {};
 
@@ -64,7 +64,8 @@ public:
                 pairPotentials[indexIJ][1] = sigmaIJ * sigmaIJ; // SigmaSquare IJ pair constant
                 double rcIJ {std::stod(coeffList[2])};
                 pairPotentials[indexIJ][2] = rcIJ * rcIJ; // RcSquare IJ pair constant
-                pairPotentials[indexIJ][3] = std::stod(coeffList[3]);
+                pairPotentials[indexIJ][3] = std::stod(coeffList[3]); // Shift IJ
+
             }
         }
 
@@ -83,7 +84,7 @@ public:
 
     [[nodiscard]] int getIndexIJ(const int &i, const int &j) const;
 
-    [[nodiscard]] int getSquareRcIJ(const int &i, const int &j) const;
+    [[nodiscard]] double getSquareRcIJ(const int &i, const int &j) const;
 };
  // namespace param
 #endif /* POTENTIALS_H_ */

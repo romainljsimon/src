@@ -102,7 +102,7 @@ public:
         {
             for (int j=i; j<=nParticleTypes; j++)
             {
-                int squareRcIJ { systemPairPotentials.getSquareRcIJ(i, j)};
+                double squareRcIJ { systemPairPotentials.getSquareRcIJ(i, j)};
                 if (squareRcIJ > maxSquareRcArray[i])
                 {
                     maxSquareRcArray[i] = squareRcIJ;

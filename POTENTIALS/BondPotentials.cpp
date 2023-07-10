@@ -20,7 +20,7 @@ int BondPotentials::getIndexIJ(const int& i, const int& j) const
         indexJ = i;
     }
 
-    int indexIJ {indexJ - indexI - 1 + m_particleTypes * (indexI - 1) - ((indexI - 1) * indexI) / 2};
+    const int indexIJ {indexJ - indexI + m_particleTypes * (indexI - 1) - ((indexI - 2) * (indexI-1)) / 2};
     return indexIJ;
 }
 

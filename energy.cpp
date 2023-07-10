@@ -82,7 +82,7 @@ double energySystem(const Particles& systemParticles, const Neighbors& systemNei
     {
         const std::vector<int>& neighborIList (systemNeighbors.getNeighborIList(indexParticle) );
         energy += energyParticle (indexParticle, systemParticles.getPositionI(indexParticle),
-                                         systemParticles, neighborIList, pairPotentials);
+                                         systemParticles, neighborIList, pairPotentials) / 2.;
     }
     return energy;
 }
@@ -157,6 +157,7 @@ double energySystemPolymer(const Particles& systemParticles, const Neighbors& sy
     	const std::vector<int>& neighborIList (systemNeighbors.getNeighborIList(indexParticle) );
     	energy += energyParticlePolymer (indexParticle, systemParticles.getPositionI(indexParticle),
                                          systemParticles, neighborIList, pairPotentials, bondPotentials) / 2.;
+        //std::cout << energy << "\n";
     }
 	return energy;
 }

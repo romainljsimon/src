@@ -57,7 +57,7 @@ int main()
     std::string key { "simType" };
     std::string simType { param.get_string(key) };
 
-    PairPotentials systemPairPotentials { param };
+    const PairPotentials systemPairPotentials { param };
 
     Particles systemParticles {param, "./initPosition.xyz"};
 
@@ -65,7 +65,7 @@ int main()
 
     if (simType == "polymer")
     {
-        BondPotentials systemBondPotentials { param, "./bonds.txt" };
+        const BondPotentials systemBondPotentials { param, "./bonds.txt" };
 
         Neighbors systemNeighbors {param, systemParticles, systemPairPotentials, systemBondPotentials};
 

@@ -15,16 +15,16 @@ int PairPotentials::getIndexIJ(const int& i, const int& j) const
         indexI = j;
         indexJ = i;
     }
-    const int indexIJ {indexJ - indexI + m_nParticleTypes * ( indexI - 1) - ((indexI - 1) * indexI) / 2};
+    const int indexIJ {indexJ - indexI + m_nParticleTypes * ( indexI - 1) - ((indexI - 1) * (indexI-2)) / 2};
     return indexIJ;
 }
 
 int PairPotentials::getParticleTypes() const
 {
     return m_nParticleTypes;
-};
+}
 
-int PairPotentials::getSquareRcIJ(const int& i, const int& j) const
+double PairPotentials::getSquareRcIJ(const int& i, const int& j) const
 {
     return getPotentialsIJ(i, j)[2];
 }
