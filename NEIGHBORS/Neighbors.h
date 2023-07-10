@@ -27,7 +27,7 @@ private:
     const double m_rSkin {};
     const double m_squareRSkin {};                        			// Skin radius squared.
     const std::string m_neighMethod {};                   			// Neighbor list method: "verlet" for verlet neighbor list. Any other value: no neighbor list.
-    int m_updateRate {0};
+    int m_updateRate {-1};
     int m_numCell {};
     double m_cellLength {};
 	int m_errors { 0 };                                             // Errors of the neighbor list.
@@ -56,7 +56,7 @@ public:
 
         m_interDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_neighborList.resize(m_nParticles);
-        createNeighborList(systemParticles, systemBondPotentials);
+        WOWcreateNeighborList(systemParticles, systemBondPotentials);
         /***
         for(auto const& x : m_neighborList)
         {
@@ -166,7 +166,7 @@ public:
                           const bool& checkNeigh);
 
 
-    [[nodiscard]] std::vector<int> getNeighborIList(int particleIndex) const;
+    [[nodiscard]] const std::vector<int>& getNeighborIList(int particleIndex) const;
 
     void updateInterDisplacement(const int &indexTranslation, const std::vector<double> &vectorTranslation);
 
