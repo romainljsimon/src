@@ -15,7 +15,7 @@ class BondPotentials
 
 private:
     const int m_particleTypes {};
-    const std::vector<std::vector<double>> m_bondPotentials {};
+    const std::vector<double> m_bondPotentials {};
     const std::vector<std::vector<int>> m_bondsArray {};
 
 
@@ -31,26 +31,27 @@ public:
     {}
 
 
-    static std::vector<std::vector<double>> initializeBondPotentials(int particleTypes) {
+    static std::vector<double> initializeBondPotentials(int particleTypes)
+    {
+        const int lenBonds { (particleTypes * (particleTypes + 1)) / 2 * 6};
+        std::vector<double> bondPotentials(lenBonds);
 
-        std::vector<std::vector<double>> bondPotentials((particleTypes * (particleTypes + 1)) / 2,
-                                                        std::vector<double>(6));
         param::Parameter potentials("./potentials.txt");
         std::string keyBond{"bondCoeff"};
         std::string delimiter{"|"};
 
         for (int i = 1; i <= particleTypes; i++)
         {
-            std::string strI{std::to_string(i)};
+            const std::string strI{std::to_string(i)};
 
             for (int j = i; j <= particleTypes; j++)
             {
 
-                std::string strJ{std::to_string(j)};
+                const std::string strJ{std::to_string(j)};
                 std::string keyIJ{keyBond};
                 keyIJ.append(strI).append(strJ);
-                std::string bondCoeff{potentials.get_string(keyIJ, "0.|0.|0.|0.|0.|0.|")};
-                const int indexIJ {j - i + particleTypes * (i - 1) - ((i - 2) * (i-1)) / 2};
+                std::string bondCoeff{ potentials.get_string(keyIJ, "0.|0.|0.|0.|0.|0.|")};
+                const int indexIJ {(j - i + particleTypes * (i - 1) - ((i - 2) * (i-1)) / 2) * 6};
                 size_t pos;
                 std::string token;
                 std::vector<std::string> coeffList{};
@@ -62,21 +63,21 @@ public:
                     bondCoeff.erase(0, pos + delimiter.length());
                 }
 
-                bondPotentials[indexIJ][0] = std::stod(coeffList[0]);// k constant for bond i
+                bondPotentials[indexIJ + 0] = std::stod(coeffList[0]);// k constant for bond i
 
-                double r0{std::stod(coeffList[1])};
-                bondPotentials[indexIJ][1] = r0 * r0; // squareR0 constant for bond i
+                const double& r0{std::stod(coeffList[1])};
+                bondPotentials[indexIJ + 1] = r0 * r0; // squareR0 constant for bond i
 
-                bondPotentials[indexIJ][2] = std::stod(coeffList[2]); // Epsilon constant for bond i
+                bondPotentials[indexIJ + 2] = std::stod(coeffList[2]); // Epsilon constant for bond i
 
-                double sigma{std::stod(coeffList[3])};
-                bondPotentials[indexIJ][3] = sigma * sigma; // square Sigma constant for bond i
+                const double& sigma{std::stod(coeffList[3])};
+                bondPotentials[indexIJ + 3] = sigma * sigma; // square Sigma constant for bond i
 
-                double rc{std::stod(coeffList[4])};
+                const double& rc{std::stod(coeffList[4])};
 
-                bondPotentials[indexIJ][4] = rc * rc; // Rc constant for bond i
+                bondPotentials[indexIJ + 4] = rc * rc; // Rc constant for bond i
 
-                bondPotentials[indexIJ][5] = std::stod(coeffList[5]); // Shift constant for bond i
+                bondPotentials[indexIJ + 5] = std::stod(coeffList[5]); // Shift constant for bond i
 
                 //std::cout << i << " "<< j << " "<< indexIJ << " "<< bondPotentials[indexIJ][0] << " "
                 //          << bondPotentials[indexIJ][1] << " "<< bondPotentials[indexIJ][2] << " "<< bondPotentials[indexIJ][3] << "\n" ;
@@ -130,7 +131,7 @@ public:
     [[nodiscard]] double feneBondEnergyIJ(const double &squareDistance, const int &particleTypeI,
                                           const int &particleTypeJ) const;
 
-    [[nodiscard]] std::vector<double> getPotentialsIJ(const int &i, const int &j) const;
+    //[[nodiscard]] std::vector<double> getPotentialsIJ(const int &i, const int &j) const;
 
     [[nodiscard]] double feneBondEnergyI(const int &indexParticle, const std::vector<double> &positionParticle,
                                          const Particles& systemParticles, const int &indexSkip) const;

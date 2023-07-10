@@ -16,7 +16,7 @@ int PairPotentials::getIndexIJ(const int& i, const int& j) const
         indexJ = i;
     }
     const int indexIJ {indexJ - indexI + m_nParticleTypes * ( indexI - 1) - ((indexI - 1) * (indexI-2)) / 2};
-    return indexIJ;
+    return indexIJ * 4;
 }
 
 int PairPotentials::getParticleTypes() const
@@ -26,14 +26,21 @@ int PairPotentials::getParticleTypes() const
 
 double PairPotentials::getSquareRcIJ(const int& i, const int& j) const
 {
-    return getPotentialsIJ(i, j)[2];
+    const int rcIndex {getIndexIJ(i, j) + 2};
+    return m_pairPotentials[rcIndex];
 }
-
-std::vector<double> PairPotentials::getPotentialsIJ(const int& i, const int& j) const
+/***
+std::vector<double> PairPotentials::getPotentialsIJ(const int& i, const int& j, const int& k) const
 {
-    int indexIJ { getIndexIJ(i, j) };
+    const int indexIJ { getIndexIJ(i, j) };
     return m_pairPotentials[indexIJ];
 }
+std::vector<double> PairPotentials::getPotentialsIJ(const int& i, const int& j) const
+{
+    const int indexIJ { getIndexIJ(i, j) };
+    return m_pairPotentials[indexIJ];
+}
+ ***/
 /*******************************************************************************
 * This function calculates the Lennard-Jones potential energy between two
 * particles seperated by a distance whose square is equal to squareDistance.
@@ -52,8 +59,9 @@ std::vector<double> PairPotentials::getPotentialsIJ(const int& i, const int& j) 
 ******************************************************************************/
 double PairPotentials::ljPairEnergy(const double& squareDistance, const int& typeI, const int& typeJ) const
 {
-    const std::vector<double> potentialsIJ (getPotentialsIJ(typeI, typeJ));
-    double rcSquareIJ {potentialsIJ[2]};
+    //const std::vector<double>& potentialsIJ (getPotentialsIJ(typeI, typeJ));
+    const int indexIJ { getIndexIJ(typeI, typeJ) };
+    const double& rcSquareIJ {m_pairPotentials[indexIJ + 2]};
 
     if (squareDistance > rcSquareIJ)
     {
@@ -62,11 +70,12 @@ double PairPotentials::ljPairEnergy(const double& squareDistance, const int& typ
 
     else
     {
-        double epsilonIJ {potentialsIJ[0]};
-        double squareSigmaIJ {potentialsIJ[1]};
-        double shiftIJ {potentialsIJ[3]};
-        const double rap_square {std::pow ((squareSigmaIJ / squareDistance), 3.)};
-        return 4. * epsilonIJ * rap_square * ( rap_square - 1.) + 4. * epsilonIJ * shiftIJ;
+        const double& epsilonIJ { m_pairPotentials[indexIJ + 0]};
+        const double& squareSigmaIJ { m_pairPotentials[indexIJ + 1]};
+        const double& shiftIJ {m_pairPotentials[indexIJ + 3] };
+        const double rapSquare { squareSigmaIJ / squareDistance };
+        const double rapSix {rapSquare * rapSquare * rapSquare};
+        return 4. * epsilonIJ * rapSix * ( rapSix - 1.) + 4. * epsilonIJ * shiftIJ;
     }
 }
 

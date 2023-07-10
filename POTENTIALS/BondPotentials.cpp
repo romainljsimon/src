@@ -21,14 +21,16 @@ int BondPotentials::getIndexIJ(const int& i, const int& j) const
     }
 
     const int indexIJ {indexJ - indexI + m_particleTypes * (indexI - 1) - ((indexI - 2) * (indexI-1)) / 2};
-    return indexIJ;
+    return indexIJ * 6;
 }
 
+/***
 std::vector<double> BondPotentials::getPotentialsIJ(const int& i, const int& j) const
 {
     int indexIJ {getIndexIJ(i, j)};
     return m_bondPotentials[indexIJ];
 }
+***/
 /*******************************************************************************
 * This function calculates the Lennard-Jones potential energy between two
 * particles seperated by a distance whose square is equal to squareDistance.
@@ -48,8 +50,8 @@ std::vector<double> BondPotentials::getPotentialsIJ(const int& i, const int& j) 
 double BondPotentials::feneBondEnergyIJ(const double& squareDistance, const int& particleTypeI,
                                         const int& particleTypeJ) const
 {
-    const std::vector<double> bondPotentialsIJ (getPotentialsIJ(particleTypeI, particleTypeJ));
-    const double squareR0IJ {bondPotentialsIJ[1]};
+    const int indexIJ {getIndexIJ(particleTypeI, particleTypeJ)};
+    const double squareR0IJ {m_bondPotentials[indexIJ + 1]};
     double energy {0.};
 
 
@@ -61,20 +63,21 @@ double BondPotentials::feneBondEnergyIJ(const double& squareDistance, const int&
     else
     {
 
-        const double feneKI {bondPotentialsIJ[0]};
+        const double feneKI {m_bondPotentials[indexIJ]};
         // std::cout << feneKI << "  " << squareR0IJ << "\n";
         energy += -0.5 * feneKI * squareR0IJ * std::log(1. - squareDistance / squareR0IJ);
     }
 
-    double rcSquareIJ {bondPotentialsIJ[4]};
+    double rcSquareIJ {m_bondPotentials[indexIJ + 4]};
 
     if (squareDistance < rcSquareIJ)
     {
 
-        const double epsilonIJ {bondPotentialsIJ[2]};
-        const double squareSigmaIJ {bondPotentialsIJ[3]};
-        const double shiftIJ {bondPotentialsIJ[5]};
-        const double rapSix {std::pow ((squareSigmaIJ / squareDistance), 3.)};
+        const double epsilonIJ {m_bondPotentials[indexIJ + 2]};
+        const double squareSigmaIJ {m_bondPotentials[indexIJ + 3]};
+        const double shiftIJ {m_bondPotentials[indexIJ + 5]};
+        const double rapSquare { squareSigmaIJ / squareDistance };
+        const double rapSix {rapSquare * rapSquare * rapSquare};
         //std::cout << epsilonIJ << "  " << squareSigmaIJ << "  " << shiftIJ << "\n";
         energy += 4. * epsilonIJ * rapSix * ( rapSix - 1.) + 4. * epsilonIJ * shiftIJ;
     }

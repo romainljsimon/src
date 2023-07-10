@@ -14,7 +14,7 @@ class PairPotentials
 
 private:
     const int m_nParticleTypes {};
-    const std::vector<std::vector<double>> m_pairPotentials {};
+    const std::vector<double> m_pairPotentials {};
 
 
 
@@ -28,11 +28,11 @@ public:
     }
 
 
-    static std::vector<std::vector<double>> initializePotentials(int nParticleTypes)
+    static std::vector<double> initializePotentials(int nParticleTypes)
     {
 
         int lenPairs {nParticleTypes * (nParticleTypes + 1) / 2};
-        std::vector<std::vector<double>> pairPotentials (lenPairs, std::vector<double>(4));
+        std::vector<double> pairPotentials (lenPairs * 4) ; //, std::vector<double>(4));
 
         param::Parameter potentials("./POTENTIALS.txt" );
         std::string keyPair {"pairCoeff"};
@@ -59,18 +59,27 @@ public:
                 }
 
 
-                pairPotentials[indexIJ][0] = std::stod(coeffList[0]); // Epsilon IJ pair constant
-                double sigmaIJ {std::stod(coeffList[1])};
-                pairPotentials[indexIJ][1] = sigmaIJ * sigmaIJ; // SigmaSquare IJ pair constant
-                double rcIJ {std::stod(coeffList[2])};
-                pairPotentials[indexIJ][2] = rcIJ * rcIJ; // RcSquare IJ pair constant
-                pairPotentials[indexIJ][3] = std::stod(coeffList[3]); // Shift IJ
+                pairPotentials[indexIJ * 4 + 0] = std::stod(coeffList[0]); // Epsilon IJ pair constant
+                const double& sigmaIJ {std::stod(coeffList[1])};
+                pairPotentials[indexIJ * 4 + 1] = sigmaIJ * sigmaIJ; // SigmaSquare IJ pair constant
+                const double& rcIJ { std::stod(coeffList[2]) };
+                pairPotentials[indexIJ * 4 + 2] = rcIJ * rcIJ; // RcSquare IJ pair constant
+                pairPotentials[indexIJ * 4 + 3] = std::stod(coeffList[3]); // Shift IJ
+                /***
+                std::cout << pairPotentials[indexIJ * 4 + 0] << " ";
+                std::cout << pairPotentials[indexIJ * 4 + 1] << " ";
+                std::cout << pairPotentials[indexIJ * 4 + 2] << " ";
+                std::cout << pairPotentials[indexIJ * 4 + 3] << " ";
+                std::cout << "\n";
+                ***/
 
             }
         }
 
         return pairPotentials;
     }
+
+    std::vector<double> getPotentialsIJ(const int& i, const int& j, const int& k) const;
 
     [[nodiscard]] std::vector<double> getPotentialsIJ(const int &i, const int &j) const;
 
