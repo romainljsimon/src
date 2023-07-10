@@ -56,7 +56,7 @@ public:
 
         m_interDisplacementMatrix.resize(m_nParticles, std::vector<double>(3, 0));
         m_neighborList.resize(m_nParticles);
-        WOWcreateNeighborList(systemParticles, systemBondPotentials);
+        createNeighborList(systemParticles, systemBondPotentials);
         /***
         for(auto const& x : m_neighborList)
         {

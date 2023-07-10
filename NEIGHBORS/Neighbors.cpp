@@ -427,7 +427,7 @@ void Neighbors::checkInterDisplacement(const Particles& systemParticles, const B
         const double& thresh {m_threshArray[particleTypeIndex]};
         if ( squareDispVector[i] > thresh)
         {
-            WOWcreateNeighborList(systemParticles, systemBondPotentials);
+            createNeighborList(systemParticles, systemBondPotentials);
             std::fill(m_interDisplacementMatrix.begin(), m_interDisplacementMatrix.end(),
                       std::vector<double>(3, 0));
             break;
