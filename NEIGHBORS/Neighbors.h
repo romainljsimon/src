@@ -103,13 +103,13 @@ public:
             for (int j=i; j<=nParticleTypes; j++)
             {
                 double squareRcIJ { systemPairPotentials.getSquareRcIJ(i, j)};
-                if (squareRcIJ > maxSquareRcArray[i])
+                if (squareRcIJ > maxSquareRcArray[i-1])
                 {
-                    maxSquareRcArray[i] = squareRcIJ;
+                    maxSquareRcArray[i-1] = squareRcIJ;
                 }
-                if (squareRcIJ > maxSquareRcArray[j])
+                if (squareRcIJ > maxSquareRcArray[j-1])
                 {
-                    maxSquareRcArray[j] = squareRcIJ;
+                    maxSquareRcArray[j-1] = squareRcIJ;
                 }
 
             }
@@ -124,7 +124,8 @@ public:
 
         for (auto const &elt: maxSquareRcArray)
         {
-            double rootThresh { (rSkin - elt) / 2.};
+            double maxRc { pow(elt, 1./2.) };
+            const double rootThresh { (rSkin - maxRc)  / 2.};
             threshArray.push_back(rootThresh * rootThresh);
         }
         return threshArray;
@@ -189,6 +190,10 @@ public:
                                     const bool &checkNeigh);
 
     void checkInterDisplacement(const Particles &systemParticles, const BondPotentials &systemBondPotentials);
+
+    [[nodiscard]] int getUpdateRate() const;
+
+    [[nodiscard]] int getErrors() const;
 };
 
 

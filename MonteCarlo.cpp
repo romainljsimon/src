@@ -107,9 +107,9 @@ void MonteCarlo::mcTotal()
         std::cout << "Swap MC move acceptance rate: " << m_acceptanceRateSwap << "\n";
         std::cout << "Total MC move acceptance rate: " << m_acceptanceRate << "\n";
     }
-
-	std::cout << "Neighbor list update rate: " << m_updateRate / m_timeSteps << "\n";
-	std::cout << "Number of neighbor list errors: " << m_errors << "\n";
+    double updateRate { static_cast<double>(m_systemNeighbors.getUpdateRate()) / m_timeSteps};
+	std::cout << "Neighbor list update rate: " << updateRate << "\n";
+	std::cout << "Number of neighbor list errors: " <<  m_systemNeighbors.getErrors() << "\n";
 
 }
 

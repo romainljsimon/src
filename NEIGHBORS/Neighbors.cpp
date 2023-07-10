@@ -70,7 +70,8 @@ void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const Bo
 
                     if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j))
                     {
-                        if (squareDistance <  m_maxSquareRcArray[i])
+                        int typeI {systemParticles.getParticleTypeI(i) -1};
+                        if (squareDistance <  m_maxSquareRcArray[typeI])
                         {
                             ++m_errors;
                         }
@@ -412,14 +413,15 @@ void Neighbors::checkInterDisplacement(const Particles& systemParticles)
 
 void Neighbors::checkInterDisplacement(const Particles& systemParticles, const BondPotentials& systemBondPotentials)
 {
-    const  std::vector<double> squareDispVector = getSquareNormRowMatrix(m_interDisplacementMatrix);
+    const std::vector<double> squareDispVector { getSquareNormRowMatrix(m_interDisplacementMatrix) };
     int nParticles { systemParticles.getNParticles()};
     for (int i=0; i < nParticles; i++)
     {
         int particleTypeIndex { systemParticles.getParticleTypeI(i) - 1};
         //const double maxRc {( m_maxDiam + m_typeArray[i]) / 2 * m_rC};
         //const double thresh = { pow ( (m_rSkin - maxRc) / 2, 2)};
-        if ( squareDispVector[i] > m_threshArray[particleTypeIndex])
+        const double& thresh {m_threshArray[particleTypeIndex]};
+        if ( squareDispVector[i] > thresh)
         {
             WOWcreateNeighborList(systemParticles, systemBondPotentials);
             std::fill(m_interDisplacementMatrix.begin(), m_interDisplacementMatrix.end(),
@@ -434,6 +436,16 @@ void Neighbors::checkInterDisplacement(const Particles& systemParticles, const B
 /*******************************************************************************
 * EXTRACT NEIGHBOR INFORMATION METHODS
  ******************************************************************************/
+
+int Neighbors::getUpdateRate() const
+{
+    return m_updateRate;
+}
+
+int Neighbors::getErrors() const
+{
+    return m_errors;
+}
 
 std::vector<int> Neighbors::getNeighborIList(int particleIndex) const
 {
