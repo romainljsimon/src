@@ -97,9 +97,9 @@ public:
 
     [[nodiscard]] int getNParticles() const;
 
-    [[nodiscard]] std::vector<double> getPositionI(const int &i) const;
+    [[nodiscard]]  const std::vector<double>& getPositionI(const int& i) const;
 
-    [[nodiscard]] int getParticleTypeI(const int &i) const;
+    [[nodiscard]]  int getParticleTypeI(const int &i) const;
 
     [[nodiscard]] int getMoleculeTypeI(const int &i) const;
 

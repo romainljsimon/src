@@ -19,7 +19,7 @@ double Particles::getHalfLengthCube() const
     return m_halfLengthCube;
 }
 
-std::vector<double> Particles::getPositionI(const int& i) const
+const std::vector<double>& Particles::getPositionI(const int& i) const
 {
     return m_positionArray[i];
 }

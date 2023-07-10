@@ -36,7 +36,6 @@ private:
 	const int m_nParticles {};                                            // System's number of particles.
 	double m_acceptanceRate { 0. };                                 // Monte Carlo acceptance rate.
     double m_acceptanceRateSwap { 0. };                                 // Monte Carlo acceptance rate.
-    double m_updateRate { -1. };                                     // Monte Carlo neighbor list update rate.
     const int m_saveRate {};
 	const bool m_calculatePressure {};                               // Boolean that decides if the pressure is calculated or not.
     const bool m_swap {};

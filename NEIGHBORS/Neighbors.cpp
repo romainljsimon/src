@@ -43,18 +43,22 @@ void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const Bo
 
     for (int i = 0; i < m_nParticles - 1; i++)
     {
-        std::vector<double> positionParticle = systemParticles.getPositionI(i);
+        const std::vector<double>& positionParticle { systemParticles.getPositionI(i) };
+        const std::vector<int> bondsI {systemBondPotentials.getBondsI(i)};
+        //int bondsSize {static_cast<int>(bondsI.size())};
+        //int count {0};
 
         for (int j = i + 1; j < m_nParticles; j++)
         {
 
-            std::vector<int> bondsI {systemBondPotentials.getBondsI(i)};
+            //if (count < bondsSize) {
             if (std::binary_search(bondsI.begin(), bondsI.end(), j))
             {
-                continue;
-            }
-
-            double squareDistance {systemParticles.squareDistancePair(positionParticle, j)};
+                    //count++;
+                    continue;
+                }
+            //}
+            const double squareDistance {systemParticles.squareDistancePair(positionParticle, j)};
 
             if (squareDistance < m_squareRSkin)
             {
@@ -66,11 +70,11 @@ void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const Bo
                 if (static_cast<int>(oldNeighborList[i].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
                 {
 
-                    // Compare the new neighbor list with the new neighbor list
+                    // Compare the new neighbor list with the old neighbor list
 
                     if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j))
                     {
-                        int typeI {systemParticles.getParticleTypeI(i) -1};
+                        const int typeI {systemParticles.getParticleTypeI(i) - 1};
                         if (squareDistance <  m_maxSquareRcArray[typeI])
                         {
                             ++m_errors;
@@ -260,8 +264,8 @@ void Neighbors::createSamePairCellNeighbor(const Particles& systemParticles,
 
     for (int i = 0; i < cellParticlesSize - 1; i++)
     {
-        const int realIIndex { cellParticles[i] };
-        const std::vector<double> positionParticle { systemParticles.getPositionI(realIIndex) };
+        const int& realIIndex { cellParticles[i] };
+        const std::vector<double>& positionParticle { systemParticles.getPositionI(realIIndex) };
 
         for (int j = i+1; j < cellParticlesSize; j++)
         {
@@ -283,7 +287,7 @@ void Neighbors::createSamePairCellNeighbor(const Particles& systemParticles, con
     {
         const int realIIndex { cellParticles[i] };
 
-        const std::vector<double> positionParticle { systemParticles.getPositionI(realIIndex) };
+        const std::vector<double>& positionParticle { systemParticles.getPositionI(realIIndex) };
 
         const std::vector<int> bondsParticleI{ systemBondPotentials.getBondsI(realIIndex) };
 
@@ -308,7 +312,7 @@ void Neighbors::createDiffPairCellNeighbor(const Particles& systemParticles,
 {
     for (auto const &i: cellParticles)
     {
-        const std::vector<double> positionParticle { systemParticles.getPositionI(i) };
+        const std::vector<double>& positionParticle { systemParticles.getPositionI(i) };
 
         for (auto const &j: testNeighbors)
         {
@@ -324,7 +328,7 @@ void Neighbors::createDiffPairCellNeighbor(const Particles& systemParticles, con
 {
     for (auto const &i: cellParticles)
     {
-        const std::vector<double> positionParticle { systemParticles.getPositionI(i) };
+        const std::vector<double>& positionParticle { systemParticles.getPositionI(i) };
         const std::vector<int> bondsParticleI{ systemBondPotentials.getBondsI(i) };
 
         for (auto const &j: testNeighbors)
@@ -414,8 +418,8 @@ void Neighbors::checkInterDisplacement(const Particles& systemParticles)
 void Neighbors::checkInterDisplacement(const Particles& systemParticles, const BondPotentials& systemBondPotentials)
 {
     const std::vector<double> squareDispVector { getSquareNormRowMatrix(m_interDisplacementMatrix) };
-    int nParticles { systemParticles.getNParticles()};
-    for (int i=0; i < nParticles; i++)
+
+    for (int i=0; i < m_nParticles; i++)
     {
         int particleTypeIndex { systemParticles.getParticleTypeI(i) - 1};
         //const double maxRc {( m_maxDiam + m_typeArray[i]) / 2 * m_rC};

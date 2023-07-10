@@ -8,7 +8,7 @@
 #include <vector>
 #include <cmath>
 #include "util.h"
-
+/***
 double rForce(double squareDistance, double sigmaA, double sigmaB, double squareRc)
 {
     double squareSigma { std::pow (((sigmaA + sigmaB) / 2. ), 2.) };
@@ -65,4 +65,4 @@ double pressureSystem(const double& temp, const std::vector<std::vector<double>>
     }
     return 1. - sum / (3. *  positionArraySize * temp);
 }
-
+***/
