@@ -138,6 +138,6 @@ public:
 
     [[nodiscard]] int getIndexIJ(const int &i, const int &j) const;
 
-    [[nodiscard]] std::vector<int> getBondsI(const int &i) const;
+    [[nodiscard]] const std::vector<int>& getBondsI(const int &i) const;
 };
 #endif /* BONDPOTENTIALS_H_ */

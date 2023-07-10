@@ -4,7 +4,7 @@
 #include <cmath>
 #include "BondPotentials.h"
 
-std::vector<int> BondPotentials::getBondsI(const int& i) const
+const std::vector<int>& BondPotentials::getBondsI(const int& i) const
 {
     return m_bondsArray[i];
 }

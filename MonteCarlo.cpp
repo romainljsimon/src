@@ -236,7 +236,7 @@ void MonteCarlo::mcTranslation() {
     positionParticleTranslation = vectorSum(positionParticleTranslation, randomVector);
     positionParticleTranslation = periodicBC(positionParticleTranslation, m_systemParticles.getLengthCube());
 
-    std::vector<int> neighborIList { m_systemNeighbors.getNeighborIList(indexTranslation) };
+    const std::vector<int>& neighborIList { m_systemNeighbors.getNeighborIList(indexTranslation) };
     double oldEnergyParticle;
     double newEnergyParticle;
 
@@ -307,8 +307,8 @@ void MonteCarlo::mcSwap()
     double energyParticle2;
     double energyParticleSwap1;
     double energyParticleSwap2;
-    const std::vector<int> neighborIList1 { m_systemNeighbors.getNeighborIList(indexSwap1) };
-    const std::vector<int> neighborIList2 { m_systemNeighbors.getNeighborIList(indexSwap2) };
+    const std::vector<int>& neighborIList1 { m_systemNeighbors.getNeighborIList(indexSwap1) };
+    const std::vector<int>& neighborIList2 { m_systemNeighbors.getNeighborIList(indexSwap2) };
 
 
     if (m_simulationMol == "polymer")

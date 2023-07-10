@@ -95,13 +95,13 @@ public:
     }
 
 
-    [[nodiscard]] int getNParticles() const;
+    [[nodiscard]] const int& getNParticles() const;
 
     [[nodiscard]]  const std::vector<double>& getPositionI(const int& i) const;
 
-    [[nodiscard]]  int getParticleTypeI(const int &i) const;
+    [[nodiscard]]  const int& getParticleTypeI(const int &i) const;
 
-    [[nodiscard]] int getMoleculeTypeI(const int &i) const;
+    [[nodiscard]] const int& getMoleculeTypeI(const int &i) const;
 
     void swapParticleTypesIJ(const int &i, const int &j, const int &typeI, const int &typeJ);
 
@@ -116,9 +116,9 @@ public:
 
     [[nodiscard]] double squareDistancePair(const int &indexI, const std::vector<double> &positionJ) const;
 
-    [[nodiscard]] double getLengthCube() const;
+    [[nodiscard]] const double& getLengthCube() const;
 
-    [[nodiscard]] double getHalfLengthCube() const;
+    [[nodiscard]] const double& getHalfLengthCube() const;
 
     void swapParticleTypesIJ(const int &i, const int &j);
 };

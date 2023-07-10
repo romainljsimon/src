@@ -4,17 +4,17 @@
 #include "Particles.h"
 
 
-int Particles::getNParticles() const
+const int& Particles::getNParticles() const
 {
     return m_nParticles;
 }
 
-double Particles::getLengthCube() const
+const double& Particles::getLengthCube() const
 {
     return m_lengthCube;
 }
 
-double Particles::getHalfLengthCube() const
+const double& Particles::getHalfLengthCube() const
 {
     return m_halfLengthCube;
 }
@@ -23,12 +23,12 @@ const std::vector<double>& Particles::getPositionI(const int& i) const
 {
     return m_positionArray[i];
 }
-int Particles::getParticleTypeI(const int& i) const
+const int& Particles::getParticleTypeI(const int& i) const
 {
     return m_particleTypeArray[i];
 }
 
-int Particles::getMoleculeTypeI(const int& i) const
+const int& Particles::getMoleculeTypeI(const int& i) const
 {
     return m_moleculeTypeArray[i];
 }
@@ -49,7 +49,7 @@ void Particles::swapParticleTypesIJ(const int& i, const int& j)
     //std::cout << i << "  " << j << "\n";
     //std::cout << m_particleTypeArray[i] << "  " << m_particleTypeArray[j] << "\n";
 
-    int typeJ {getParticleTypeI(j)};
+    const int typeJ {getParticleTypeI(j)};
     //std::cout << m_particleTypeArray[i] << m_particleTypeArray[j] << "\n";
     m_particleTypeArray[j] = m_particleTypeArray[i];
     //std::cout << m_particleTypeArray[i] << m_particleTypeArray[j] << "\n";
@@ -91,15 +91,19 @@ double Particles::squareDistancePair(const std::vector<double>& positionI, const
 
 double Particles::squareDistancePair(const int& indexI, const int& indexJ) const
 {
-    return squareDistancePair(m_positionArray[indexI], m_positionArray[indexJ]);
+    const std::vector<double>& positionI {m_positionArray[indexI]};
+    const std::vector<double>& positionJ {m_positionArray[indexJ]};
+    return squareDistancePair(positionI, positionJ);
 }
 
 double Particles::squareDistancePair(const std::vector<double>& positionI, const int& indexJ) const
 {
-    return squareDistancePair(positionI, m_positionArray[indexJ]);
+    const std::vector<double>& positionJ {m_positionArray[indexJ]};
+    return squareDistancePair(positionI, positionJ);
 }
 
 double Particles::squareDistancePair(const int& indexI, const std::vector<double>& positionJ) const
 {
-    return squareDistancePair(m_positionArray[indexI], positionJ);
+    const std::vector<double>& positionI {m_positionArray[indexI]};
+    return squareDistancePair(positionI, positionJ);
 }
