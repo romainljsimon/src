@@ -35,7 +35,7 @@ void MonteCarlo::mcTotal()
     std::string pressureFilePath {m_folderPath + "/outP.txt"};
     // std::vector<double> radiusArray (divideVectorByScalar(m_typeArray, 2));
 
-	//saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube,preName + std::to_string(0) + extname );
+	m_systemParticles.saveInXYZ(preName + std::to_string(0) + extname );
 	saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
 	// saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(0) + extnameDisp);
 
@@ -75,9 +75,9 @@ void MonteCarlo::mcTotal()
 			//radiusArray = divideVectorByScalar(m_typeArray, 2);
             std::string nameXYZ {preName};
             nameXYZ.append(std::to_string(i + 1)).append(extname);
-            std::string nameDisp {preNameDisp};
-            nameDisp.append(std::to_string(i + 1)).append(extnameDisp);
-            //saveInXYZ (m_positionArray, radiusArray, m_moleculeType, m_lengthCube, nameXYZ);
+            //std::string nameDisp {preNameDisp};
+            //nameDisp.append(std::to_string(i + 1)).append(extnameDisp);
+            m_systemParticles.saveInXYZ(nameXYZ );
 			//saveDisplacement (m_totalDisplacementMatrix, nameDisp);
 			++save_index;
 		}
@@ -95,7 +95,7 @@ void MonteCarlo::mcTotal()
 
     //radiusArray = divideVectorByScalar(m_typeArray, 2);
 	m_acceptanceRate /= m_timeSteps;
-    //saveInXYZ(m_positionArray, radiusArray, m_moleculeType, m_lengthCube, preName + std::to_string(m_timeSteps) + extname );
+    m_systemParticles.saveInXYZ( preName + std::to_string(m_timeSteps) + extname );
     //saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(m_timeSteps) + extnameDisp);
     saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
     std::cout << "Translation MC move acceptance rate: " << m_acceptanceRate - m_pSwap * m_acceptanceRate << "\n";
@@ -234,7 +234,7 @@ void MonteCarlo::mcTranslation() {
     const std::vector<double> randomVector(randomVectorDoubleGenerator(3, -m_rBox, m_rBox));
     std::vector<double> positionParticleTranslation = m_systemParticles.getPositionI(indexTranslation);
     positionParticleTranslation = vectorSum(positionParticleTranslation, randomVector);
-    positionParticleTranslation = periodicBC(positionParticleTranslation, m_systemParticles.getLengthCube());
+    positionParticleTranslation = m_systemParticles.periodicBC(positionParticleTranslation);
 
     const std::vector<int>& neighborIList { m_systemNeighbors.getNeighborIList(indexTranslation) };
     double oldEnergyParticle;
@@ -283,6 +283,7 @@ void MonteCarlo::mcTranslation() {
         ***/
         m_systemNeighbors.updateInterDisplacement(indexTranslation, randomVector);
         m_systemParticles.updatePositionI(indexTranslation, positionParticleTranslation);
+        m_systemParticles.updateFlags(indexTranslation);
     }
 }
 

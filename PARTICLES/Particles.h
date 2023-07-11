@@ -15,6 +15,8 @@ private:
     const int m_nParticles {};
     const double m_lengthCube {};
     const double m_halfLengthCube {};
+    std::vector<int> m_newFlags {0, 0, 0};
+    std::vector<int> m_flagsArray {};
     std::vector<std::vector<double>> m_positionArray {};
     std::vector<int> m_particleTypeArray {};
     std::vector<int> m_moleculeTypeArray {};
@@ -27,7 +29,9 @@ public:
     : m_nParticles ( initializeNumber(path))
     , m_lengthCube {pow (static_cast<double>(m_nParticles) / param.get_double("density"), 1. / 3.) }
     , m_halfLengthCube (0.5 * m_lengthCube)
+
     {
+        m_flagsArray.resize(3 * m_nParticles, 0);
         initializeParticles(path);
     }
 
@@ -94,6 +98,7 @@ public:
         infile.close();
     }
 
+    void updateFlags(const int& indexParticle);
 
     [[nodiscard]] const int& getNParticles() const;
 
@@ -120,7 +125,11 @@ public:
 
     [[nodiscard]] const double& getHalfLengthCube() const;
 
+    void saveInXYZ(const std::string& path) const;
+
     void swapParticleTypesIJ(const int &i, const int &j);
+
+    std::vector<double> periodicBC(std::vector<double> positionParticle);
 };
 
 #endif /* PARTICLES_H_ */

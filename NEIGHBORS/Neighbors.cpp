@@ -37,7 +37,7 @@ void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const Bo
 {
     // Be careful with the swaps and poly dispersity. Solution for now is to take rSkin big enough.
     ++m_updateRate;
-    std::vector<std::vector<int>> oldNeighborList = m_neighborList;
+    const std::vector<std::vector<int>> oldNeighborList { m_neighborList};
     m_neighborList.clear();
     m_neighborList.resize(m_nParticles);
 
@@ -51,38 +51,34 @@ void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const Bo
         for (int j = i + 1; j < m_nParticles; j++)
         {
 
-
-            if (std::binary_search(bondsI.begin(), bondsI.end(), j))
+            const bool notIn {!std::binary_search(bondsI.begin(), bondsI.end(), j)};
+            if (notIn)
             {
-                    //count++;
-                    continue;
-                }
 
 
-            const double squareDistance {systemParticles.squareDistancePair(positionParticle, j)};
+                const double squareDistance{systemParticles.squareDistancePair(positionParticle, j)};
 
-            if (squareDistance < m_squareRSkin)
-            {
-                // j and i are neighbors
+                if (squareDistance < m_squareRSkin) {
+                    // j and i are neighbors
 
-                m_neighborList[i].push_back(j); // j is on row i
-                m_neighborList[j].push_back(i); // i is on row j
+                    m_neighborList[i].push_back(j); // j is on row i
+                    m_neighborList[j].push_back(i); // i is on row j
 
-                if (static_cast<int>(oldNeighborList[i].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
-                {
-
-                    // Compare the new neighbor list with the old neighbor list
-
-                    if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j))
+                    if (static_cast<int>(oldNeighborList[i].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
                     {
-                        const int typeI {systemParticles.getParticleTypeI(i) - 1};
-                        if (squareDistance <  m_maxSquareRcArray[typeI])
-                        {
-                            ++m_errors;
+
+                        // Compare the new neighbor list with the old neighbor list
+
+                        if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j)) {
+                            const int typeI{systemParticles.getParticleTypeI(i) - 1};
+                            if (squareDistance < m_maxSquareRcArray[typeI])
+                            {
+                                ++m_errors;
+                            }
                         }
                     }
-                }
 
+                }
             }
         }
 

@@ -107,3 +107,100 @@ double Particles::squareDistancePair(const int& indexI, const std::vector<double
     const std::vector<double>& positionI {m_positionArray[indexI]};
     return squareDistancePair(positionI, positionJ);
 }
+
+
+std::vector<double> Particles::periodicBC(std::vector<double> positionParticle)
+/*
+ *This function is an implementation of the periodic Boundary conditions.
+ *If a particle gets out of the simulation box from one of the sides, it gets back in the box from the opposite side.
+ */
+{
+    m_newFlags = {0, 0, 0};
+
+    for (int i = 0; i < 3; i++)
+    {
+        double& positionI {positionParticle[i]};
+        if (positionI < 0)
+        {
+            positionI += m_lengthCube;
+            m_newFlags[i] -= 1;
+        }
+        else if (positionI > m_lengthCube)
+            positionI -= m_lengthCube;
+            m_newFlags[i] += 1;
+    }
+    return positionParticle;
+}
+
+void Particles::updateFlags(const int& indexParticle)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        m_flagsArray[indexParticle + i] += m_newFlags[i];
+    }
+}
+
+
+void Particles::saveInXYZ(const std::string& path) const
+{
+
+    /*
+     * This function saves in a .xyz file the radius and the position of each particle.
+      */
+
+
+    std::ofstream fOut(path);
+    fOut << m_nParticles;
+    fOut << "\n";
+    std::string lengthStr = std::to_string(m_lengthCube);
+    fOut << "Lattice=";
+    fOut << '"';
+    fOut << lengthStr;
+    fOut << " 0.0 0.0 0.0 ";
+    fOut << lengthStr;
+    fOut << " 0.0 0.0 0.0 ";
+    fOut << lengthStr;
+    fOut << '"';
+    fOut << " Properties=type:I:1:radius:R:1:pos:R:3";
+    fOut << "\n";
+    int it {0};
+    for(auto const& x : m_positionArray)
+    {
+
+        int j { 0 };
+        for(auto const& i : x)
+        {
+
+            if (j == 2)
+            {
+                fOut << i;
+                fOut << " ";
+                fOut << m_flagsArray[3*it];
+                fOut << " ";
+                fOut << m_flagsArray[3*it+1];
+                fOut << " ";
+                fOut << m_flagsArray[3*it+2];
+                fOut << "\n";
+            }
+            else if (j==0)
+            {
+                fOut << m_moleculeTypeArray[it];
+                fOut << " ";
+                fOut << m_particleTypeArray[it];
+                fOut << " ";
+                fOut << i;
+                fOut << " ";
+            }
+            else
+            {
+                fOut << i;
+                fOut << " ";
+            }
+
+            j += 1;
+
+        }
+        it += 1;
+    }
+    fOut.close();
+}
