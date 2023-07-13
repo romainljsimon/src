@@ -11,7 +11,6 @@
 #include <string>
 #include "MonteCarlo.h"
 #include "random.h"
-#include "energy.h"
 #include "readSaveFile.h"
 #include "util.h"
 
@@ -31,11 +30,11 @@ void MonteCarlo::mcTotal()
 	std::string extname {".xyz"};
 	std::string preNameDisp ("./disp/displacement");
 	std::string extnameDisp {".txt"};
-    std::string energyFilePath{m_folderPath + "/outE.txt"};
-    std::string pressureFilePath {m_folderPath + "/outP.txt"};
+    constexpr std::string_view energyFilePath{"./outE.txt"};
+    //std::string pressureFilePath {"./outP.txt"};
     // std::vector<double> radiusArray (divideVectorByScalar(m_typeArray, 2));
 
-	m_systemParticles.saveInXYZ(preName + std::to_string(0) + extname );
+	m_systemMolecules.saveInXYZ(preName + std::to_string(0) + extname );
 	saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
 	// saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(0) + extnameDisp);
 
@@ -49,24 +48,12 @@ void MonteCarlo::mcTotal()
 
 		for (int j = 0; j < m_nParticles; j++) // N Monte Carlo moves are tried in one time step.
 		{
-			mcMove();
-		}
 
-		//m_interDisplacementMatrix = matrixSum( m_interDisplacementMatrix, m_stepDisplacementMatrix );
-		//m_totalDisplacementMatrix = matrixSum( m_totalDisplacementMatrix, m_stepDisplacementMatrix );
-		//std::fill( m_stepDisplacementMatrix.begin(), m_stepDisplacementMatrix.end(), std::vector<double>(3, 0));
+            mcMove();
+        }
 
-		if (m_neighMethod == "verlet")
-		{
-            if (m_simulationMol == "polymer")
-            {
-                m_systemNeighbors.checkInterDisplacement(m_systemParticles,m_bondPotentials);
-            }
-            else
-            {
-                m_systemNeighbors.checkInterDisplacement(m_systemParticles);
-            }
-		}
+        m_systemNeighbors.checkInterDisplacement(m_systemMolecules);
+
 
 		// Next, the results of the simulations are saved.
 
@@ -77,7 +64,7 @@ void MonteCarlo::mcTotal()
             nameXYZ.append(std::to_string(i + 1)).append(extname);
             //std::string nameDisp {preNameDisp};
             //nameDisp.append(std::to_string(i + 1)).append(extnameDisp);
-            m_systemParticles.saveInXYZ(nameXYZ );
+            m_systemMolecules.saveInXYZ(nameXYZ );
 			//saveDisplacement (m_totalDisplacementMatrix, nameDisp);
 			++save_index;
 		}
@@ -86,30 +73,45 @@ void MonteCarlo::mcTotal()
 		{
 			saveDoubleTXT(m_energy / m_nParticles, energyFilePath); //Energy is saved at each time step.
 		}
+        /***
 		if (m_calculatePressure) // Saves pressure if m_calculatePressure is True
 		{
 			saveDoubleTXT( m_pressure, pressureFilePath);
 		}
+        ***/
 
 	}
 
     //radiusArray = divideVectorByScalar(m_typeArray, 2);
 	m_acceptanceRate /= m_timeSteps;
-    m_systemParticles.saveInXYZ( preName + std::to_string(m_timeSteps) + extname );
+    m_systemMolecules.saveInXYZ( preName + std::to_string(m_timeSteps) + extname );
     //saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(m_timeSteps) + extnameDisp);
-    saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
-    std::cout << "Translation MC move acceptance rate: " << m_acceptanceRate - m_pSwap * m_acceptanceRate << "\n";
+    // saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
 
+    constexpr std::string_view translationString{"Translation MC move acceptance rate: "};
     if ( m_swap )
     {
         m_acceptanceRateSwap /= m_timeSteps;
         m_acceptanceRateSwap /= m_pSwap;
-        std::cout << "Swap MC move acceptance rate: " << m_acceptanceRateSwap << "\n";
-        std::cout << "Total MC move acceptance rate: " << m_acceptanceRate << "\n";
+
+        const double translationRate { (m_acceptanceRate - m_pSwap * m_acceptanceRateSwap) / (1 - m_pSwap)};
+
+        constexpr std::string_view swapString { "Swap MC move acceptance rate: " };
+        constexpr std::string_view totalString { "Total MC move acceptance rate: " };
+
+        std::cout << translationString << translationRate << "\n";
+        std::cout << swapString << m_acceptanceRateSwap << "\n";
+        std::cout << totalString  << m_acceptanceRate << "\n";
+    }
+    else
+    {
+        std::cout << translationString  << m_acceptanceRate << "\n";
     }
     double updateRate { static_cast<double>(m_systemNeighbors.getUpdateRate()) / m_timeSteps};
-	std::cout << "Neighbor list update rate: " << updateRate << "\n";
-	std::cout << "Number of neighbor list errors: " <<  m_systemNeighbors.getErrors() << "\n";
+    constexpr std::string_view neighborString { "Neighbor list update rate: "};
+    constexpr std::string_view neighborErrorString  { "Number of neighbor list errors: "};
+	std::cout << neighborString  << updateRate << "\n";
+	std::cout << neighborErrorString <<  m_systemNeighbors.getErrors() << "\n";
 
 }
 
@@ -132,12 +134,13 @@ void MonteCarlo::mcMove()
         }
         else
         {
+            //mcMoleculeTranslation();
             mcTranslation ();
+
         }
     }
     else
     {
-        mcTranslation ();
     }
 }
 
@@ -147,79 +150,58 @@ void MonteCarlo::mcMove()
  * the move according to the Metropolis criterion. It is called ??? times in one
  * time step.
  ******************************************************************************/
-/***
-void MonteCarlo::mcAllMove()
+
+void MonteCarlo::mcMoleculeTranslation()
 {
-	int indexTranslation { randomIntGenerator(0, (m_nParticles - 1) / 3) }; // randomly chosen particle
+	const int typeMolecule { randomIntGenerator(0, (m_nParticles - 1) / 3) }; // randomly chosen Molecule
+    const int indexTranslation { 3 * typeMolecule};
 	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -m_rBox, m_rBox) );
+	double oldEnergyMolecule {0};
+	double newEnergyMolecule {0};
+    std::vector<std::vector<double>> positionArrayTranslation;
 
-	double oldEnergyPolymer {};
-	double newEnergyPolymer {};
-	std::vector< std::vector<double>> tentativePositionArray(m_positionArray);
-
-	for (int j = 0; j < 2; j++)
+	for (int j = 0; j < 3; j++)
 	{
 
-		std::vector<double> positionParticleTranslation = mcTranslation ( indexTranslation + j, randomVector );
+        const int newIndexTranslation {indexTranslation + j };
+        const std::vector<double> positionParticleTranslation(vectorTranslation(newIndexTranslation,
+                                                                                randomVector));
+        positionArrayTranslation.push_back(positionParticleTranslation);
+        const std::vector<int>& neighborIList { m_systemNeighbors.getNeighborIList(newIndexTranslation) };
 
-		tentativePositionArray[indexTranslation + j] = positionParticleTranslation;
-
+		oldEnergyMolecule += m_systemMolecules.energyPairParticleExtraMolecule( newIndexTranslation, neighborIList, typeMolecule);
+		newEnergyMolecule += m_systemMolecules.energyPairParticleExtraMolecule( newIndexTranslation,
+                                                                           positionParticleTranslation,
+                                                                           neighborIList, typeMolecule);
 	}
 
-	for (int j = 0; j < 2; j++)
-	{
-		std::vector<int> neighborIList { };
+    const double diffEnergy {newEnergyMolecule - oldEnergyMolecule};
+    // Metropolis criterion
+    const bool acceptMove{ metropolis(diffEnergy) };
 
-		if ( m_neighMethod == "verlet" )
-		{
-			neighborIList = m_neighborList[indexTranslation + j]; // particle's neighbor list
-		}
-
-		else
-		{
-			neighborIList.resize ( m_nParticles );
-			std::iota (std::begin(neighborIList), std::end(neighborIList), 0);
-
-		}
-
-		double oldEnergyParticle {};
-		double newEnergyParticle {};
-
- 		std::vector<int> bondsI ( m_bondsMatrix[indexTranslation] );
-
-		oldEnergyParticle = energyParticlePolymer (indexTranslation, m_positionArray[indexTranslation],
-												   m_positionArray, neighborIList, m_typeArray, bondsI,
-												   m_squareRc, m_lengthCube, m_squareR0, m_feneK);
-		newEnergyParticle = energyParticlePolymer (indexTranslation, tentativePositionArray[indexTranslation + j],
-												   tentativePositionArray, neighborIList, m_typeArray, bondsI,
-												   m_squareRc, m_lengthCube, m_squareR0, m_feneK);
-
-		oldEnergyPolymer += oldEnergyParticle;
-		newEnergyParticle += newEnergyParticle;
-
-	}
-
-
-	// Metropolis criterion
-	bool acceptMove { metropolis (newEnergyPolymer, oldEnergyPolymer) } ;
-
-	// If the move is accepted, then the energy, the position array and the displacement array can be updated.
-	// If the m_calculatePressure is set to True, then the pressure is calculated.
-	if ( acceptMove )
-	{
-
-
-
-		double newEnergy {m_energy - oldEnergyPolymer + newEnergyPolymer};
-		m_energy = newEnergy;
-		m_stepDisplacementMatrix[indexTranslation] = vectorSum(m_stepDisplacementMatrix[indexTranslation], randomVector);
-		m_positionArray = tentativePositionArray;
-		// m_acceptanceRate += 1. / m_nParticles; // increment of the acceptance rate.
-
-	}
-
+    // If the move is accepted, then the energy, the position array and the displacement array can be updated.
+    // If the m_calculatePressure is set to True, then the pressure is calculated.
+    if (acceptMove)
+    {
+        generalUpdate(diffEnergy);
+        /***
+        if (m_calculatePressure)
+        {
+            const double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_typeArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
+            const double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_typeArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
+            m_pressure += newPressureParticle - oldPressureParticle;
+        }
+        ***/
+        m_systemMolecules.updateFlags(indexTranslation);
+        for (int j = 0; j < 3; j++)
+        {
+            const int newIndexTranslation {indexTranslation + j };
+            m_systemNeighbors.updateInterDisplacement(newIndexTranslation, randomVector);
+            m_systemMolecules.updatePositionI(newIndexTranslation, positionArrayTranslation[j]);
+        }
+    }
+    m_systemMolecules.reinitializeFlags();
 }
-***/
 
 /*******************************************************************************
  * This function returns a tentative new particle position.
@@ -229,39 +211,20 @@ void MonteCarlo::mcAllMove()
  *                     taken from a uniform distribution U(-m_rBox, m_rBox).
  * @return Tentative new particle position.
  ******************************************************************************/
-void MonteCarlo::mcTranslation() {
+void MonteCarlo::mcTranslation()
+{
+
     const int indexTranslation{randomIntGenerator(0, m_nParticles - 1)}; // randomly chosen particle
     const std::vector<double> randomVector(randomVectorDoubleGenerator(3, -m_rBox, m_rBox));
-    std::vector<double> positionParticleTranslation = m_systemParticles.getPositionI(indexTranslation);
-    positionParticleTranslation = vectorSum(positionParticleTranslation, randomVector);
-    positionParticleTranslation = m_systemParticles.periodicBC(positionParticleTranslation);
-
+    //const std::vector<double>  randomVector = {0.02, 0, 0};
+    std::vector<double> positionParticleTranslation {vectorTranslation(indexTranslation, randomVector)};
     const std::vector<int>& neighborIList { m_systemNeighbors.getNeighborIList(indexTranslation) };
     double oldEnergyParticle;
     double newEnergyParticle;
 
-    if (m_simulationMol == "polymer")
-    {
-
-        oldEnergyParticle = energyParticlePolymer(indexTranslation,
-                                                  m_systemParticles.getPositionI(indexTranslation),
-                                                  m_systemParticles, neighborIList,
-                                                  m_pairPotentials, m_bondPotentials);
-        newEnergyParticle = energyParticlePolymer(indexTranslation, positionParticleTranslation,
-                                                  m_systemParticles, neighborIList,
-                                                  m_pairPotentials, m_bondPotentials);
-
-    }
-    else
-    {
-        oldEnergyParticle = energyParticle(indexTranslation,
-                                           m_systemParticles.getPositionI(indexTranslation),
-                                           m_systemParticles, neighborIList,
-                                           m_pairPotentials);
-
-        newEnergyParticle = energyParticle(indexTranslation, positionParticleTranslation,
-                                           m_systemParticles, neighborIList,m_pairPotentials);
-    }
+    oldEnergyParticle = m_systemMolecules.energyParticleMolecule(indexTranslation, neighborIList);
+    newEnergyParticle = m_systemMolecules.energyParticleMolecule(indexTranslation, positionParticleTranslation,
+                                                                 neighborIList);
 
     const double diff_energy {newEnergyParticle - oldEnergyParticle};
 
@@ -282,9 +245,10 @@ void MonteCarlo::mcTranslation() {
         }
         ***/
         m_systemNeighbors.updateInterDisplacement(indexTranslation, randomVector);
-        m_systemParticles.updatePositionI(indexTranslation, positionParticleTranslation);
-        m_systemParticles.updateFlags(indexTranslation);
+        m_systemMolecules.updatePositionI(indexTranslation, positionParticleTranslation);
+        m_systemMolecules.updateFlags(indexTranslation);
     }
+    m_systemMolecules.reinitializeFlags();
 }
 
 /*******************************************************************************
@@ -312,57 +276,27 @@ void MonteCarlo::mcSwap()
     const std::vector<int>& neighborIList2 { m_systemNeighbors.getNeighborIList(indexSwap2) };
 
 
-    if (m_simulationMol == "polymer")
-    {
 
-        energyParticle1 = energyParticlePolymer(indexSwap1,m_systemParticles.getPositionI(indexSwap1),
-                                                m_systemParticles, neighborIList1,
-                                                m_pairPotentials, m_bondPotentials, indexSwap2);
+    energyParticle1 = m_systemMolecules.energyParticleMolecule(indexSwap1, neighborIList1, indexSwap2);
 
-        energyParticle2 = energyParticlePolymer(indexSwap2, m_systemParticles.getPositionI(indexSwap2),
-                                                m_systemParticles, neighborIList2,
-                                                m_pairPotentials, m_bondPotentials, indexSwap1);
+    energyParticle2 = m_systemMolecules.energyParticleMolecule(indexSwap2, neighborIList2, indexSwap1);
 
-        m_systemParticles.swapParticleTypesIJ(indexSwap1, indexSwap2);
+    m_systemMolecules.swapParticleTypesIJ(indexSwap1, indexSwap2);
 
-        energyParticleSwap1 = energyParticlePolymer(indexSwap1,m_systemParticles.getPositionI(indexSwap1),
-                                                    m_systemParticles, neighborIList1,
-                                                    m_pairPotentials, m_bondPotentials, indexSwap2);
+    energyParticleSwap1 = m_systemMolecules.energyParticleMolecule(indexSwap1, neighborIList1, indexSwap2);
 
-        energyParticleSwap2 = energyParticlePolymer(indexSwap2, m_systemParticles.getPositionI(indexSwap2),
-                                                    m_systemParticles, neighborIList2,
-                                                    m_pairPotentials, m_bondPotentials, indexSwap1);
+    energyParticleSwap2 = m_systemMolecules.energyParticleMolecule(indexSwap2, neighborIList2, indexSwap1);
 
-    }
-    else
-    {
-        energyParticle1 = energyParticle(indexSwap1, m_systemParticles.getPositionI(indexSwap1),
-                                         m_systemParticles, neighborIList1,
-                                         m_pairPotentials, indexSwap2);
 
-        energyParticle2 = energyParticle(indexSwap2, m_systemParticles.getPositionI(indexSwap2),
-                                         m_systemParticles, neighborIList2,
-                                         m_pairPotentials, indexSwap1);
-
-        m_systemParticles.swapParticleTypesIJ(indexSwap1, indexSwap2);
-
-        energyParticleSwap1 = energyParticle(indexSwap1, m_systemParticles.getPositionI(indexSwap1),
-                                             m_systemParticles, neighborIList1,
-                                             m_pairPotentials, indexSwap2);
-
-        energyParticleSwap2 = energyParticle(indexSwap2, m_systemParticles.getPositionI(indexSwap2),
-                                             m_systemParticles, neighborIList2,
-                                             m_pairPotentials, indexSwap1);
-    }
-    const double diff_energy{ energyParticleSwap1 + energyParticleSwap2 - energyParticle1 - energyParticle2 };
+    const double diffEnergy{ energyParticleSwap1 + energyParticleSwap2 - energyParticle1 - energyParticle2 };
     // Metropolis criterion
-    const bool acceptMove { metropolis( diff_energy) };
+    const bool acceptMove { metropolis( diffEnergy) };
 
     // If the move is accepted, then the energy, the position array and the displacement array can be updated.
     // If the m_calculatePressure is set to True, then the pressure is calculated.
     if ( acceptMove )
     {
-        generalUpdate( diff_energy );
+        generalUpdate( diffEnergy );
         m_acceptanceRateSwap += 1. / m_nParticles;
         /***
         if (m_calculatePressure)
@@ -404,16 +338,22 @@ void MonteCarlo::mcSwap()
     }
     else
     {
-        m_systemParticles.swapParticleTypesIJ(indexSwap1, indexSwap2);
+        m_systemMolecules.swapParticleTypesIJ(indexSwap1, indexSwap2);
     }
 }
 
 
-void MonteCarlo::generalUpdate(double diff_energy)
+std::vector<double> MonteCarlo::vectorTranslation(const int& indexTranslation, const std::vector<double>& randomVector)
 {
+    std::vector<double> positionParticleTranslation = m_systemMolecules.getPositionI(indexTranslation);
+    positionParticleTranslation = vectorSum(positionParticleTranslation, randomVector);
+    positionParticleTranslation = m_systemMolecules.periodicBC(positionParticleTranslation);
+    return positionParticleTranslation;
+}
 
-    const double newEnergy {m_energy + diff_energy};
-    m_energy = newEnergy;
+void MonteCarlo::generalUpdate(double diffEnergy)
+{
+    m_energy += diffEnergy;
     m_acceptanceRate += 1. / m_nParticles; // increment of the acceptance rate.
 
 }

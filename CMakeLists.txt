@@ -7,8 +7,6 @@ add_compile_options(-O3 -flto)
 include_directories(.)
 
 add_executable(swapMC
-        energy.cpp
-        energy.h
         main.cpp
         MonteCarlo.cpp
         MonteCarlo.h
@@ -21,6 +19,12 @@ add_executable(swapMC
         unittests.h
         util.cpp
         util.h
-        pressure.cpp
-        pressure.h
-        INPUT/Parameter.h POTENTIALS/PairPotentials.h POTENTIALS/BondPotentials.h POTENTIALS/PairPotentials.cpp POTENTIALS/BondPotentials.cpp NEIGHBORS/Neighbors.cpp PARTICLES/Particles.h PARTICLES/Particles.cpp)
+        INPUT/Parameter.h
+        POTENTIALS/PairPotentials.cpp
+        POTENTIALS/PairPotentials.h
+        POTENTIALS/BondPotentials.h
+        POTENTIALS/BondPotentials.cpp
+        NEIGHBORS/Neighbors.cpp
+        NEIGHBORS/Neighbors.h
+        MOLECULES/Molecules.cpp
+        MOLECULES/Molecules.h)

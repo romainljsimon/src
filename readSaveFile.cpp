@@ -149,7 +149,7 @@ void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std:
     fOut.close();
 }
 
-void saveDoubleTXT(const double& number, const std::string& path)
+void saveDoubleTXT(const double& number, const std::string_view& path)
 /*
  * This function saves the system energy in a txt file
  */

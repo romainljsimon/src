@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 #include "INPUT/Parameter.h"
-#include "PARTICLES/Particles.h"
 
 class PairPotentials
 {
@@ -16,10 +15,9 @@ private:
     const int m_nParticleTypes {};
     const std::vector<double> m_pairPotentials {};
 
-
-
 public:
     // POTENTIALS constructor
+    PairPotentials() = default;
 
     explicit PairPotentials (param::Parameter param)
     : m_nParticleTypes (param.get_int( "particleTypes"))
@@ -34,7 +32,7 @@ public:
         int lenPairs {nParticleTypes * (nParticleTypes + 1) / 2};
         std::vector<double> pairPotentials (lenPairs * 4) ; //, std::vector<double>(4));
 
-        param::Parameter potentials("./POTENTIALS.txt" );
+        param::Parameter potentials("./potentials.txt" );
         std::string keyPair {"pairCoeff"};
         std::string delimiter { "|"};
         for (int i=1; i<=nParticleTypes; i++)
@@ -47,7 +45,7 @@ public:
                 std::string keyIJ {keyPair};
                 keyIJ.append(strI).append(strJ);
                 std::string potentialCoeff {potentials.get_string(keyIJ)};
-                const int indexIJ {j - i + nParticleTypes * (i - 1) - ((i - 2) * (i-1)) / 2};
+                const int indexIJ {4 * (j - i + nParticleTypes * (i - 1) - ((i - 2) * (i-1)) / 2)};
                 size_t pos;
                 std::string token;
                 std::vector<std::string> coeffList {};
@@ -59,12 +57,12 @@ public:
                 }
 
 
-                pairPotentials[indexIJ * 4 + 0] = std::stod(coeffList[0]); // Epsilon IJ pair constant
+                pairPotentials[indexIJ + 0] = std::stod(coeffList[0]); // Epsilon IJ pair constant
                 const double& sigmaIJ {std::stod(coeffList[1])};
-                pairPotentials[indexIJ * 4 + 1] = sigmaIJ * sigmaIJ; // SigmaSquare IJ pair constant
+                pairPotentials[indexIJ + 1] = sigmaIJ * sigmaIJ; // SigmaSquare IJ pair constant
                 const double& rcIJ { std::stod(coeffList[2]) };
-                pairPotentials[indexIJ * 4 + 2] = rcIJ * rcIJ; // RcSquare IJ pair constant
-                pairPotentials[indexIJ * 4 + 3] = std::stod(coeffList[3]); // Shift IJ
+                pairPotentials[indexIJ + 2] = rcIJ * rcIJ; // RcSquare IJ pair constant
+                pairPotentials[indexIJ + 3] = std::stod(coeffList[3]); // Shift IJ
                 /***
                 std::cout << pairPotentials[indexIJ * 4 + 0] << " ";
                 std::cout << pairPotentials[indexIJ * 4 + 1] << " ";
@@ -79,15 +77,9 @@ public:
         return pairPotentials;
     }
 
-    std::vector<double> getPotentialsIJ(const int& i, const int& j, const int& k) const;
-
-    [[nodiscard]] std::vector<double> getPotentialsIJ(const int &i, const int &j) const;
 
     [[nodiscard]] double ljPairEnergy(const double &squareDistance, const int &typeI, const int &typeJ) const;
 
-    [[nodiscard]] double energyPairParticle(const int &indexParticle, const std::vector<double> &positionParticle,
-                                            const Particles &systemParticles, const std::vector<int> &neighborIList,
-                                            const int &indexSkip) const;
 
     [[nodiscard]] int getParticleTypes() const;
 

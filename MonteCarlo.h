@@ -12,13 +12,10 @@
 #include <iterator>
 #include <fstream>
 #include <vector>
-#include "energy.h"
 #include "pressure.h"
 #include "INPUT/Parameter.h"
 #include "util.h"
-#include "POTENTIALS/PairPotentials.h"
-#include "POTENTIALS/BondPotentials.h"
-#include "PARTICLES/Particles.h"
+#include "MOLECULES/Molecules.h"
 #include "NEIGHBORS/Neighbors.h"
 
 
@@ -26,9 +23,7 @@ class MonteCarlo
 {
 
 private:
-    const BondPotentials m_bondPotentials;
-    const PairPotentials m_pairPotentials;
-    Particles m_systemParticles;
+    Molecules m_systemMolecules;
     Neighbors m_systemNeighbors;
 	int m_errors { 0 };                                             // Errors of the neighbor list.
 	double m_energy {};                                             // System's energy.
@@ -51,16 +46,14 @@ private:
 
 
 public:
-    // Polymer constructor
-    MonteCarlo (param::Parameter param, const Particles& systemParticles, const PairPotentials& systemPairPotentials,
-                const BondPotentials& systemBondPotentials, const Neighbors& systemNeighbors, std::string folderPath)
+    // Monte Carlo constructor
+    MonteCarlo (param::Parameter param, const Molecules& systemMolecules, Neighbors  systemNeighbors,
+                std::string folderPath)
 
             : m_simulationMol (param.get_string("simType"))
-            , m_bondPotentials (systemBondPotentials)
-            , m_pairPotentials (systemPairPotentials)
-            , m_systemParticles (systemParticles)
-            , m_systemNeighbors(systemNeighbors)
-            , m_nParticles(systemParticles.getNParticles())
+            , m_systemMolecules (systemMolecules)
+            , m_systemNeighbors(std::move(systemNeighbors))
+            , m_nParticles(systemMolecules.getNParticles())
             , m_calculatePressure(param.get_bool("calcPressure", false))
             , m_swap (param.get_bool("swap", false))
             , m_pSwap (param.get_double("pSwap", 0.2))
@@ -71,53 +64,13 @@ public:
             , m_timeSteps { param.get_int( "timeSteps") }
             , m_saveRate { param.get_int("saveRate", 50)}
             , m_folderPath (std::move( folderPath ))
-            , m_energy { energySystemPolymer( systemParticles, systemNeighbors, systemPairPotentials, systemBondPotentials) }
-
 
     {
-        // Potential Initializations
-
-
-        //if (m_calculatePressure)
-        //{
-        //    m_pressure = pressureSystem(m_temp, m_positionArray, m_typeArray, m_squareRc, m_lengthCube, m_halfLengthCube); //+ corrPressure;
-        //}
-
-    }
-    // Atomic constructor
-    MonteCarlo (param::Parameter param, const Particles& systemParticles,
-                const PairPotentials& systemPairPotentials,  const Neighbors& systemNeighbors, std::string folderPath)
-
-            : m_simulationMol (param.get_string("simType"))
-            , m_pairPotentials(systemPairPotentials)
-            , m_systemParticles (systemParticles)
-            , m_calculatePressure(param.get_bool("calcPressure", false))
-            , m_nParticles(systemParticles.getNParticles())
-            , m_swap (param.get_bool("swap", false))
-            , m_pSwap (param.get_double("pSwap", 0.2))
-            , m_systemNeighbors(systemNeighbors)
-            , m_temp { param.get_double( "temp") }
-            , m_rBox { param.get_double( "rBox") }
-            , m_saveUpdate { param.get_int( "waitingTime") }
-            , m_neighMethod (param.get_string( "neighMethod", "verlet"))
-            , m_timeSteps { param.get_int( "timeSteps") }
-            , m_saveRate { param.get_int("saveRate", 50)}
-            , m_folderPath (std::move( folderPath ))
-            , m_energy { energySystem( systemParticles, systemNeighbors, systemPairPotentials) }
-    {
-
-
-
-        //if (m_calculatePressure)
-        //{
-        //    m_pressure = pressureSystem(m_temp, m_positionArray, m_typeArray,
-         //                               m_squareRc, m_lengthCube, m_halfLengthCube); //+ corrPressure;
-        //}
+        m_energy = systemMolecules.energySystemMolecule( m_systemNeighbors );
 
     }
 
 	void mcTotal();
-
 	void mcMove();
     void mcTranslation();
     void generalUpdate(double diff_energy);
@@ -125,8 +78,9 @@ public:
     [[nodiscard]] bool metropolis(double diff_energy) const;
 
 
+    std::vector<double> vectorTranslation(const int &indexTranslation, const std::vector<double> &randomVector);
 
-
+    void mcMoleculeTranslation();
 };
 
 

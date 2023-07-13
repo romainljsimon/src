@@ -9,6 +9,7 @@
 #include <cmath>
 #include <algorithm>
 #include "Neighbors.h"
+#include "../MOLECULES/Molecules.h"
 
 
 /*******************************************************************************
@@ -33,22 +34,22 @@
  * such as there are no errors.
  ******************************************************************************/
 
-void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const BondPotentials& systemBondPotentials)
+void Neighbors::WOWcreateNeighborList(const Molecules& systemMolecules)
 {
     // Be careful with the swaps and poly dispersity. Solution for now is to take rSkin big enough.
     ++m_updateRate;
     const std::vector<std::vector<int>> oldNeighborList { m_neighborList};
     m_neighborList.clear();
-    m_neighborList.resize(m_nParticles);
+    m_neighborList.resize(systemMolecules.m_nParticles);
 
-    for (int i = 0; i < m_nParticles - 1; i++)
+    for (int i = 0; i < systemMolecules.m_nParticles - 1; i++)
     {
-        const std::vector<double>& positionParticle { systemParticles.getPositionI(i) };
-        const std::vector<int>& bondsI {systemBondPotentials.getBondsI(i)};
+        const std::vector<double>& positionParticle { systemMolecules.getPositionI(i) };
+        const std::vector<int>& bondsI {systemMolecules.m_bondsArray[i]};
         //const int bondsSize {static_cast<int>(bondsI.size())};
         //int count {0};
 
-        for (int j = i + 1; j < m_nParticles; j++)
+        for (int j = i + 1; j < systemMolecules.m_nParticles; j++)
         {
 
             const bool notIn {!std::binary_search(bondsI.begin(), bondsI.end(), j)};
@@ -56,7 +57,7 @@ void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const Bo
             {
 
 
-                const double squareDistance{systemParticles.squareDistancePair(positionParticle, j)};
+                const double squareDistance{systemMolecules.squareDistancePair(positionParticle, j)};
 
                 if (squareDistance < m_squareRSkin) {
                     // j and i are neighbors
@@ -70,7 +71,7 @@ void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const Bo
                         // Compare the new neighbor list with the old neighbor list
 
                         if (!std::binary_search(oldNeighborList[i].begin(), oldNeighborList[i].end(), j)) {
-                            const int typeI{systemParticles.getParticleTypeI(i) - 1};
+                            const int typeI{systemMolecules.getParticleTypeI(i) - 1};
                             if (squareDistance < m_maxSquareRcArray[typeI])
                             {
                                 ++m_errors;
@@ -85,14 +86,14 @@ void Neighbors::WOWcreateNeighborList(const Particles& systemParticles, const Bo
     }
 }
 
-void Neighbors::createNeighborList(const Particles& systemParticles)
+void Neighbors::createNeighborList(const Molecules& systemMolecules)
 {
     // Be careful with the swaps and poly dispersity. Solution for now is to take rSkin big enough.
     const std::vector<std::vector<int>> oldNeighborList = m_neighborList;
     ++m_updateRate;
     m_neighborList.clear();
-    m_neighborList.resize(m_nParticles);
-    const std::vector<std::vector<std::vector<std::vector<int>>>> cellList { createCellList ( systemParticles) };
+    m_neighborList.resize(systemMolecules.m_nParticles);
+    const std::vector<std::vector<std::vector<std::vector<int>>>> cellList { createCellList ( systemMolecules) };
     const bool checkNeigh { m_updateRate > 0};
 
     for (int xCell = 0; xCell < m_numCell; xCell++)
@@ -101,41 +102,16 @@ void Neighbors::createNeighborList(const Particles& systemParticles)
         {
             for (int zCell = 0; zCell < m_numCell; zCell++)
             {
-                createCellNeighbors(systemParticles, oldNeighborList, cellList, xCell, yCell, zCell, checkNeigh);
+                createCellNeighbors(systemMolecules, oldNeighborList, cellList, xCell, yCell, zCell, checkNeigh);
             }
         }
     }
-    sortNeighborList();
+    sortNeighborList(systemMolecules);
 }
 
-void Neighbors::createNeighborList(const Particles& systemParticles, const BondPotentials& systemBondPotentials)
+void Neighbors::sortNeighborList(const Molecules& systemMolecules)
 {
-    // Be careful with the swaps and poly dispersity. Solution for now is to take rSkin big enough.
-    const std::vector<std::vector<int>> oldNeighborList = m_neighborList;
-    ++m_updateRate;
-    m_neighborList.clear();
-    m_neighborList.resize(m_nParticles);
-    const std::vector<std::vector<std::vector<std::vector<int>>>>& cellList { createCellList ( systemParticles) };
-    const bool checkNeigh { m_updateRate > 0};
-
-    for (int xCell = 0; xCell < m_numCell; xCell++)
-    {
-        for (int yCell = 0; yCell < m_numCell; yCell++)
-        {
-            for (int zCell = 0; zCell < m_numCell; zCell++)
-            {
-                createCellNeighbors(systemParticles, systemBondPotentials, oldNeighborList, cellList,
-                                    xCell, yCell, zCell, checkNeigh);
-
-            }
-        }
-    }
-    sortNeighborList();
-}
-
-void Neighbors::sortNeighborList()
-{
-    for (int i = 0; i < m_nParticles; i++)
+    for (int i = 0; i < systemMolecules.m_nParticles; i++)
     {
         std::vector<int> neighborIList{m_neighborList[i]};
         std::sort(neighborIList.begin(), neighborIList.end());
@@ -143,15 +119,15 @@ void Neighbors::sortNeighborList()
     }
 }
 
-std::vector<std::vector<std::vector<std::vector<int>>>> Neighbors::createCellList(const Particles& systemParticles) const
+std::vector<std::vector<std::vector<std::vector<int>>>> Neighbors::createCellList(const Molecules& systemMolecules) const
 {
     std::vector<std::vector<std::vector<std::vector<int>>>> cellList{};
     cellList.resize(m_numCell, std::vector<std::vector<std::vector<int>>>(m_numCell,
                                                                           std::vector<std::vector<int>>(m_numCell)));
 
-    for (int i = 0; i < m_nParticles; i++)
+    for (int i = 0; i < systemMolecules.m_nParticles; i++)
     {
-        std::vector<double> positionArrayI { systemParticles.getPositionI(i) };
+        std::vector<double> positionArrayI { systemMolecules.m_positionArray[i]};
         const int xCell{static_cast<int>(floor(positionArrayI[0] / m_cellLength))};
         const int yCell{static_cast<int>(floor(positionArrayI[1] / m_cellLength))};
         const int zCell{static_cast<int>(floor(positionArrayI[2] / m_cellLength))};
@@ -161,48 +137,14 @@ std::vector<std::vector<std::vector<std::vector<int>>>> Neighbors::createCellLis
     return cellList;
 }
 
-void Neighbors::createCellNeighbors(const Particles& systemParticles,
+
+void Neighbors::createCellNeighbors(const Molecules& systemMolecules,
                                     const std::vector<std::vector<int>>& oldNeighborList,
                                     const std::vector<std::vector<std::vector<std::vector<int>>>>& cellList,
                                     int xCell, int yCell, int zCell, const bool& checkNeigh)
 {
-    const std::vector<int> xyzCellParticles{cellList[xCell][yCell][zCell]};
-    createSamePairCellNeighbor(systemParticles, oldNeighborList, xyzCellParticles, checkNeigh);
-    const int xyzInt {xCell * 100 + yCell * 10 + zCell};
-    for (int xCellDiff = -1; xCellDiff < 2; xCellDiff++)
-    {
-        const int testXCell {cellTest(xCell + xCellDiff)};
-
-        for (int yCellDiff = -1; yCellDiff < 2; yCellDiff++)
-        {
-            const int testYCell {cellTest(yCell + yCellDiff)};
-
-            for (int zCellDiff = -1; zCellDiff < 2; zCellDiff++)
-            {
-                const int testZCell {cellTest(zCell + zCellDiff)};
-
-                const int testInt {testXCell * 100 + testYCell * 10 + testZCell};
-
-                if (testInt  > xyzInt)
-                {
-
-                    createDiffPairCellNeighbor(systemParticles,
-                                               oldNeighborList, xyzCellParticles,
-                                               cellList[testXCell][testYCell][testZCell], checkNeigh);
-                }
-            }
-        }
-    }
-}
-
-void Neighbors::createCellNeighbors(const Particles& systemParticles, const BondPotentials& systemBondPotentials,
-                                    const std::vector<std::vector<int>>& oldNeighborList,
-                                    const std::vector<std::vector<std::vector<std::vector<int>>>>& cellList,
-                                    int xCell, int yCell, int zCell, const bool& checkNeigh)
-{
-    const std::vector<int> xyzCellParticles{cellList[xCell][yCell][zCell]};
-    createSamePairCellNeighbor(systemParticles, systemBondPotentials, oldNeighborList,
-                               xyzCellParticles, checkNeigh);
+    const std::vector<int> xyzCellParticles{ cellList[xCell][yCell][zCell] };
+    createSamePairCellNeighbor(systemMolecules, oldNeighborList, xyzCellParticles, checkNeigh);
 
     const int xyzInt {xCell * 100 + yCell * 10 + zCell};
     for (int xCellDiff = -1; xCellDiff < 2; xCellDiff++)
@@ -222,7 +164,7 @@ void Neighbors::createCellNeighbors(const Particles& systemParticles, const Bond
                 if (testInt  > xyzInt)
                 {
 
-                    createDiffPairCellNeighbor(systemParticles, systemBondPotentials,
+                    createDiffPairCellNeighbor(systemMolecules,
                                                oldNeighborList, xyzCellParticles,
                                                cellList[testXCell][testYCell][testZCell], checkNeigh);
                 }
@@ -248,8 +190,7 @@ int Neighbors::cellTest(int indexCell) const
     }
 }
 
-
-void Neighbors::createSamePairCellNeighbor(const Particles& systemParticles,
+void Neighbors::createSamePairCellNeighbor(const Molecules& systemMolecules,
                                            const std::vector<std::vector<int>>& oldNeighborList,
                                            const std::vector<int>& cellParticles, const bool& checkNeigh)
 {
@@ -257,88 +198,49 @@ void Neighbors::createSamePairCellNeighbor(const Particles& systemParticles,
 
     for (int i = 0; i < cellParticlesSize - 1; i++)
     {
-        const int& realIIndex { cellParticles[i] };
-        const std::vector<double>& positionParticle { systemParticles.getPositionI(realIIndex) };
+        const int realIIndex{cellParticles[i]};
 
-        for (int j = i+1; j < cellParticlesSize; j++)
-        {
-            const int realJIndex {cellParticles[j]};
-            updateIJNeighbor(systemParticles, oldNeighborList, positionParticle,
-                             realIIndex, realJIndex, checkNeigh);
+        const std::vector<double> &positionParticle{systemMolecules.getPositionI(realIIndex)};
 
-        }
-    }
-}
+        const std::vector<int> &bondsParticleI{systemMolecules.m_bondsArray[realIIndex]};
 
-void Neighbors::createSamePairCellNeighbor(const Particles& systemParticles, const BondPotentials& systemBondPotentials,
-                                           const std::vector<std::vector<int>>& oldNeighborList,
-                                           const std::vector<int>& cellParticles, const bool& checkNeigh)
-{
-    const int cellParticlesSize{static_cast<int>(cellParticles.size())};
-
-    for (int i = 0; i < cellParticlesSize - 1; i++)
-    {
-        const int realIIndex { cellParticles[i] };
-
-        const std::vector<double>& positionParticle { systemParticles.getPositionI(realIIndex) };
-
-        const std::vector<int> bondsParticleI{ systemBondPotentials.getBondsI(realIIndex) };
-
-        for (int j = i+1; j < cellParticlesSize; j++)
-        {
-            const int realJIndex {cellParticles[j]};
+        for (int j = i + 1; j < cellParticlesSize; j++) {
+            const int realJIndex{cellParticles[j]};
 
 
-            if (!std::binary_search(bondsParticleI.begin(), bondsParticleI.end(), realJIndex))
-            {
-                updateIJNeighbor(systemParticles, oldNeighborList, positionParticle,
+            if (!std::binary_search(bondsParticleI.begin(), bondsParticleI.end(), realJIndex)) {
+                updateIJNeighbor(systemMolecules, oldNeighborList, positionParticle,
                                  realIIndex, realJIndex, checkNeigh);
             }
         }
     }
 }
 
-void Neighbors::createDiffPairCellNeighbor(const Particles& systemParticles,
+void Neighbors::createDiffPairCellNeighbor(const Molecules& systemMolecules,
                                            const std::vector<std::vector<int>>& oldNeighborList,
                                            const std::vector<int>& cellParticles,
                                            const std::vector<int>& testNeighbors, const bool& checkNeigh)
 {
     for (auto const &i: cellParticles)
     {
-        const std::vector<double>& positionParticle { systemParticles.getPositionI(i) };
-
-        for (auto const &j: testNeighbors)
-        {
-            updateIJNeighbor(systemParticles, oldNeighborList, positionParticle, i, j, checkNeigh);
-        }
-    }
-}
-
-void Neighbors::createDiffPairCellNeighbor(const Particles& systemParticles, const BondPotentials& systemBondPotentials,
-                                           const std::vector<std::vector<int>>& oldNeighborList,
-                                           const std::vector<int>& cellParticles,
-                                           const std::vector<int>& testNeighbors, const bool& checkNeigh)
-{
-    for (auto const &i: cellParticles)
-    {
-        const std::vector<double>& positionParticle { systemParticles.getPositionI(i) };
-        const std::vector<int> bondsParticleI{ systemBondPotentials.getBondsI(i) };
+        const std::vector<double>& positionParticle { systemMolecules.m_positionArray[i] };
+        const std::vector<int>& bondsParticleI{ systemMolecules.m_bondsArray[i] };
 
         for (auto const &j: testNeighbors)
         {
             if (!std::binary_search(bondsParticleI.begin(), bondsParticleI.end(), j))
             {
-                updateIJNeighbor(systemParticles, oldNeighborList, positionParticle, i, j, checkNeigh);
+                updateIJNeighbor(systemMolecules, oldNeighborList, positionParticle, i, j, checkNeigh);
             }
         }
     }
 }
 
-void Neighbors::updateIJNeighbor(const Particles& systemParticles, const std::vector<std::vector<int>>& oldNeighborList,
+void Neighbors::updateIJNeighbor(const Molecules& systemMolecules, const std::vector<std::vector<int>>& oldNeighborList,
                                  const std::vector<double>& positionParticle, const int& indexI, const int& indexJ,
                                  const bool& checkNeigh)
 {
-    const double squareDistance { systemParticles.squareDistancePair(positionParticle, indexJ) };
+    const double squareDistance { systemMolecules.squareDistancePair(positionParticle, indexJ) };
 
     if (squareDistance < m_squareRSkin)
     {
@@ -347,14 +249,14 @@ void Neighbors::updateIJNeighbor(const Particles& systemParticles, const std::ve
         m_neighborList[indexJ].push_back(indexI); // i is on row j
         if (checkNeigh)
         {
-            checkNeighborError(systemParticles, oldNeighborList, squareDistance, indexI, indexJ);
+            checkNeighborError(systemMolecules, oldNeighborList, squareDistance, indexI, indexJ);
         }
     }
 }
 
 
 
-void Neighbors::checkNeighborError(const Particles& systemParticles, const std::vector<std::vector<int>>& oldNeighborList,
+void Neighbors::checkNeighborError(const Molecules& systemMolecules, const std::vector<std::vector<int>>& oldNeighborList,
                                    const double& squareDistance, const int& indexI, const int& indexJ)
 {
     //if (static_cast<int>(oldNeighborList[indexI].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
@@ -363,7 +265,7 @@ void Neighbors::checkNeighborError(const Particles& systemParticles, const std::
     if (!std::binary_search(oldNeighborList[indexI].begin(), oldNeighborList[indexI].end(), indexJ))
     {
 
-        int particleTypeIndex { systemParticles.getParticleTypeI(indexI) - 1};
+        int particleTypeIndex { systemMolecules.getParticleTypeI(indexI) - 1};
 
         double squareMaxRc { m_maxSquareRcArray[particleTypeIndex] };
         if (squareDistance < squareMaxRc)
@@ -373,7 +275,6 @@ void Neighbors::checkNeighborError(const Particles& systemParticles, const std::
     }
     //}
 }
-
 
 
 void Neighbors::updateInterDisplacement(const int& indexTranslation, const std::vector<double>& vectorTranslation)
@@ -388,45 +289,24 @@ void Neighbors::updateInterDisplacement(const int& indexTranslation, const std::
  * m_interDisplacementMatrix is reinitialized to zero. The criterion shouldn't
  * allow for any errors?
  ******************************************************************************/
-void Neighbors::checkInterDisplacement(const Particles& systemParticles)
+void Neighbors::checkInterDisplacement(const Molecules& systemMolecules)
 {
     const  std::vector<double> squareDispVector = getSquareNormRowMatrix(m_interDisplacementMatrix);
 
-    for (int i=0; i < m_nParticles; i++)
+    for (int i=0; i < systemMolecules.m_nParticles; i++)
     {
-        int particleTypeIndex { systemParticles.getParticleTypeI(i) - 1};
+        int particleTypeIndex { systemMolecules.getParticleTypeI(i) - 1};
         //const double maxRc {( m_maxDiam + m_typeArray[i]) / 2 * m_rC};
         //const double thresh = { pow ( (m_rSkin - maxRc) / 2, 2)};
         if ( squareDispVector[i] > m_threshArray[particleTypeIndex])
         {
-            createNeighborList(systemParticles);
+            createNeighborList(systemMolecules);
             std::fill(m_interDisplacementMatrix.begin(), m_interDisplacementMatrix.end(),
                       std::vector<double>(3, 0));
             break;
         }
     }
 }
-
-void Neighbors::checkInterDisplacement(const Particles& systemParticles, const BondPotentials& systemBondPotentials)
-{
-    const std::vector<double> squareDispVector { getSquareNormRowMatrix(m_interDisplacementMatrix) };
-
-    for (int i=0; i < m_nParticles; i++)
-    {
-        int particleTypeIndex { systemParticles.getParticleTypeI(i) - 1};
-        //const double maxRc {( m_maxDiam + m_typeArray[i]) / 2 * m_rC};
-        //const double thresh = { pow ( (m_rSkin - maxRc) / 2, 2)};
-        const double& thresh {m_threshArray[particleTypeIndex]};
-        if ( squareDispVector[i] > thresh)
-        {
-            WOWcreateNeighborList(systemParticles, systemBondPotentials);
-            std::fill(m_interDisplacementMatrix.begin(), m_interDisplacementMatrix.end(),
-                      std::vector<double>(3, 0));
-            break;
-        }
-    }
-}
-
 
 
 /*******************************************************************************

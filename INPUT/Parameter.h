@@ -64,6 +64,7 @@ namespace param {
             }
             readFromStream(is);
         }
+
         void readFromStream(std::istream &is)
         {
             std::string line;

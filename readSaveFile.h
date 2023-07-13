@@ -20,7 +20,7 @@ struct posRad
 posRad readXYZ(const std::string& path);
 void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std::vector<double>& radiusArray,
                const std::vector<int>& moleculeType, const double& lengthCube,  const std::string& path);
-void saveDoubleTXT(const double& number, const std::string& path);
+void saveDoubleTXT(const double& number, const std::string_view& path);
 void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const std::string& path);
 std::vector<std::vector<int>> readBondsTXT(const std::string& path);
 

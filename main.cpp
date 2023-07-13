@@ -13,10 +13,7 @@
 #include "readSaveFile.h"
 #include "util.h"
 #include "MonteCarlo.h"
-#include "POTENTIALS/PairPotentials.h"
-#include "POTENTIALS/BondPotentials.h"
 #include "INPUT/Parameter.h"
-#include "PARTICLES/Particles.h"
 #include "NEIGHBORS/Neighbors.h"
 
 int main()
@@ -24,7 +21,7 @@ int main()
 
     std::string folderPath ( "." );
 //squareDistancePairTest();
-    //std::cout << std::unitbuf;
+    std::cout << std::unitbuf;
 
 	//Opening INPUT variables file
     param::Parameter param(folderPath + "/inputVar.txt" );
@@ -55,37 +52,21 @@ int main()
 	auto t_start = std::chrono::high_resolution_clock::now();
 
     std::string key { "simType" };
-    std::string simType { param.get_string(key) };
+    const PairPotentials systemPairPotentials{param};
 
-    const PairPotentials systemPairPotentials { param };
+    const BondPotentials systemBondPotentials{param};
 
-    Particles systemParticles {param, "./initPosition.xyz"};
+    Molecules systemMolecules {param, systemPairPotentials, systemBondPotentials, "./initPosition.xyz"};
 
 
+    Neighbors systemNeighbors {param, systemMolecules};
 
-    if (simType == "polymer")
-    {
-        const BondPotentials systemBondPotentials { param, "./bonds.txt" };
 
-        Neighbors systemNeighbors {param, systemParticles, systemPairPotentials, systemBondPotentials};
+    MonteCarlo system {param,  systemMolecules, systemNeighbors, folderPath};
 
-        MonteCarlo system {param,  systemParticles, systemPairPotentials,  systemBondPotentials, systemNeighbors, folderPath};
 
-        system.mcTotal();
-    }
-    else if (simType == "atomic")
-    {
-        Neighbors systemNeighbors {param, systemParticles, systemPairPotentials};
+    system.mcTotal();
 
-        MonteCarlo system {param,  systemParticles, systemPairPotentials,  systemNeighbors, folderPath};
-
-        system.mcTotal();
-    }
-    else
-    {
-        std::cout << "The simType variable is not 'atomic' or 'polymer' \n";
-        std::cout << "Please define the simulation type as one of the two\n";
-    }
 
 	std::clock_t c_end = std::clock();
 	auto t_end = std::chrono::high_resolution_clock::now();

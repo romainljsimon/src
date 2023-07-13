@@ -8,7 +8,6 @@
 #include <string>
 #include <vector>
 #include "../INPUT/Parameter.h"
-#include "../PARTICLES/Particles.h"
 
 class BondPotentials
 {
@@ -16,18 +15,15 @@ class BondPotentials
 private:
     const int m_particleTypes {};
     const std::vector<double> m_bondPotentials {};
-    const std::vector<std::vector<int>> m_bondsArray {};
-
 
 public:
     // Bonds constructor
 
     BondPotentials() = default;
 
-    explicit BondPotentials (param::Parameter param, const std::string& path)
+    explicit BondPotentials (param::Parameter param)
     : m_particleTypes (param.get_int("particleTypes"))
     , m_bondPotentials(initializeBondPotentials(m_particleTypes))
-    , m_bondsArray(initializeBondsArray(path))
     {}
 
 
@@ -79,8 +75,8 @@ public:
 
                 bondPotentials[indexIJ + 5] = std::stod(coeffList[5]); // Shift constant for bond i
 
-                //std::cout << i << " "<< j << " "<< indexIJ << " "<< bondPotentials[indexIJ][0] << " "
-                //          << bondPotentials[indexIJ][1] << " "<< bondPotentials[indexIJ][2] << " "<< bondPotentials[indexIJ][3] << "\n" ;
+                //std::cout << i << " "<< j << " "<< indexIJ << " "<< bondPotentials[indexIJ+0] << " "
+                //<< bondPotentials[indexIJ+1] << " "<< bondPotentials[indexIJ+2] << " "<< bondPotentials[indexIJ+3] << "\n" ;
 
             }
         }
@@ -88,56 +84,13 @@ public:
         return bondPotentials;
     }
 
-    static std::vector<std::vector<int>> initializeBondsArray(const std::string& path)
-    {
-        std::ifstream infile(path);
-
-        if (!infile.is_open())
-            std::cout << "Error opening file";
-
-
-        int nParticles{};
-        infile >> nParticles;
-
-        int nBonds{};
-        infile >> nBonds;
-
-        std::vector<std::vector<int>> bondsArray(nParticles);
-
-        for (int r = 0; r < nBonds; r++) //Outer loop for rows
-        {
-
-            int indexI {};
-            infile >> indexI;
-
-            int indexJ {};
-            infile >> indexJ;
-
-            bondsArray[indexI].push_back(indexJ);
-            bondsArray[indexJ].push_back(indexI);
-
-        }
-        infile.close();
-        /***
-
-        std::cout << bondsArray.size() << "\n";
-         ***/
-        return bondsArray;
-    }
-
-
-
 
     [[nodiscard]] double feneBondEnergyIJ(const double &squareDistance, const int &particleTypeI,
                                           const int &particleTypeJ) const;
 
     //[[nodiscard]] std::vector<double> getPotentialsIJ(const int &i, const int &j) const;
 
-    [[nodiscard]] double feneBondEnergyI(const int &indexParticle, const std::vector<double> &positionParticle,
-                                         const Particles& systemParticles, const int &indexSkip) const;
-
     [[nodiscard]] int getIndexIJ(const int &i, const int &j) const;
 
-    [[nodiscard]] const std::vector<int>& getBondsI(const int &i) const;
 };
 #endif /* BONDPOTENTIALS_H_ */
