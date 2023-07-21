@@ -10,57 +10,6 @@
 #include <string>
 #include "readSaveFile.h"
 
-posRad readXYZ(const std::string& path)
-{
-    std::ifstream infile(path);
-
-    if (!infile.is_open())
-        std::cout << "Error opening file" ;
-
-    int row{};
-    infile >> row;
-    int col { 5 };
-
-    std::string line;
-    getline(infile, line);
-    getline(infile, line);
-
-
-    std::vector<std::vector <double>> positionArray(row, std::vector<double>(3));
-    std::vector<double> radiusArray (row);
-    std::vector<int> moleculeType (row , 1);
-
-
-    //Defining the loop for getting INPUT from the file
-
-    for (int r = 0; r < row; r++) //Outer loop for rows
-    {
-        for (int c = 0; c < col; c++) //inner loop for columns
-        {
-            if (c == 0)
-            {
-                infile >> moleculeType[r];
-            }
-            else if (c == 1)
-            {
-                infile >> radiusArray[r];
-            }
-
-            else
-            {
-                infile >> positionArray[r][c - (col - 3)]; //Take INPUT from file and put into positionArray
-            }
-        }
-
-    }
-
-    infile.close();
-    posRad initPosRad;
-    initPosRad.radVector = radiusArray;
-    initPosRad.posMatrix = positionArray;
-    initPosRad.moleculeType = moleculeType;
-    return initPosRad;
-}
 
 std::vector<std::vector<int>> readBondsTXT(const std::string& path)
 {
@@ -149,7 +98,7 @@ void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std:
     fOut.close();
 }
 
-void saveDoubleTXT(const double& number, const std::string_view& path)
+void saveDoubleTXT(const double& number, const std::string& path)
 /*
  * This function saves the system energy in a txt file
  */

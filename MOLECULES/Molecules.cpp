@@ -96,20 +96,20 @@ double Molecules::squareDistancePair(const std::vector<double>& positionI, const
 
 double Molecules::squareDistancePair(const int& indexI, const int& indexJ) const
 {
-    const std::vector<double>& positionI { m_positionArray[indexI] };
-    const std::vector<double>& positionJ { m_positionArray[indexJ] };
+    const std::vector<double>& positionI {getPositionI(indexI)};
+    const std::vector<double>& positionJ { getPositionI(indexJ)};
     return squareDistancePair(positionI, positionJ);
 }
 
 double Molecules::squareDistancePair(const std::vector<double>& positionI, const int& indexJ) const
 {
-    const std::vector<double>& positionJ {m_positionArray[indexJ]};
+    const std::vector<double>& positionJ {getPositionI(indexJ)};
     return squareDistancePair(positionI, positionJ);
 }
 
 double Molecules::squareDistancePair(const int& indexI, const std::vector<double>& positionJ) const
 {
-    const std::vector<double>& positionI {m_positionArray[indexI]};
+    const std::vector<double>& positionI {getPositionI(indexI)};
     return squareDistancePair(positionI, positionJ);
 }
 
@@ -209,7 +209,7 @@ double Molecules::energyPairParticle(const int& indexParticle, const std::vector
 double Molecules::energyPairParticle(const int& indexParticle, const std::vector<int>& neighborIList,
                                      const int& indexSkip) const
 {
-    const std::vector<double>& positionParticle {m_positionArray[indexParticle]};
+    const std::vector<double>& positionParticle {getPositionI(indexParticle)};
     return energyPairParticle(indexParticle, positionParticle, neighborIList, indexSkip);
 }
 
@@ -247,7 +247,7 @@ double Molecules::energyPairParticleExtraMolecule(const int& indexParticle, cons
 double Molecules::energyPairParticleExtraMolecule(const int& indexParticle, const std::vector<int>& neighborIList,
                                      const int& typeMoleculeI) const
 {
-    const std::vector<double>& positionParticle {m_positionArray[indexParticle]};
+    const std::vector<double>& positionParticle {getPositionI(indexParticle)};
     return energyPairParticleExtraMolecule(indexParticle, positionParticle, neighborIList, typeMoleculeI);
 }
 
@@ -274,7 +274,7 @@ double Molecules::feneBondEnergyI(const int& indexParticle, const std::vector<do
 
 double Molecules::feneBondEnergyI(const int& indexParticle, const int& indexSkip) const
 {
-    const std::vector<double>& positionParticle {m_positionArray[indexParticle]};
+    const std::vector<double>& positionParticle {getPositionI(indexParticle)};
     return feneBondEnergyI(indexParticle, positionParticle, indexSkip);
 }
 

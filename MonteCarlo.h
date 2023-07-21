@@ -17,6 +17,7 @@
 #include "util.h"
 #include "MOLECULES/Molecules.h"
 #include "NEIGHBORS/Neighbors.h"
+#include <cmath>
 
 
 class MonteCarlo

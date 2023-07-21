@@ -37,7 +37,7 @@ public:
     // Molecule Neighbors. The neighbor list does NOT include bonded neighbors.
     Neighbors (param::Parameter param, const Molecules& systemMolecules)
             : m_rSkin { param.get_double( "rSkin") }
-            , m_squareRSkin {pow (m_rSkin, 2 ) }
+            , m_squareRSkin {std::pow (m_rSkin, 2 ) }
             , m_maxSquareRcArray (initializeMaxRc( systemMolecules))
             , m_threshArray (initializeThreshArray(param, m_maxSquareRcArray))
             , m_numCell { static_cast<int>(systemMolecules.m_lengthCube / m_rSkin) }

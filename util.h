@@ -8,6 +8,8 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
+#include <vector>
+
 double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB,
                           const double& lengthCube, const double& halfLengthCube);
 

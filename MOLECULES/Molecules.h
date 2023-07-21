@@ -7,6 +7,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cmath>
+#include <cmath>
 #include "../INPUT/Parameter.h"
 #include "../POTENTIALS/PairPotentials.h"
 #include "../POTENTIALS/BondPotentials.h"

@@ -30,12 +30,12 @@ void MonteCarlo::mcTotal()
 	const std::string extname {".xyz"};
 	const std::string preNameDisp ("./disp/displacement");
 	const std::string extnameDisp {".txt"};
-    constexpr std::string_view energyFilePath{"./outE.txt"};
+    const std::string energyFilePath{"./outE.txt"};
     //std::string pressureFilePath {"./outP.txt"};
     // std::vector<double> radiusArray (divideVectorByScalar(m_typeArray, 2));
 
 	m_systemMolecules.saveInXYZ(preName + std::to_string(0) + extname );
-	saveDoubleTXT(m_energy / m_nParticles, m_folderPath + "/outE.txt");
+	saveDoubleTXT(m_energy / m_nParticles, energyFilePath);
 	// saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(0) + extnameDisp);
 
 	const std::vector<int> saveTimeStepArray ( createSaveTime(m_timeSteps, m_saveUpdate, 1.1));
@@ -141,7 +141,8 @@ void MonteCarlo::mcMove()
     }
     else
     {
-    }
+        mcTranslation();
+     }
 }
 
 /*******************************************************************************
