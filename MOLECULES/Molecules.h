@@ -19,7 +19,7 @@ class Molecules
 
 public:
     // POTENTIALS constructor
-
+    const int m_nDims {3};
     const PairPotentials m_systemPairPotentials {};
     const BondPotentials m_systemBondPotentials {};
     const std::vector<std::vector<int>> m_bondsArray {};
@@ -28,7 +28,7 @@ public:
     const double m_halfLengthCube {};
     std::vector<int> m_newFlags;
     std::vector<int> m_flagsArray {};
-    std::vector<std::vector<double>> m_positionArray {};
+    std::vector<double> m_positionArray {};
     std::vector<int> m_particleTypeArray {};
     std::vector<int> m_moleculeTypeArray {};
 
@@ -114,7 +114,7 @@ public:
 
         m_moleculeTypeArray.resize(row);
         m_particleTypeArray.resize(row);
-        m_positionArray.resize(row, std::vector<double>(3));
+        m_positionArray.resize(m_nDims * row);
         //std::vector<std::vector <double>> positionArray(row, std::vector<double>(3));
         //std::vector<double> typeArray (row);
         //std::vector<int> moleculeType (row , 1);
@@ -139,7 +139,8 @@ public:
 
                 else
                 {
-                    infile >> m_positionArray[r][c - (col - 3)]; //Take INPUT from file and put into positionArray
+                    infile >> m_positionArray[m_nDims * r + c - (col - 3)];
+                     //Take INPUT from file and put into positionArray
                 }
             }
         }
@@ -150,7 +151,7 @@ public:
 
     [[nodiscard]] const int& getNParticles() const;
 
-    [[nodiscard]]  const std::vector<double>& getPositionI(const int& i) const;
+    [[nodiscard]]  std::vector<double> getPositionI(const int& i) const;
 
     [[nodiscard]]  const int& getParticleTypeI(const int &i) const;
 
@@ -215,6 +216,7 @@ public:
                                                       const std::vector<int>& neighborIList, const int& typeMoleculeI) const;
 
     [[nodiscard]] double energyPairParticleExtraMolecule(const int& indexParticle, const std::vector<int>& neighborIList, const int& typeMoleculeI) const;
+
 };
 
 #endif /* MOLECULES_H_ */

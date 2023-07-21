@@ -10,6 +10,7 @@ const int& Molecules::getNParticles() const
     return m_nParticles;
 }
 
+
 const double& Molecules::getLengthCube() const
 {
     return m_lengthCube;
@@ -20,9 +21,12 @@ const double& Molecules::getHalfLengthCube() const
     return m_halfLengthCube;
 }
 
-const std::vector<double>& Molecules::getPositionI(const int& i) const
+std::vector<double> Molecules::getPositionI(const int& i) const
 {
-    return m_positionArray[i];
+    const int realIndex { i * m_nDims };
+    const std::vector<double> positionI (m_positionArray.begin() + realIndex,
+                                         m_positionArray.begin() + realIndex + m_nDims);
+    return positionI;
 }
 const int& Molecules::getParticleTypeI(const int& i) const
 {
@@ -36,7 +40,8 @@ const int& Molecules::getMoleculeTypeI(const int& i) const
 
 void Molecules::updatePositionI(const int& i, const std::vector<double>& newPosition)
 {
-    m_positionArray[i] = newPosition;
+    const int realIndex {i * m_nDims};
+    std::copy(newPosition.begin(), newPosition.end(), m_positionArray.begin() + realIndex);
 }
 
 void Molecules::swapParticleTypesIJ(const int& i, const int& j, const int& typeI, const int& typeJ)
@@ -91,8 +96,8 @@ double Molecules::squareDistancePair(const std::vector<double>& positionI, const
 
 double Molecules::squareDistancePair(const int& indexI, const int& indexJ) const
 {
-    const std::vector<double>& positionI {m_positionArray[indexI]};
-    const std::vector<double>& positionJ {m_positionArray[indexJ]};
+    const std::vector<double>& positionI { m_positionArray[indexI] };
+    const std::vector<double>& positionJ { m_positionArray[indexJ] };
     return squareDistancePair(positionI, positionJ);
 }
 
@@ -298,8 +303,7 @@ double Molecules::energyParticleMolecule(const int& indexParticle, const std::ve
                                          const int& indexSkip) const
 {
 
-    const std::vector<double>& positionParticle {m_positionArray[indexParticle]};
-
+    const std::vector<double>& positionParticle {getPositionI(indexParticle)};
     return energyParticleMolecule(indexParticle, positionParticle, neighborIList, indexSkip);
 }
 
@@ -317,7 +321,8 @@ double Molecules::energySystemMolecule(const Neighbors& systemNeighbors) const
     for (int indexParticle = 0; indexParticle < m_nParticles; indexParticle++) //Outer loop for rows
     {
         const std::vector<int> &neighborIList{systemNeighbors.m_neighborList[indexParticle]};
-        energy += energyParticleMolecule(indexParticle, neighborIList) / 2.;
+        const double particleEnergy {energyParticleMolecule(indexParticle, neighborIList)};
+        energy +=  particleEnergy / 2.;
      }
     return energy;
 }
@@ -373,41 +378,29 @@ void Molecules::saveInXYZ(const std::string& path) const
     for(auto const& x : m_positionArray)
     {
 
-        int j { 0 };
-        for(auto const& i : x)
+        if ((it%m_nDims)==0)
         {
-
-            if (j == 2)
-            {
-                const int flagIt {3*it};
-                fOut << i;
-                fOut << " ";
-                fOut << m_flagsArray[flagIt];
-                fOut << " ";
-                fOut << m_flagsArray[flagIt+1];
-                fOut << " ";
-                fOut << m_flagsArray[flagIt+2];
-                fOut << "\n";
-            }
-            else if (j==0)
-            {
-                fOut << m_moleculeTypeArray[it];
-                fOut << " ";
-                fOut << m_particleTypeArray[it];
-                fOut << " ";
-                fOut << i;
-                fOut << " ";
-            }
-            else
-            {
-                fOut << i;
-                fOut << " ";
-            }
-
-            j += 1;
+            fOut << m_moleculeTypeArray[it];
+            fOut << " ";
+            fOut << m_particleTypeArray[it];
+            fOut << " ";
 
         }
-        it += 1;
+
+        fOut << x;
+        fOut << " ";
+
+        if ((it%m_nDims)==m_nDims-1)
+        {
+            fOut << m_flagsArray[it];
+            fOut << " ";
+            fOut << m_flagsArray[it+1];
+            fOut << " ";
+            fOut << m_flagsArray[it+2];
+            fOut << "\n";
+        }
+        it++;
+
     }
     fOut.close();
 }

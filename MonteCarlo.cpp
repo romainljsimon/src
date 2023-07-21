@@ -26,10 +26,10 @@
 void MonteCarlo::mcTotal()
 {
 
-	std::string preName ("./outXYZ/position");
-	std::string extname {".xyz"};
-	std::string preNameDisp ("./disp/displacement");
-	std::string extnameDisp {".txt"};
+	const std::string preName ("./outXYZ/position");
+	const std::string extname {".xyz"};
+	const std::string preNameDisp ("./disp/displacement");
+	const std::string extnameDisp {".txt"};
     constexpr std::string_view energyFilePath{"./outE.txt"};
     //std::string pressureFilePath {"./outP.txt"};
     // std::vector<double> radiusArray (divideVectorByScalar(m_typeArray, 2));
@@ -158,7 +158,7 @@ void MonteCarlo::mcMoleculeTranslation()
 	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -m_rBox, m_rBox) );
 	double oldEnergyMolecule {0};
 	double newEnergyMolecule {0};
-    std::vector<std::vector<double>> positionArrayTranslation;
+    std::vector<double> positionArrayTranslation;
 
 	for (int j = 0; j < 3; j++)
 	{
@@ -166,7 +166,9 @@ void MonteCarlo::mcMoleculeTranslation()
         const int newIndexTranslation {indexTranslation + j };
         const std::vector<double> positionParticleTranslation(vectorTranslation(newIndexTranslation,
                                                                                 randomVector));
-        positionArrayTranslation.push_back(positionParticleTranslation);
+        positionArrayTranslation.insert( positionArrayTranslation.end(),
+                                         positionParticleTranslation.begin(),
+                                         positionParticleTranslation.end() );
         const std::vector<int>& neighborIList { m_systemNeighbors.getNeighborIList(newIndexTranslation) };
 
 		oldEnergyMolecule += m_systemMolecules.energyPairParticleExtraMolecule( newIndexTranslation, neighborIList, typeMolecule);
@@ -193,11 +195,13 @@ void MonteCarlo::mcMoleculeTranslation()
         }
         ***/
         m_systemMolecules.updateFlags(indexTranslation);
+        m_systemMolecules.updatePositionI(indexTranslation, positionArrayTranslation);
         for (int j = 0; j < 3; j++)
         {
+            // TO DO INTER DISPLACEMENT
             const int newIndexTranslation {indexTranslation + j };
             m_systemNeighbors.updateInterDisplacement(newIndexTranslation, randomVector);
-            m_systemMolecules.updatePositionI(newIndexTranslation, positionArrayTranslation[j]);
+
         }
     }
     m_systemMolecules.reinitializeFlags();
@@ -217,7 +221,7 @@ void MonteCarlo::mcTranslation()
     const int indexTranslation{randomIntGenerator(0, m_nParticles - 1)}; // randomly chosen particle
     const std::vector<double> randomVector(randomVectorDoubleGenerator(3, -m_rBox, m_rBox));
     //const std::vector<double>  randomVector = {0.02, 0, 0};
-    std::vector<double> positionParticleTranslation {vectorTranslation(indexTranslation, randomVector)};
+    std::vector<double> positionParticleTranslation { vectorTranslation(indexTranslation, randomVector) };
     const std::vector<int>& neighborIList { m_systemNeighbors.getNeighborIList(indexTranslation) };
     double oldEnergyParticle;
     double newEnergyParticle;
@@ -274,7 +278,6 @@ void MonteCarlo::mcSwap()
     double energyParticleSwap2;
     const std::vector<int>& neighborIList1 { m_systemNeighbors.getNeighborIList(indexSwap1) };
     const std::vector<int>& neighborIList2 { m_systemNeighbors.getNeighborIList(indexSwap2) };
-
 
 
     energyParticle1 = m_systemMolecules.energyParticleMolecule(indexSwap1, neighborIList1, indexSwap2);

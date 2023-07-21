@@ -93,6 +93,10 @@ void Neighbors::createNeighborList(const Molecules& systemMolecules)
     ++m_updateRate;
     m_neighborList.clear();
     m_neighborList.resize(systemMolecules.m_nParticles);
+    //for (int i = 0; i<systemMolecules.m_nParticles; i++)
+    //{
+    //    m_neighborList[i].clear();
+    //}
     const std::vector<std::vector<std::vector<std::vector<int>>>> cellList { createCellList ( systemMolecules) };
     const bool checkNeigh { m_updateRate > 0};
 
@@ -127,7 +131,7 @@ std::vector<std::vector<std::vector<std::vector<int>>>> Neighbors::createCellLis
 
     for (int i = 0; i < systemMolecules.m_nParticles; i++)
     {
-        std::vector<double> positionArrayI { systemMolecules.m_positionArray[i]};
+        const std::vector<double> positionArrayI { systemMolecules.getPositionI(i)};
         const int xCell{static_cast<int>(floor(positionArrayI[0] / m_cellLength))};
         const int yCell{static_cast<int>(floor(positionArrayI[1] / m_cellLength))};
         const int zCell{static_cast<int>(floor(positionArrayI[2] / m_cellLength))};
@@ -208,7 +212,8 @@ void Neighbors::createSamePairCellNeighbor(const Molecules& systemMolecules,
             const int realJIndex{cellParticles[j]};
 
 
-            if (!std::binary_search(bondsParticleI.begin(), bondsParticleI.end(), realJIndex)) {
+            if (!std::binary_search(bondsParticleI.begin(), bondsParticleI.end(), realJIndex))
+            {
                 updateIJNeighbor(systemMolecules, oldNeighborList, positionParticle,
                                  realIIndex, realJIndex, checkNeigh);
             }
@@ -223,7 +228,7 @@ void Neighbors::createDiffPairCellNeighbor(const Molecules& systemMolecules,
 {
     for (auto const &i: cellParticles)
     {
-        const std::vector<double>& positionParticle { systemMolecules.m_positionArray[i] };
+        const std::vector<double>& positionParticle { systemMolecules.getPositionI(i) };
         const std::vector<int>& bondsParticleI{ systemMolecules.m_bondsArray[i] };
 
         for (auto const &j: testNeighbors)

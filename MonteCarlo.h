@@ -66,8 +66,7 @@ public:
             , m_folderPath (std::move( folderPath ))
 
     {
-        m_energy = systemMolecules.energySystemMolecule( m_systemNeighbors );
-
+        m_energy = m_systemMolecules.energySystemMolecule( m_systemNeighbors );
     }
 
 	void mcTotal();
