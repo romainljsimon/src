@@ -7,7 +7,7 @@
 
 #include <utility>
 #include <vector>
-#include <numeric>
+
 #include <algorithm>
 #include <valarray>
 
@@ -97,10 +97,6 @@ double getMaxVector(const std::vector<double>& vec)
 	return max;
 }
 
-double getSquareNormVector(const std::vector<double>& vec)
-{
-	return std::inner_product(vec.begin(), vec.end(), vec.begin(), 0.);
-}
 
 // matrix operations
 
@@ -168,16 +164,7 @@ std::vector<std::vector<double>> rescaleMatrix(const std::vector<std::vector<dou
 	return multiplyMatrixByScalar(mat, ratio);
 }
 
-std::vector<double> getSquareNormRowMatrix(std::vector<std::vector<double>> mat)
-{
-	int matSize { static_cast<int>(mat.size()) };
-	std::vector<double> squareNormVector ( matSize );
-	for (int i = 0; i < matSize; i++)
-	{
-		squareNormVector[i] = getSquareNormVector( mat[i] );
-	}
-	return squareNormVector;
-}
+
 
 std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat)
 {

@@ -9,10 +9,12 @@
 #define UTIL_H_
 
 #include <vector>
+#include <numeric>
 
+/***
 double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB,
                           const double& lengthCube, const double& halfLengthCube);
-
+***/
 std::vector<double> periodicBC(std::vector<double> positionParticle, const double& lengthCube);
 
 std::vector<double> divideVectorByScalar(std::vector<double> vec, const double& scalar);
@@ -39,7 +41,26 @@ std::vector<std::vector<double>> multiplyMatrixByScalar(std::vector<std::vector<
 
 std::vector<std::vector<double>> rescaleMatrix(std::vector<std::vector<double>> mat, const double& rescale);
 
-std::vector<double> getSquareNormRowMatrix(std::vector<std::vector<double>> mat);
+template<typename InputIt>
+double getSquareNormVector(const InputIt& vecItBegin, const InputIt& vecItEnd)
+{
+    return std::inner_product(vecItBegin, vecItEnd, vecItBegin, 0.);
+}
+
+
+template<typename InputIt>
+std::vector<double> getSquareNormRowMatrix(InputIt vecItBegin, const int& lenColumn, const int& lenRow)
+{
+    std::vector<double> squareNormVector;
+    auto vecItEnd {vecItBegin + lenRow};
+    for (int i = 0; i < lenColumn; i++)
+    {
+        squareNormVector.push_back(getSquareNormVector( vecItBegin, vecItEnd));
+        vecItBegin = vecItEnd;
+        vecItEnd = vecItBegin + lenRow;
+    }
+    return squareNormVector;
+}
 
 std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat);
 

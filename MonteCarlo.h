@@ -77,8 +77,17 @@ public:
     void mcSwap();
     [[nodiscard]] bool metropolis(double diff_energy) const;
 
+    template<typename InputIt>
+    std::vector<double> vectorTranslation(const int& indexTranslation, InputIt randomVectorIt)
+    {
+        auto posItBeginTranslation = m_systemMolecules.getPosItBeginI(indexTranslation);
+        std::vector<double> positionTranslation (m_systemMolecules.m_nDims);
+        std::transform(posItBeginTranslation, posItBeginTranslation + m_systemMolecules.m_nDims,
+                       randomVectorIt, positionTranslation.begin(), std::plus<>());
+        m_systemMolecules.periodicBC(positionTranslation.begin());
+        return positionTranslation;
+    }
 
-    std::vector<double> vectorTranslation(const int &indexTranslation, const std::vector<double> &randomVector);
 
     void mcMoleculeTranslation();
 };

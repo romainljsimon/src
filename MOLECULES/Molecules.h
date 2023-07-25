@@ -33,6 +33,8 @@ public:
     std::vector<double> m_positionArray {};
     std::vector<int> m_particleTypeArray {};
     std::vector<int> m_moleculeTypeArray {};
+    const std::string m_saveHeaderString{};
+
 
     Molecules (param::Parameter param, PairPotentials  systemPairPotentials,
                BondPotentials  systemBondPotentials, const std::string& path)
@@ -43,9 +45,28 @@ public:
         , m_lengthCube {pow (static_cast<double>(m_nParticles) / param.get_double("density"), 1. / 3.) }
         , m_halfLengthCube (0.5 * m_lengthCube)
         , m_bondsArray(initializeBondsArray())
+        , m_saveHeaderString(initializeHeaderString(m_nParticles, m_lengthCube))
     {
         m_flagsArray.resize(3 * m_nParticles, 0);
         initializeParticles(path);
+    }
+
+    static std::string initializeHeaderString(const int& nParticles, const double& lengthCube)
+    {
+        std::string headerString {static_cast<char>(nParticles)};
+        headerString.append("\n");
+        std::string lengthStr {std::to_string(lengthCube)};
+        std::string zeroString {" 0.0 0.0 0.0 "};
+        headerString.append("Lattice=");
+        headerString.append(std::to_string('"'));
+        headerString.append(lengthStr);
+        headerString.append(zeroString);
+        headerString.append(lengthStr);
+        headerString.append(zeroString);
+        headerString.append(std::to_string('"'));
+        headerString.append(" Properties=molecule_type:S:1:type:I:1:pos:R:3:");
+        headerString.append("\n");
+        return headerString;
     }
 
     static std::vector<std::vector<int>> initializeBondsArray()
@@ -151,26 +172,53 @@ public:
 
     void updateFlags(const int& indexParticle);
 
+    template<typename InputIt>
+    void updatePositionI(const int& i, InputIt newPosItBegin)
+    {
+        const int realIndex {i * m_nDims};
+        std::copy(newPosItBegin, newPosItBegin + m_nDims, m_positionArray.begin() + realIndex);
+    }
+
+
+    template<typename InputIt>
+    void periodicBC(InputIt posItBegin)
+/*
+ *This function is an implementation of the periodic Boundary conditions.
+ *If a particle gets out of the simulation box from one of the sides, it gets back in the box from the opposite side.
+ */
+    {
+        for (int i = 0; i < m_nDims; i++)
+        {
+            //std::cout <<  m_newFlags[i] << "\n";
+            const auto& posI {*posItBegin};
+            if (posI < 0)
+            {
+                *posItBegin += m_lengthCube;
+                m_newFlags.push_back(-1);
+            }
+            else if (posI > m_lengthCube)
+            {
+                *posItBegin -= m_lengthCube;
+                m_newFlags.push_back(1);
+            }
+            else
+            {
+                m_newFlags.push_back(0);
+            }
+            posItBegin++;
+        }
+    }
+
     [[nodiscard]] const int& getNParticles() const;
 
     [[nodiscard]]  std::vector<double> getPositionI(const int& i) const;
 
-    [[nodiscard]]  const int& getParticleTypeI(const int &i) const;
+
+    [[nodiscard]] const int& getParticleTypeI(const int &i) const;
 
     [[nodiscard]] const int& getMoleculeTypeI(const int &i) const;
 
     void swapParticleTypesIJ(const int &i, const int &j, const int &typeI, const int &typeJ);
-
-    void updatePositionI(const int &i, const std::vector<double> &newPosition);
-
-    [[nodiscard]] double squareDistancePair(const std::vector<double> &positionA,
-                                            const std::vector<double> &positionB) const;
-
-    [[nodiscard]] double squareDistancePair(const int &indexI, const int &indexJ) const;
-
-    [[nodiscard]] double squareDistancePair(const std::vector<double> &positionI, const int &indexJ) const;
-
-    [[nodiscard]] double squareDistancePair(const int &indexI, const std::vector<double> &positionJ) const;
 
     [[nodiscard]] const double& getLengthCube() const;
 
@@ -180,37 +228,84 @@ public:
 
     void swapParticleTypesIJ(const int &i, const int &j);
 
-    std::vector<double> periodicBC(std::vector<double> positionParticle);
-
-    [[nodiscard]] double energyPairParticle(const int& indexParticle, const std::vector<double>& positionParticle,
-                                            const std::vector<int>& neighborIList, const int& indexSkip) const;
-
-    [[nodiscard]] double energyPairParticle(const int& indexParticle, const std::vector<double>& positionParticle,
-                                            const std::vector<int>& neighborIList) const;
-
-    [[nodiscard]] double energyPairParticle(const int& indexParticle, const std::vector<int>& neighborIList,
-                                            const int& indexSkip) const;
-
-    [[nodiscard]] double energyPairParticle(const int& indexParticle, const std::vector<int>& neighborIList) const;
-
     [[nodiscard]] double energySystemMolecule(const Neighbors &systemNeighbors) const;
-    [[nodiscard]] double feneBondEnergyI(const int& indexParticle, const std::vector<double>& positionParticle,
-                                         const int& indexSkip) const;
 
-    [[nodiscard]] double feneBondEnergyI(const int &indexParticle) const;
 
-    [[nodiscard]] double feneBondEnergyI(const int &indexParticle, const int &indexSkip) const;
+    template<typename InputIt>
+    double feneBondEnergyI(const int& indexParticle, InputIt posItBegin,
+                                      const int& indexSkip) const
+    {
+        double energy { 0. };
 
-    [[nodiscard]] double energyParticleMolecule(const int &indexParticle, const std::vector<int> &neighborIList) const;
+        const std::vector<int>& bondsI { m_bondsArray[indexParticle] };
+        const int& particleTypeI { m_particleTypeArray[indexParticle] };
 
-    [[nodiscard]] double energyParticleMolecule(const int &indexParticle, const std::vector<double> &positionParticle,
-                          const std::vector<int> &neighborIList, const int &indexSkip) const;
+        for (int const &indexJ: bondsI)
+        {
 
-    [[nodiscard]] double
-    energyParticleMolecule(const int &indexParticle, const std::vector<int> &neighborIList, const int &indexSkip) const;
+            if (indexJ != indexSkip)
+            {
+                const double squareDistance { squareDistancePair(posItBegin,
+                                                                 m_positionArray.begin() + m_nDims*indexJ) };
+                const int& particleTypeJ { m_particleTypeArray[indexJ] };
+                energy += m_systemBondPotentials.feneBondEnergyIJ(squareDistance, particleTypeI, particleTypeJ);
+            }
+        }
+        return energy;
+    }
 
-    [[nodiscard]] double energyParticleMolecule(const int &indexParticle, const std::vector<double> &positionParticle,
-                                  const std::vector<int> &neighborIList) const;
+
+    template<typename InputPosIt, typename InputNeighIt>
+    double energyPairParticle(const int& indexParticle, InputPosIt posItBegin,
+                              InputNeighIt NeighItBegin, const int& lenNeigh,
+                              const int& indexSkip) const
+    {
+        double energy { 0. };
+        const int& particleType {m_particleTypeArray[indexParticle]};
+
+        for (auto it = NeighItBegin; it < NeighItBegin + lenNeigh; it++)
+        {
+            const int& indexJ {*it};
+            if (indexJ != indexSkip)
+            {
+
+                const int& typeJ { m_particleTypeArray[indexJ] };
+                const double squareDistance { squareDistancePair(posItBegin,
+                                                                 m_positionArray.begin() + m_nDims*indexJ) };
+                energy += m_systemPairPotentials.ljPairEnergy(squareDistance, particleType, typeJ);
+
+            }
+        }
+        return energy;
+    }
+
+    template<typename InputPosIt, typename InputNeighIt>
+    double energyParticleMolecule(const int& indexParticle, InputPosIt posItBegin,
+                                  InputNeighIt NeighItBegin, const int& lenNeigh,
+                                  const int& indexSkip) const
+    {
+        double energy { 0. };
+        energy += energyPairParticle(indexParticle, posItBegin, NeighItBegin, lenNeigh, indexSkip);
+        energy += feneBondEnergyI(indexParticle, posItBegin, indexSkip);
+        return energy;
+    }
+
+    template<typename InputNeighIt>
+    double energyParticleMolecule(const int& indexParticle, InputNeighIt NeighItBegin, const int& lenNeigh,
+                                             const int& indexSkip) const
+    {
+
+        //std::cout << &*m_positionArray.begin() << "\n";
+        const auto& posItBegin {m_positionArray.begin() + m_nDims * indexParticle};
+        return energyParticleMolecule(indexParticle, posItBegin, NeighItBegin, lenNeigh, indexSkip);
+    }
+
+    template<typename InputNeighIt>
+    double energyParticleMolecule(const int& indexParticle, InputNeighIt NeighItBegin,
+                                  const int& lenNeigh) const
+    {
+        return energyParticleMolecule(indexParticle, NeighItBegin, lenNeigh, -1);
+    }
 
     void reinitializeFlags();
 
@@ -219,6 +314,34 @@ public:
 
     [[nodiscard]] double energyPairParticleExtraMolecule(const int& indexParticle, const std::vector<int>& neighborIList, const int& typeMoleculeI) const;
 
+    template<typename InputItI, typename InputItJ>
+    double squareDistancePair(InputItI firstI, InputItJ firstJ) const
+    {
+        double squareDistance { 0. };
+        //std::vector<double> diffArray (m_nDims);
+        //td::transform(firstI, firstI + m_nDims, firstJ, diffArray.begin(), std::minus<>() );
+
+        for (int i = 0; i < m_nDims; i++)
+        {
+            double diff = *firstI - *firstJ;
+            if (diff > m_halfLengthCube)
+            {
+                diff -= m_lengthCube;
+            }
+            else if (diff < - m_halfLengthCube)
+            {
+                diff += m_lengthCube;
+            }
+
+            squareDistance += diff * diff;
+            firstI++;
+            firstJ++;
+        }
+
+        return squareDistance;
+    }
+
+    [[nodiscard]] std::__wrap_iter<const double *> getPosItBeginI(const int &i) const;
 };
 
 #endif /* MOLECULES_H_ */

@@ -11,6 +11,7 @@
 #include <utility>
 #include <iterator>
 #include <fstream>
+#include <algorithm>
 #include <vector>
 #include "../INPUT/Parameter.h"
 #include "../MOLECULES/Molecules.h"
@@ -22,16 +23,19 @@ class Neighbors
     friend class Molecules;
 
 private:
-	std::vector<std::vector<int>> m_neighborList {};                // Neighbor list.
+	std::vector<int> m_neighborList {};                // Neighbor list.
+    std::vector<int> m_neighborIndex {};
     const double m_rSkin {};
     const double m_squareRSkin {};                        			// Skin radius squared.
+    const int m_nDims {3};
     int m_updateRate {-1};
     const int m_numCell {};
     const double m_cellLength {};
 	int m_errors { 0 };                                             // Errors of the neighbor list.
-	std::vector<std::vector<double>> m_interDisplacementMatrix {};  // Inter neighbor list update displacement matrix.
+	std::vector<double> m_interDisplacementVector {};  // Inter neighbor list update displacement matrix.
     const std::vector<double> m_maxSquareRcArray{};
     const std::vector<double> m_threshArray{};
+    int m_numNeighMax{};
 
 public:
     // Molecule Neighbors. The neighbor list does NOT include bonded neighbors.
@@ -44,20 +48,28 @@ public:
             , m_cellLength { systemMolecules.m_lengthCube / static_cast<double>(m_numCell)}
 
     {
-
-        m_interDisplacementMatrix.resize(systemMolecules.m_nParticles, std::vector<double>(3, 0));
+        const double density {systemMolecules.m_nParticles / std::pow(systemMolecules.m_lengthCube, 3) };
+        m_numNeighMax = static_cast<int>(std::pow(m_rSkin, 3) * 4./3. * 3.15 * density * 1.2);
+        m_interDisplacementVector.resize(systemMolecules.m_nParticles * systemMolecules.m_nDims, 0);
         m_neighborList.resize(systemMolecules.m_nParticles);
         createNeighborList(systemMolecules);
+
         /***
         for(auto const& x : m_neighborList)
         {
-            for(auto const& y : x)
-            {
-                std::cout << y << " ";
+            std::cout << x;
+            if (it < m_numNeighMax) {
+                it++;
+                std::cout << " ";
             }
-            std::cout << "\n";
+            else if (it == m_numNeighMax) {
+                it=1;
+                std::cout << "\n";
+            }
+
         }
-         ***/
+        ***/
+
     }
 
 
@@ -105,36 +117,75 @@ public:
 
     [[nodiscard]] int cellTest(int indexCell) const;
 
-    void WOWcreateNeighborList(const Molecules& systemMolecules);
+   // void WOWcreateNeighborList(const Molecules& systemMolecules);
 
     [[nodiscard]] std::vector<std::vector<std::vector<std::vector<int>>>>
     createCellList(const Molecules &systemMolecules) const;
 
     void createSamePairCellNeighbor(const Molecules& systemMolecules,
-                                    const std::vector<std::vector<int>>& oldNeighborList,
+                                    const std::vector<int>& oldNeighborList,
+                                    const std::vector<int>& oldNeighborIndex,
                                     const std::vector<int>& cellMolecules, const bool& checkNeigh);
 
     void createDiffPairCellNeighbor(const Molecules& systemMolecules,
-                                    const std::vector<std::vector<int>>& oldNeighborList,
+                                    const std::vector<int>& oldNeighborList,
+                                    const std::vector<int>& oldNeighborIndex,
                                     const std::vector<int>& cellMolecules,
                                     const std::vector<int>& testNeighbors, const bool& checkNeigh);
 
-    void checkNeighborError(const Molecules& systemMolecules, const std::vector<std::vector<int>> &oldNeighborList,
+    void checkNeighborError(const Molecules& systemMolecules, const std::vector<int> &oldNeighborList,
+                            const std::vector<int>& oldNeighborIndex,
                             const double &squareDistance, const int &indexI, const int &indexJ);
 
 
 
-    void updateIJNeighbor(const Molecules& systemMolecules, const std::vector<std::vector<int>>& oldNeighborList,
-                          const std::vector<double>& positionParticle, const int& indexI, const int& indexJ,
-                          const bool& checkNeigh);
 
+    template<typename InputIt>
+    void updateIJNeighbor(const Molecules& systemMolecules, const std::vector<int>& oldNeighborList,
+                          const std::vector<int>& oldNeighborIndex, const InputIt& posItBegin,
+                          const int& indexI, const int& indexJ, const bool& checkNeigh)
+    {
+        auto posItBeginJ {systemMolecules.getPosItBeginI(indexJ)};
+        const double squareDistance { systemMolecules.squareDistancePair(posItBegin,
+                                                                         posItBeginJ)};
+
+        if (squareDistance < m_squareRSkin)
+        {
+            // j and i are neighbors
+            const int lastIndexI {m_neighborIndex[indexI]};
+
+            m_neighborList[lastIndexI] = indexJ; // j is on row i
+            m_neighborIndex[indexI]++;
+
+            const int lastIndexJ {m_neighborIndex[indexJ]};
+            m_neighborList[lastIndexJ] = indexI; // j is on row i
+            m_neighborIndex[indexJ]++;
+            if (checkNeigh)
+            {
+                 checkNeighborError(systemMolecules, oldNeighborList, oldNeighborIndex,
+                                    squareDistance, indexI, indexJ);
+            }
+        }
+    }
+    [[nodiscard]] int getNeighborIndexBegin(const int& particleIndex) const
+    {
+        //return m_neighborIndex[particleIndex];
+        // std::cout  << particleIndex * m_numNeighMax <<'\n';
+        return particleIndex * m_numNeighMax;
+    }
+
+    [[nodiscard]] int getNeighborIndexEnd(const int& particleIndex) const
+    {
+        return m_neighborIndex[particleIndex];
+    }
 
     void sortNeighborList(const Molecules& systemMolecules);
 
     void createNeighborList(const Molecules& systemMolecules);
 
     void createCellNeighbors(const Molecules &systemMolecules,
-                             const std::vector<std::vector<int>> &oldNeighborList,
+                             const std::vector<int> &oldNeighborList,
+                             const std::vector<int>& oldNeighborIndex,
                              const std::vector<std::vector<std::vector<std::vector<int>>>> &cellList, int xCell,
                              int yCell, int zCell, const bool &checkNeigh);
 
@@ -143,9 +194,21 @@ public:
     [[nodiscard]] int getErrors() const;
 
 
-    [[nodiscard]] const std::vector<int>& getNeighborIList(int particleIndex) const;
+    //[[nodiscard]] const std::vector<int>& getNeighborIList(int particleIndex) const;
 
-    void updateInterDisplacement(const int &indexTranslation, const std::vector<double> &vectorTranslation);
+    template<typename InputIt>
+    void updateInterDisplacement(const int& indexTranslation, const InputIt& vectorItTranslation)
+    {
+        const int realIndex {indexTranslation * m_nDims};
+        auto dispItBegin( m_interDisplacementVector.begin() + realIndex);
+
+        std::transform(dispItBegin, dispItBegin + m_nDims, vectorItTranslation,
+                       dispItBegin, std::plus<>());
+    }
+
+    [[nodiscard]] int getLenIndexBegin(const int &indexTranslation) const;
+
+    [[nodiscard]] std::__wrap_iter<const int *> getNeighItBeginI(const int &i) const;
 };
 
 
