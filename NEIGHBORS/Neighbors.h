@@ -36,6 +36,8 @@ private:
     const std::vector<double> m_maxSquareRcArray{};
     const std::vector<double> m_threshArray{};
     int m_numNeighMax{};
+    using NeighIterator = std::vector<int>::const_iterator;
+
 
 public:
     // Molecule Neighbors. The neighbor list does NOT include bonded neighbors.
@@ -208,7 +210,11 @@ public:
 
     [[nodiscard]] int getLenIndexBegin(const int &indexTranslation) const;
 
-    [[nodiscard]] __gnu_cxx::__normal_iterator<const int *, std::vector<int>> getNeighItBeginI(const int &i) const;
+    [[nodiscard]] NeighIterator getNeighItBeginI(const int &indexParticle) const
+    {
+        const int& neighIndex {getNeighborIndexBegin(indexParticle)};
+        return m_neighborList.begin() + neighIndex;
+    }
 };
 
 

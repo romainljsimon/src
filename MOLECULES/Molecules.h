@@ -9,9 +9,11 @@
 #include <vector>
 #include <cmath>
 #include <cmath>
+#include <typeinfo>
 #include "../INPUT/Parameter.h"
 #include "../POTENTIALS/PairPotentials.h"
 #include "../POTENTIALS/BondPotentials.h"
+
 
 class Neighbors;
 
@@ -34,6 +36,10 @@ public:
     std::vector<int> m_particleTypeArray {};
     std::vector<int> m_moleculeTypeArray {};
     const std::string m_saveHeaderString{};
+    using PosIterator = std::vector<double>::const_iterator;
+
+    //std::vector<double> typeArray{1, 2};
+
 
 
     Molecules (param::Parameter param, PairPotentials  systemPairPotentials,
@@ -49,6 +55,8 @@ public:
     {
         m_flagsArray.resize(3 * m_nParticles, 0);
         initializeParticles(path);
+        std::cout << typeid(m_positionArray.begin()).name();
+
     }
 
     static std::string initializeHeaderString(const int& nParticles, const double& lengthCube)
@@ -387,7 +395,15 @@ public:
         return squareDistance;
     }
 
-    [[nodiscard]] __gnu_cxx::__normal_iterator<const double *, std::vector<double>> getPosItBeginI(const int &i) const;
+    [[nodiscard]] PosIterator getPosItBeginI(const int &i) const
+    {
+        const int realIndex { i * m_nDims };
+        auto outIt {m_positionArray.begin() + realIndex};
+        return outIt;
+    }
+
+
+
 };
 
 #endif /* MOLECULES_H_ */

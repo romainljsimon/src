@@ -20,8 +20,7 @@ int main()
 {
 
     std::string folderPath ( "." );
-//squareDistancePairTest();
-    std::cout << std::unitbuf;
+    //squareDistancePairTest();
 
 	//Opening INPUT variables file
     param::Parameter param(folderPath + "/inputVar.txt" );

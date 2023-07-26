@@ -21,6 +21,7 @@ const double& Molecules::getHalfLengthCube() const
     return m_halfLengthCube;
 }
 
+
 std::vector<double> Molecules::getPositionI(const int& i) const
 {
     const int realIndex { i * m_nDims };
@@ -30,11 +31,6 @@ std::vector<double> Molecules::getPositionI(const int& i) const
 }
 
 
-__gnu_cxx::__normal_iterator<const double *, std::vector<double>> Molecules::getPosItBeginI(const int& i) const
-{
-    const int realIndex { i * m_nDims };
-    return m_positionArray.begin() + realIndex;
-}
 
 const int& Molecules::getParticleTypeI(const int& i) const
 {
@@ -150,7 +146,7 @@ double Molecules::energyPairParticleExtraMolecule(const int& indexParticle, cons
             //    continue;
             //}
             const int& typeJ {m_particleTypeArray[indexJ]};
-            const double squareDistance { squareDistancePair(positionParticle.begin(), m_positionArray.begin() + 3*indexJ)  };
+            const double squareDistance { squareDistancePair(positionParticle.begin(), m_positionArray.begin() + m_nDims * indexJ)  };
             energy += m_systemPairPotentials.ljPairEnergy(squareDistance, particleType, typeJ);
 
         }
