@@ -378,13 +378,17 @@ public:
         for (int i = 0; i < m_nDims; i++)
         {
             double diff = *firstI - *firstJ;
-            if (diff > m_halfLengthCube)
+            double absDiff {fabs(diff) };
+            if (absDiff> m_halfLengthCube)
             {
-                diff -= m_lengthCube;
-            }
-            else if (diff < - m_halfLengthCube)
-            {
-                diff += m_lengthCube;
+                if (diff < 0.0)
+                {
+                    diff += m_lengthCube;
+                }
+                else
+                {
+                    diff -= m_lengthCube;
+                }
             }
 
             squareDistance += diff * diff;

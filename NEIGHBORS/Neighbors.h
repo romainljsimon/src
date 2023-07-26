@@ -196,8 +196,6 @@ public:
     [[nodiscard]] int getErrors() const;
 
 
-    //[[nodiscard]] const std::vector<int>& getNeighborIList(int particleIndex) const;
-
     template<typename InputIt>
     void updateInterDisplacement(const int& indexTranslation, const InputIt& vectorItTranslation)
     {
