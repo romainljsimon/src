@@ -127,7 +127,7 @@ void MonteCarlo::mcMove()
 
         if ( swapped )
         {
-           // mcSwap();
+            mcSwap();
         }
         else
         {
@@ -227,7 +227,7 @@ void MonteCarlo::mcTranslation()
                                                                         lenNeigh)};
     double newEnergyParticle { m_systemMolecules.energyParticleMolecule(indexTranslation,
                                                                         positionTranslation.begin(),
-                                                                        neighItBegin, lenNeigh, -1)};
+                                                                        neighItBegin, lenNeigh)};
 
     const double diff_energy {newEnergyParticle - oldEnergyParticle};
 
@@ -262,7 +262,7 @@ void MonteCarlo::mcTranslation()
  *                     taken from a uniform distribution U(-m_rBox, m_rBox).
  * @return Tentative new particle position.
  ******************************************************************************/
-/***
+
 void MonteCarlo::mcSwap()
 {
     int indexSwap1 { randomIntGenerator(0, m_nParticles - 1) };
@@ -272,26 +272,24 @@ void MonteCarlo::mcSwap()
     indexSwap1 -= indexSwap1 % 3;
     indexSwap2 = indexSwap1 + 2;
 
-    double energyParticle1;
-    double energyParticle2;
-    double energyParticleSwap1;
-    double energyParticleSwap2;
-    const std::vector<int>& neighborIList1 { m_systemNeighbors.getNeighborIList(indexSwap1) };
-    const std::vector<int>& neighborIList2 { m_systemNeighbors.getNeighborIList(indexSwap2) };
+
+    const auto& neighItBegin1 { m_systemNeighbors.getNeighItBeginI(indexSwap1) };
+    const int& lenNeigh1 {m_systemNeighbors.getLenIndexBegin(indexSwap1)};
+    const auto& neighItBegin2 { m_systemNeighbors.getNeighItBeginI(indexSwap2) };
+    const int& lenNeigh2 {m_systemNeighbors.getLenIndexBegin(indexSwap2)};
 
 
-    energyParticle1 = m_systemMolecules.energyParticleMolecule(indexSwap1, neighborIList1, indexSwap2);
-
-    energyParticle2 = m_systemMolecules.energyParticleMolecule(indexSwap2, neighborIList2, indexSwap1);
-
-    m_systemMolecules.swapParticleTypesIJ(indexSwap1, indexSwap2);
-
-    energyParticleSwap1 = m_systemMolecules.energyParticleMolecule(indexSwap1, neighborIList1, indexSwap2);
-
-    energyParticleSwap2 = m_systemMolecules.energyParticleMolecule(indexSwap2, neighborIList2, indexSwap1);
+    double diffEnergySwap1{ m_systemMolecules.energyParticleMoleculeSwap(indexSwap1, neighItBegin1,
+                                                                   lenNeigh1, indexSwap2)};
 
 
-    const double diffEnergy{ energyParticleSwap1 + energyParticleSwap2 - energyParticle1 - energyParticle2 };
+    double diffEnergySwap2 { m_systemMolecules.energyParticleMoleculeSwap(indexSwap2, neighItBegin2,
+                                                               lenNeigh2, indexSwap1)};
+
+
+
+
+    const double diffEnergy{ diffEnergySwap1 + diffEnergySwap2 };
     // Metropolis criterion
     const bool acceptMove { metropolis( diffEnergy) };
 
@@ -301,7 +299,9 @@ void MonteCarlo::mcSwap()
     {
         generalUpdate( diffEnergy );
         m_acceptanceRateSwap += 1. / m_nParticles;
+        m_systemMolecules.swapParticleTypesIJ(indexSwap1, indexSwap2);
 
+        /***
         if (m_calculatePressure)
         {
             const double pressureParticleSwap1 {pressureParticle(m_temp, indexSwap1,
@@ -337,13 +337,9 @@ void MonteCarlo::mcSwap()
 
             m_pressure += pressureParticleSwap1 + pressureParticleSwap2 - pressureParticle1 - pressureParticle2;
         }
-    }
-    else
-    {
-        m_systemMolecules.swapParticleTypesIJ(indexSwap1, indexSwap2);
+        ***/
     }
 }
-***/
 
 
 void MonteCarlo::generalUpdate(double diffEnergy)

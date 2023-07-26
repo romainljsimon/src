@@ -232,8 +232,7 @@ public:
 
 
     template<typename InputIt>
-    double feneBondEnergyI(const int& indexParticle, InputIt posItBegin,
-                                      const int& indexSkip) const
+    double feneBondEnergyI(const int& indexParticle, InputIt posItBegin) const
     {
         double energy { 0. };
 
@@ -243,13 +242,11 @@ public:
         for (int const &indexJ: bondsI)
         {
 
-            if (indexJ != indexSkip)
-            {
-                const double squareDistance { squareDistancePair(posItBegin,
+            const double squareDistance { squareDistancePair(posItBegin,
                                                                  m_positionArray.begin() + m_nDims*indexJ) };
-                const int& particleTypeJ { m_particleTypeArray[indexJ] };
-                energy += m_systemBondPotentials.feneBondEnergyIJ(squareDistance, particleTypeI, particleTypeJ);
-            }
+            const int& particleTypeJ { m_particleTypeArray[indexJ] };
+            energy += m_systemBondPotentials.feneBondEnergyIJ(squareDistance, particleTypeI, particleTypeJ);
+
         }
         return energy;
     }
@@ -257,8 +254,7 @@ public:
 
     template<typename InputPosIt, typename InputNeighIt>
     double energyPairParticle(const int& indexParticle, InputPosIt posItBegin,
-                              InputNeighIt NeighItBegin, const int& lenNeigh,
-                              const int& indexSkip) const
+                              InputNeighIt NeighItBegin, const int& lenNeigh) const
     {
         double energy { 0. };
         const int& particleType {m_particleTypeArray[indexParticle]};
@@ -266,45 +262,33 @@ public:
         for (auto it = NeighItBegin; it < NeighItBegin + lenNeigh; it++)
         {
             const int& indexJ {*it};
-            if (indexJ != indexSkip)
-            {
 
-                const int& typeJ { m_particleTypeArray[indexJ] };
-                const double squareDistance { squareDistancePair(posItBegin,
-                                                                 m_positionArray.begin() + m_nDims*indexJ) };
-                energy += m_systemPairPotentials.ljPairEnergy(squareDistance, particleType, typeJ);
+            const int& typeJ { m_particleTypeArray[indexJ] };
+            const double squareDistance { squareDistancePair(posItBegin,
+                                                             m_positionArray.begin() + m_nDims*indexJ) };
+            energy += m_systemPairPotentials.ljPairEnergy(squareDistance, particleType, typeJ);
 
-            }
+
         }
         return energy;
     }
 
     template<typename InputPosIt, typename InputNeighIt>
     double energyParticleMolecule(const int& indexParticle, InputPosIt posItBegin,
-                                  InputNeighIt NeighItBegin, const int& lenNeigh,
-                                  const int& indexSkip) const
+                                  InputNeighIt NeighItBegin, const int& lenNeigh) const
     {
         double energy { 0. };
-        energy += energyPairParticle(indexParticle, posItBegin, NeighItBegin, lenNeigh, indexSkip);
-        energy += feneBondEnergyI(indexParticle, posItBegin, indexSkip);
+        energy += energyPairParticle(indexParticle, posItBegin, NeighItBegin, lenNeigh);
+        energy += feneBondEnergyI(indexParticle, posItBegin);
         return energy;
     }
 
     template<typename InputNeighIt>
-    double energyParticleMolecule(const int& indexParticle, InputNeighIt NeighItBegin, const int& lenNeigh,
-                                             const int& indexSkip) const
+    double energyParticleMolecule(int indexParticle, InputNeighIt NeighItBegin, const int& lenNeigh) const
     {
 
-        //std::cout << &*m_positionArray.begin() << "\n";
         const auto& posItBegin {m_positionArray.begin() + m_nDims * indexParticle};
-        return energyParticleMolecule(indexParticle, posItBegin, NeighItBegin, lenNeigh, indexSkip);
-    }
-
-    template<typename InputNeighIt>
-    double energyParticleMolecule(const int& indexParticle, InputNeighIt NeighItBegin,
-                                  const int& lenNeigh) const
-    {
-        return energyParticleMolecule(indexParticle, NeighItBegin, lenNeigh, -1);
+        return energyParticleMolecule(indexParticle, posItBegin, NeighItBegin, lenNeigh);
     }
 
     void reinitializeFlags();
@@ -314,12 +298,74 @@ public:
 
     [[nodiscard]] double energyPairParticleExtraMolecule(const int& indexParticle, const std::vector<int>& neighborIList, const int& typeMoleculeI) const;
 
+    template<typename InputPosIt, typename InputNeighIt>
+    double energyPairParticleSwap(const int& indexParticle, InputPosIt posItBegin,
+                                  InputNeighIt NeighItBegin, const int& lenNeigh,
+                                  const int& indexSwap) const
+    {
+        double energy { 0. };
+        const int& particleType {m_particleTypeArray[indexParticle]};
+        const int& swapParticleType {m_particleTypeArray[indexSwap]};
+
+        for (auto it = NeighItBegin; it < NeighItBegin + lenNeigh; it++)
+        {
+            const int& indexJ {*it};
+            if (indexJ != indexSwap)
+            {
+
+                const int& typeJ { m_particleTypeArray[indexJ] };
+                const double squareDistance { squareDistancePair(posItBegin,
+                                                                 m_positionArray.begin() + m_nDims*indexJ) };
+
+                energy += m_systemPairPotentials.ljPairEnergy(squareDistance, swapParticleType, typeJ);
+                energy -= m_systemPairPotentials.ljPairEnergy(squareDistance, particleType, typeJ);
+
+            }
+        }
+        return energy;
+    }
+
+    template<typename InputIt>
+    [[nodiscard]] double feneBondEnergyISwap(const int& indexParticle, InputIt posItBegin,
+                               const int& indexSwap) const
+    {
+        double energy { 0. };
+
+        const std::vector<int>& bondsI { m_bondsArray[indexParticle] };
+        const int& particleTypeI { m_particleTypeArray[indexParticle] };
+        const int& swapParticleTypeI {m_particleTypeArray[indexSwap]};
+
+        for (int const &indexJ: bondsI)
+        {
+
+            if (indexJ != indexSwap)
+            {
+                const double squareDistance { squareDistancePair(posItBegin,
+                                                                 m_positionArray.begin() + m_nDims*indexJ) };
+                const int& particleTypeJ { m_particleTypeArray[indexJ] };
+                energy += m_systemBondPotentials.feneBondEnergyIJ(squareDistance,
+                                                                  swapParticleTypeI, particleTypeJ);
+                energy -= m_systemBondPotentials.feneBondEnergyIJ(squareDistance, particleTypeI, particleTypeJ);
+            }
+        }
+        return energy;
+    }
+    template<typename InputNeighIt>
+    double energyParticleMoleculeSwap(const int& indexParticle, InputNeighIt NeighItBegin, const int& lenNeigh,
+                                      const int& indexSwap) const
+    {
+        double energy { 0. };
+        const auto& posItBegin {m_positionArray.begin() + 3 * indexParticle};
+        energy += energyPairParticleSwap(indexParticle, posItBegin, NeighItBegin, lenNeigh, indexSwap);
+        energy += feneBondEnergyISwap(indexParticle, posItBegin, indexSwap);
+        return energy;
+    }
+
+
     template<typename InputItI, typename InputItJ>
     double squareDistancePair(InputItI firstI, InputItJ firstJ) const
     {
         double squareDistance { 0. };
-        //std::vector<double> diffArray (m_nDims);
-        //td::transform(firstI, firstI + m_nDims, firstJ, diffArray.begin(), std::minus<>() );
 
         for (int i = 0; i < m_nDims; i++)
         {
