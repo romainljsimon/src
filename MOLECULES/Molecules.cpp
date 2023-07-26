@@ -30,7 +30,7 @@ std::vector<double> Molecules::getPositionI(const int& i) const
 }
 
 
-std::__wrap_iter<const double *> Molecules::getPosItBeginI(const int& i) const
+__gnu_cxx::__normal_iterator<const double *, std::vector<double>> Molecules::getPosItBeginI(const int& i) const
 {
     const int realIndex { i * m_nDims };
     return m_positionArray.begin() + realIndex;

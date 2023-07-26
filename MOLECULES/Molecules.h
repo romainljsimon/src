@@ -387,7 +387,7 @@ public:
         return squareDistance;
     }
 
-    [[nodiscard]] std::__wrap_iter<const double *> getPosItBeginI(const int &i) const;
+    [[nodiscard]] __gnu_cxx::__normal_iterator<const double *, std::vector<double>> getPosItBeginI(const int &i) const;
 };
 
 #endif /* MOLECULES_H_ */

@@ -334,7 +334,7 @@ int Neighbors::getLenIndexBegin(const int& indexParticle) const
     return lenNeigh;
 }
 
-std::__wrap_iter<const int *> Neighbors::getNeighItBeginI(const int &indexParticle) const
+__gnu_cxx::__normal_iterator<const int *, std::vector<int>> Neighbors::getNeighItBeginI(const int &indexParticle) const
 {
     const int& neighIndex {getNeighborIndexBegin(indexParticle)};
     return m_neighborList.begin() + neighIndex;

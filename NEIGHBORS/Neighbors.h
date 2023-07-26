@@ -208,7 +208,7 @@ public:
 
     [[nodiscard]] int getLenIndexBegin(const int &indexTranslation) const;
 
-    [[nodiscard]] std::__wrap_iter<const int *> getNeighItBeginI(const int &i) const;
+    [[nodiscard]] __gnu_cxx::__normal_iterator<const int *, std::vector<int>> getNeighItBeginI(const int &i) const;
 };
 
 
