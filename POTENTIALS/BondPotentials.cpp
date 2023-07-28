@@ -15,8 +15,8 @@ int BondPotentials::getIndexIJ(const int& i, const int& j) const
         indexJ = i;
     }
 
-    const int indexIJ {indexJ - indexI + m_particleTypes * (indexI - 1) - ((indexI - 2) * (indexI-1)) / 2};
-    return indexIJ * 6;
+    const int indexIJ {3 * ( 2 * indexJ +  indexI + 2 * m_particleTypes * ( indexI - 1) -  indexI * indexI  - 2)};
+    return indexIJ;
 }
 
 /***
@@ -46,7 +46,9 @@ double BondPotentials::feneBondEnergyIJ(const double& squareDistance, const int&
                                         const int& particleTypeJ) const
 {
     const int indexIJ {getIndexIJ(particleTypeI, particleTypeJ)};
-    const double& squareR0IJ {m_bondPotentials[indexIJ + 1]};
+    auto it {m_bondPotentials.begin() + indexIJ};
+    const double& squareR0IJ {*it};
+    ++it;
     double energy {0.};
 
 
@@ -57,20 +59,25 @@ double BondPotentials::feneBondEnergyIJ(const double& squareDistance, const int&
     }
     else
     {
+        const double& feneKI {*it};
+        ++it;
 
-        const double& feneKI {m_bondPotentials[indexIJ]};
         // std::cout << feneKI << "  " << squareR0IJ << "\n";
         energy += -0.5 * feneKI * squareR0IJ * std::log(1. - squareDistance / squareR0IJ);
     }
 
-    double rcSquareIJ {m_bondPotentials[indexIJ + 4]};
+    double rcSquareIJ {*it};
+    ++it;
 
     if (squareDistance < rcSquareIJ)
     {
 
-        const double& epsilonIJ {m_bondPotentials[indexIJ + 2]};
-        const double& squareSigmaIJ {m_bondPotentials[indexIJ + 3]};
-        const double& shiftIJ {m_bondPotentials[indexIJ + 5]};
+        const double& epsilonIJ {*it};
+        ++it;
+        const double& squareSigmaIJ {*it};
+        ++it;
+        const double& shiftIJ {*it};
+        ++it;
         const double rapSquare { squareSigmaIJ / squareDistance };
         const double rapSix {rapSquare * rapSquare * rapSquare};
         //std::cout << epsilonIJ << "  " << squareSigmaIJ << "  " << shiftIJ << "\n";

@@ -57,11 +57,11 @@ public:
                 }
 
 
-                pairPotentials[indexIJ + 0] = std::stod(coeffList[0]); // Epsilon IJ pair constant
+                pairPotentials[indexIJ + 1] = std::stod(coeffList[0]); // Epsilon IJ pair constant
                 const double& sigmaIJ {std::stod(coeffList[1])};
-                pairPotentials[indexIJ + 1] = sigmaIJ * sigmaIJ; // SigmaSquare IJ pair constant
+                pairPotentials[indexIJ + 2] = sigmaIJ * sigmaIJ; // SigmaSquare IJ pair constant
                 const double& rcIJ { std::stod(coeffList[2]) };
-                pairPotentials[indexIJ + 2] = rcIJ * rcIJ; // RcSquare IJ pair constant
+                pairPotentials[indexIJ] = rcIJ * rcIJ; // RcSquare IJ pair constant
                 pairPotentials[indexIJ + 3] = std::stod(coeffList[3]); // Shift IJ
                 /***
                 std::cout << pairPotentials[indexIJ * 4 + 0] << " ";

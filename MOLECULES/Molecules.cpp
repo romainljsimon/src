@@ -21,12 +21,16 @@ const double& Molecules::getHalfLengthCube() const
     return m_halfLengthCube;
 }
 
+const int& Molecules::getNDims() const
+{
+    return m_nDims;
+}
+
 
 std::vector<double> Molecules::getPositionI(const int& i) const
 {
-    const int realIndex { i * m_nDims };
-    std::vector<double> positionI (m_positionArray.begin() + realIndex,
-                                   m_positionArray.begin() + realIndex + m_nDims);
+    std::vector<double> positionI (getPosItBeginI(i),
+                                   getPosItEndI(i));
     return positionI;
 }
 
@@ -245,5 +249,3 @@ void Molecules::saveInXYZ(const std::string& path) const
     }
     fOut.close();
 }
-
-//template double Molecules::squareDistancePair<std::__1::__wrap_iter<double const*>>(const std::__1::__wrap_iter<double const*>&, const std::__1::__wrap_iter<double const*>&);

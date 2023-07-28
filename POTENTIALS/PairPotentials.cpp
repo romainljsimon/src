@@ -13,8 +13,8 @@ int PairPotentials::getIndexIJ(const int& i, const int& j) const
         indexI = j;
         indexJ = i;
     }
-    const int indexIJ {indexJ - indexI + m_nParticleTypes * ( indexI - 1) - ((indexI - 1) * (indexI-2)) / 2};
-    return indexIJ * 4;
+    const int indexIJ {2 * ( 2 * indexJ +  indexI + 2 * m_nParticleTypes * ( indexI - 1) -  indexI * indexI  - 2)};
+    return indexIJ;
 }
 
 int PairPotentials::getParticleTypes() const
@@ -59,7 +59,9 @@ double PairPotentials::ljPairEnergy(const double& squareDistance, const int& typ
 {
     //const std::vector<double>& potentialsIJ (getPotentialsIJ(typeI, typeJ));
     const int indexIJ { getIndexIJ(typeI, typeJ) };
-    const double& rcSquareIJ { m_pairPotentials[indexIJ + 2] };
+    auto it {m_pairPotentials.begin() + indexIJ};
+    const double& rcSquareIJ { *it};
+    ++it;
 
     if (squareDistance > rcSquareIJ)
     {
@@ -70,10 +72,12 @@ double PairPotentials::ljPairEnergy(const double& squareDistance, const int& typ
     else
     {
 
-        const double& epsilonIJ { m_pairPotentials[indexIJ + 0]};
-
-        const double& squareSigmaIJ { m_pairPotentials[indexIJ + 1]};
-        const double& shiftIJ { m_pairPotentials[indexIJ + 3] };
+        const double& epsilonIJ {*it};
+        ++it;
+        const double& squareSigmaIJ {*it};
+        ++it;
+        const double& shiftIJ { *it};
+        ++it;
         const double rapSquare { squareSigmaIJ / squareDistance };
         const double rapSix { rapSquare * rapSquare * rapSquare};
 

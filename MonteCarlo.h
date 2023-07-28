@@ -26,7 +26,6 @@ class MonteCarlo
 private:
     Molecules m_systemMolecules;
     Neighbors m_systemNeighbors;
-	int m_errors { 0 };                                             // Errors of the neighbor list.
 	double m_energy {};                                             // System's energy.
 	double m_pressure {};                                           // System's pressure.
 	const int m_nParticles {};                                            // System's number of particles.
@@ -51,8 +50,7 @@ public:
     MonteCarlo (param::Parameter param, const Molecules& systemMolecules, Neighbors  systemNeighbors,
                 std::string folderPath)
 
-            : m_simulationMol (param.get_string("simType"))
-            , m_systemMolecules (systemMolecules)
+        : m_systemMolecules (systemMolecules)
             , m_systemNeighbors(std::move(systemNeighbors))
             , m_nParticles(systemMolecules.getNParticles())
             , m_calculatePressure(param.get_bool("calcPressure", false))
@@ -61,7 +59,6 @@ public:
             , m_temp { param.get_double( "temp") }
             , m_rBox { param.get_double( "rBox") }
             , m_saveUpdate { param.get_int( "waitingTime") }
-            , m_neighMethod (param.get_string( "neighMethod", "verlet"))
             , m_timeSteps { param.get_int( "timeSteps") }
             , m_saveRate { param.get_int("saveRate", 50)}
             , m_folderPath (std::move( folderPath ))
@@ -81,8 +78,9 @@ public:
     std::vector<double> vectorTranslation(const int& indexTranslation, InputIt randomVectorIt)
     {
         auto posItBeginTranslation = m_systemMolecules.getPosItBeginI(indexTranslation);
-        std::vector<double> positionTranslation (m_systemMolecules.m_nDims);
-        std::transform(posItBeginTranslation, posItBeginTranslation + m_systemMolecules.m_nDims,
+        const int& nDims {m_systemMolecules.getNDims()};
+        std::vector<double> positionTranslation (nDims);
+        std::transform(posItBeginTranslation, posItBeginTranslation + nDims,
                        randomVectorIt, positionTranslation.begin(), std::plus<>());
         m_systemMolecules.periodicBC(positionTranslation.begin());
         return positionTranslation;

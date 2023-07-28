@@ -222,13 +222,14 @@ void Neighbors::createSamePairCellNeighbor(const Molecules& systemMolecules,
 
         const auto &posItBegin{systemMolecules.getPosItBeginI(realIIndex)};
 
-        const std::vector<int> &bondsParticleI{systemMolecules.m_bondsArray[realIIndex]};
-
+        //const std::vector<int> &bondsParticleI{systemMolecules.m_bondsArray[realIIndex]};
+        const auto& bondsItBegin {systemMolecules.getBondsItBeginI(realIIndex)};
+        const auto& bondsItEnd {systemMolecules.getBondsItEndI(realIIndex)};
         for (int j = i + 1; j < cellParticlesSize; j++) {
             const int realJIndex{cellParticles[j]};
 
 
-            if (!std::binary_search(bondsParticleI.begin(), bondsParticleI.end(), realJIndex))
+            if (!std::binary_search(bondsItBegin, bondsItEnd, realJIndex))
             {
                 updateIJNeighbor(systemMolecules, oldNeighborList, oldNeighborIndex, posItBegin,
                                  realIIndex, realJIndex, checkNeigh);
@@ -246,11 +247,12 @@ void Neighbors::createDiffPairCellNeighbor(const Molecules& systemMolecules,
     for (auto const &i: cellParticles)
     {
         const auto& posItBegin { systemMolecules.getPosItBeginI(i)};
-        const std::vector<int>& bondsParticleI{ systemMolecules.m_bondsArray[i] };
+        const auto& bondsItBegin {systemMolecules.getBondsItBeginI(i)};
+        const auto& bondsItEnd {systemMolecules.getBondsItEndI(i)};
 
         for (auto const &j: testNeighbors)
         {
-            if (!std::binary_search(bondsParticleI.begin(), bondsParticleI.end(), j))
+            if (!std::binary_search(bondsItBegin, bondsItEnd, j))
             {
                 updateIJNeighbor(systemMolecules, oldNeighborList, oldNeighborIndex, posItBegin, i, j, checkNeigh);
             }

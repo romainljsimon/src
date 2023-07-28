@@ -8,8 +8,9 @@
 #include <utility>
 #include <vector>
 #include <cmath>
-#include <cmath>
+#include <algorithm>
 #include <typeinfo>
+#include <tuple>
 #include "../INPUT/Parameter.h"
 #include "../POTENTIALS/PairPotentials.h"
 #include "../POTENTIALS/BondPotentials.h"
@@ -21,15 +22,16 @@ class Molecules
 {
     friend class Neighbors;
 
-public:
+private:
     // POTENTIALS constructor
     const int m_nDims {3};
     const PairPotentials m_systemPairPotentials {};
     const BondPotentials m_systemBondPotentials {};
-    const std::vector<std::vector<int>> m_bondsArray {};
     const int m_nParticles {};
     const double m_lengthCube {};
     const double m_halfLengthCube {};
+    const std::vector<int> m_bondsArray {};
+    const std::vector<int> m_bondsIndex {};
     std::vector<int> m_newFlags;
     std::vector<int> m_flagsArray {};
     std::vector<double> m_positionArray {};
@@ -37,81 +39,26 @@ public:
     std::vector<int> m_moleculeTypeArray {};
     const std::string m_saveHeaderString{};
     using PosIterator = std::vector<double>::const_iterator;
+    using BondsIterator = std::vector<int>::const_iterator;
 
     //std::vector<double> typeArray{1, 2};
-
-
-
     Molecules (param::Parameter param, PairPotentials  systemPairPotentials,
-               BondPotentials  systemBondPotentials, const std::string& path)
+               BondPotentials  systemBondPotentials, const std::string& path,
+               const std::tuple<std::vector<int>, std::vector<int>>& bondsData)
 
-        : m_nParticles ( initializeNumber(path))
-        , m_systemPairPotentials(std::move(systemPairPotentials))
-        , m_systemBondPotentials(std::move(systemBondPotentials))
-        , m_lengthCube {pow (static_cast<double>(m_nParticles) / param.get_double("density"), 1. / 3.) }
-        , m_halfLengthCube (0.5 * m_lengthCube)
-        , m_bondsArray(initializeBondsArray())
-        , m_saveHeaderString(initializeHeaderString(m_nParticles, m_lengthCube))
+            : m_nParticles ( initializeNumber(path))
+            , m_systemPairPotentials(std::move(systemPairPotentials))
+            , m_systemBondPotentials(std::move(systemBondPotentials))
+            , m_lengthCube {pow (static_cast<double>(m_nParticles) / param.get_double("density"), 1. / 3.) }
+            , m_halfLengthCube (0.5 * m_lengthCube)
+            , m_bondsArray(std::get<0>(bondsData))
+            , m_bondsIndex(std::get<1>(bondsData))
+            , m_saveHeaderString(initializeHeaderString(m_nParticles, m_lengthCube))
+
     {
         m_flagsArray.resize(3 * m_nParticles, 0);
         initializeParticles(path);
-        std::cout << typeid(m_positionArray.begin()).name();
 
-    }
-
-    static std::string initializeHeaderString(const int& nParticles, const double& lengthCube)
-    {
-        std::string headerString {static_cast<char>(nParticles)};
-        headerString.append("\n");
-        std::string lengthStr {std::to_string(lengthCube)};
-        std::string zeroString {" 0.0 0.0 0.0 "};
-        headerString.append("Lattice=");
-        headerString.append(std::to_string('"'));
-        headerString.append(lengthStr);
-        headerString.append(zeroString);
-        headerString.append(lengthStr);
-        headerString.append(zeroString);
-        headerString.append(std::to_string('"'));
-        headerString.append(" Properties=molecule_type:S:1:type:I:1:pos:R:3:");
-        headerString.append("\n");
-        return headerString;
-    }
-
-    static std::vector<std::vector<int>> initializeBondsArray()
-    {
-        std::ifstream infile("./bonds.txt");
-
-        if (!infile.is_open())
-            std::cout << "Error opening file";
-
-
-        int nParticles{};
-        infile >> nParticles;
-
-        int nBonds{};
-        infile >> nBonds;
-
-        std::vector<std::vector<int>> bondsArray(nParticles);
-
-        for (int r = 0; r < nBonds; r++) //Outer loop for rows
-        {
-
-            int indexI {};
-            infile >> indexI;
-
-            int indexJ {};
-            infile >> indexJ;
-
-            bondsArray[indexI].push_back(indexJ);
-            bondsArray[indexJ].push_back(indexI);
-
-        }
-        infile.close();
-        /***
-
-        std::cout << bondsArray.size() << "\n";
-         ***/
-        return bondsArray;
     }
 
     static int initializeNumber(const std::string& path)
@@ -171,11 +118,80 @@ public:
                 else
                 {
                     infile >> m_positionArray[m_nDims * r + c - (col - 3)];
-                     //Take INPUT from file and put into positionArray
+                    //Take INPUT from file and put into positionArray
                 }
             }
         }
         infile.close();
+    }
+
+public:
+    Molecules (param::Parameter param, PairPotentials  systemPairPotentials,
+               BondPotentials  systemBondPotentials, const std::string& path)
+
+        : Molecules(param, std::move(systemPairPotentials), std::move(systemBondPotentials), path, initializeBondsArray(initializeNumber(path)))
+    {
+    }
+
+    static std::string initializeHeaderString(const int& nParticles, const double& lengthCube)
+    {
+        std::string headerString {static_cast<char>(nParticles)};
+        headerString.append("\n");
+        std::string lengthStr {std::to_string(lengthCube)};
+        std::string zeroString {" 0.0 0.0 0.0 "};
+        headerString.append("Lattice=");
+        headerString.append(std::to_string('"'));
+        headerString.append(lengthStr);
+        headerString.append(zeroString);
+        headerString.append(lengthStr);
+        headerString.append(zeroString);
+        headerString.append(std::to_string('"'));
+        headerString.append(" Properties=molecule_type:S:1:type:I:1:pos:R:3:");
+        headerString.append("\n");
+        return headerString;
+    }
+
+    static std::tuple<std::vector<int>, std::vector<int>> initializeBondsArray(const int& nParticles)
+    {
+        std::ifstream infile("./bonds.txt");
+
+        if (!infile.is_open())
+            std::cout << "Error opening file";
+
+        int nBonds{};
+        infile >> nBonds;
+
+
+        std::vector<int> bondsArray(2 * nBonds);
+        std::vector<int> bondsIndex(nParticles + 1, 0);
+
+        for (int r = 0; r < nBonds; r++) //Outer loop for rows
+        {
+
+            int indexI {};
+            infile >> indexI;
+
+            int indexJ {};
+            infile >> indexJ;
+
+            // std::rotate(bondsArray.rbegin() + bondsIndex[indexI], bondsArray.rbegin() + bondsIndex[indexI] + 1, bondsArray.rend());
+            bondsArray[bondsIndex[indexI+1]] = indexJ;
+            std::for_each(bondsIndex.begin() + indexI+1, bondsIndex.end(), [](int& d) { d+=1;});
+
+            // std::rotate(bondsArray.rbegin() + bondsIndex[indexJ], bondsArray.rbegin() + bondsIndex[indexJ] + 1, bondsArray.rend());
+            bondsArray[bondsIndex[indexJ+1]] = indexI;
+            std::for_each(bondsIndex.begin() + indexJ+1, bondsIndex.end(), [](int& d) { d+=1;});
+            //bondsArray.insert(bondsArray.begin() + bondsIndex[indexI], indexJ);
+            //bondsArray[indexI].push_back(indexJ);
+            //bondsArray[indexJ].push_back(indexI);
+
+        }
+        infile.close();
+        /***
+
+        std::cout << bondsArray.size() << "\n";
+         ***/
+        return std::make_tuple(bondsArray, bondsIndex);
     }
 
     void updateFlags(const int& indexParticle);
@@ -217,6 +233,8 @@ public:
         }
     }
 
+
+
     [[nodiscard]] const int& getNParticles() const;
 
     [[nodiscard]]  std::vector<double> getPositionI(const int& i) const;
@@ -244,14 +262,15 @@ public:
     {
         double energy { 0. };
 
-        const std::vector<int>& bondsI { m_bondsArray[indexParticle] };
+        const auto &bondsItBegin { getBondsItBeginI(indexParticle) };
+        const auto &bondsItEnd {getBondsItEndI(indexParticle)};
         const int& particleTypeI { m_particleTypeArray[indexParticle] };
 
-        for (int const &indexJ: bondsI)
+        for (auto it = bondsItBegin; it < bondsItEnd; it++)
         {
-
+            const int& indexJ {*it};
             const double squareDistance { squareDistancePair(posItBegin,
-                                                                 m_positionArray.begin() + m_nDims*indexJ) };
+                                                             getPosItBeginI(indexJ)) };
             const int& particleTypeJ { m_particleTypeArray[indexJ] };
             energy += m_systemBondPotentials.feneBondEnergyIJ(squareDistance, particleTypeI, particleTypeJ);
 
@@ -267,13 +286,13 @@ public:
         double energy { 0. };
         const int& particleType {m_particleTypeArray[indexParticle]};
 
-        for (auto it = NeighItBegin; it < NeighItBegin + lenNeigh; it++)
+        for (auto it = NeighItBegin; it < NeighItBegin + lenNeigh; ++it)
         {
             const int& indexJ {*it};
 
             const int& typeJ { m_particleTypeArray[indexJ] };
             const double squareDistance { squareDistancePair(posItBegin,
-                                                             m_positionArray.begin() + m_nDims*indexJ) };
+                                                             getPosItBeginI(indexJ)) };
             energy += m_systemPairPotentials.ljPairEnergy(squareDistance, particleType, typeJ);
 
 
@@ -295,7 +314,7 @@ public:
     double energyParticleMolecule(int indexParticle, InputNeighIt NeighItBegin, const int& lenNeigh) const
     {
 
-        const auto& posItBegin {m_positionArray.begin() + m_nDims * indexParticle};
+        const auto& posItBegin {getPosItBeginI(indexParticle)};
         return energyParticleMolecule(indexParticle, posItBegin, NeighItBegin, lenNeigh);
     }
 
@@ -339,12 +358,14 @@ public:
     {
         double energy { 0. };
 
-        const std::vector<int>& bondsI { m_bondsArray[indexParticle] };
+        const auto &bondsItBegin { getBondsItBeginI(indexParticle) };
+        const auto &bondsItEnd {getBondsItEndI(indexParticle)};
         const int& particleTypeI { m_particleTypeArray[indexParticle] };
         const int& swapParticleTypeI {m_particleTypeArray[indexSwap]};
 
-        for (int const &indexJ: bondsI)
+        for (auto it = bondsItBegin; it < bondsItEnd; it++)
         {
+            const int& indexJ {*it};
 
             if (indexJ != indexSwap)
             {
@@ -406,8 +427,27 @@ public:
         return outIt;
     }
 
+    [[nodiscard]] PosIterator getPosItEndI(const int &i) const
+    {
+        const int realIndex { (i+1) * m_nDims };
+        auto outIt {m_positionArray.begin() + realIndex};
+        return outIt;
+    }
+
+    [[nodiscard]] BondsIterator getBondsItBeginI(const int &i) const
+    {
+        auto outIt {m_bondsArray.begin() + m_bondsIndex[i]};
+        return outIt;
+    }
+
+    [[nodiscard]] BondsIterator getBondsItEndI(const int &i) const
+    {
+        auto outIt {m_bondsArray.begin() + m_bondsIndex[i + 1]};
+        return outIt;
+    }
 
 
+    [[nodiscard]] const int &getNDims() const;
 };
 
 #endif /* MOLECULES_H_ */

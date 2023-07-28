@@ -213,6 +213,12 @@ public:
         const int& neighIndex {getNeighborIndexBegin(indexParticle)};
         return m_neighborList.begin() + neighIndex;
     }
+
+    [[nodiscard]] NeighIterator getNeighItEndI(const int &indexParticle) const
+    {
+        const int& neighIndex {getNeighborIndexBegin(indexParticle + 1)};
+        return m_neighborList.begin() + neighIndex;
+    }
 };
 
 
