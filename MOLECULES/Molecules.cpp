@@ -237,11 +237,12 @@ void Molecules::saveInXYZ(const std::string& path) const
 
         if ((it%m_nDims)==m_nDims-1)
         {
+            std::cout << it << "\n";
+            fOut << m_flagsArray[it-2];
+            fOut << space;
+            fOut << m_flagsArray[it-1];
+            fOut << space;
             fOut << m_flagsArray[it];
-            fOut << space;
-            fOut << m_flagsArray[it+1];
-            fOut << space;
-            fOut << m_flagsArray[it+2];
             fOut << "\n";
         }
         it++;
