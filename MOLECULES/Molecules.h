@@ -135,17 +135,18 @@ public:
 
     static std::string initializeHeaderString(const int& nParticles, const double& lengthCube)
     {
-        std::string headerString {static_cast<char>(nParticles)};
+        std::string headerString {std::to_string(nParticles)};
         headerString.append("\n");
         std::string lengthStr {std::to_string(lengthCube)};
         std::string zeroString {" 0.0 0.0 0.0 "};
         headerString.append("Lattice=");
-        headerString.append(std::to_string('"'));
+        headerString.append("\"");
         headerString.append(lengthStr);
         headerString.append(zeroString);
         headerString.append(lengthStr);
         headerString.append(zeroString);
-        headerString.append(std::to_string('"'));
+        headerString.append(lengthStr);
+        headerString.append("\"");
         headerString.append(" Properties=molecule_type:S:1:type:I:1:pos:R:3:");
         headerString.append("\n");
         return headerString;

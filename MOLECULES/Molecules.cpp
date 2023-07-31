@@ -225,9 +225,9 @@ void Molecules::saveInXYZ(const std::string& path) const
 
         if ((it%m_nDims)==0)
         {
-            fOut << m_moleculeTypeArray[it];
+            fOut << m_moleculeTypeArray[it / 3];
             fOut << space;
-            fOut << m_particleTypeArray[it];
+            fOut << m_particleTypeArray[it / 3];
             fOut << space;
 
         }
