@@ -72,7 +72,7 @@ double PairPotentials::ljPairEnergy(const double& squareDistance, const int& typ
     else
     {
 
-        const double& epsilonIJ {*it};
+        const double& fourEpsilonIJ {*it};
         ++it;
         const double& squareSigmaIJ {*it};
         ++it;
@@ -81,7 +81,7 @@ double PairPotentials::ljPairEnergy(const double& squareDistance, const int& typ
         const double rapSquare { squareSigmaIJ / squareDistance };
         const double rapSix { rapSquare * rapSquare * rapSquare};
 
-        return 4. * epsilonIJ * rapSix * ( rapSix - 1.) + 4. * epsilonIJ * shiftIJ;
+        return fourEpsilonIJ * rapSix * ( rapSix - 1.) + fourEpsilonIJ * shiftIJ;
     }
 }
 

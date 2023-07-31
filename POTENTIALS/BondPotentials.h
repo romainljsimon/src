@@ -65,7 +65,7 @@ public:
 
                 bondPotentials[indexIJ + 1] = std::stod(coeffList[0]); // squareR0 constant for bond i
 
-                bondPotentials[indexIJ + 3] = std::stod(coeffList[2]); // Epsilon constant for bond i
+                bondPotentials[indexIJ + 3] = 4 * std::stod(coeffList[2]); // Epsilon constant for bond i
 
                 const double& sigma{std::stod(coeffList[3])};
                 bondPotentials[indexIJ + 4] = sigma * sigma; // square Sigma constant for bond i

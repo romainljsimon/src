@@ -72,7 +72,7 @@ double BondPotentials::feneBondEnergyIJ(const double& squareDistance, const int&
     if (squareDistance < rcSquareIJ)
     {
 
-        const double& epsilonIJ {*it};
+        const double& fourEpsilonIJ {*it};
         ++it;
         const double& squareSigmaIJ {*it};
         ++it;
@@ -81,7 +81,7 @@ double BondPotentials::feneBondEnergyIJ(const double& squareDistance, const int&
         const double rapSquare { squareSigmaIJ / squareDistance };
         const double rapSix {rapSquare * rapSquare * rapSquare};
         //std::cout << epsilonIJ << "  " << squareSigmaIJ << "  " << shiftIJ << "\n";
-        energy += 4. * epsilonIJ * rapSix * ( rapSix - 1.) + 4. * epsilonIJ * shiftIJ;
+        energy += fourEpsilonIJ * rapSix * ( rapSix - 1.) + fourEpsilonIJ * shiftIJ;
     }
     return energy;
 }
