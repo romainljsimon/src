@@ -174,11 +174,12 @@ public:
             int indexJ {};
             infile >> indexJ;
 
-            // std::rotate(bondsArray.rbegin() + bondsIndex[indexI], bondsArray.rbegin() + bondsIndex[indexI] + 1, bondsArray.rend());
+            std::rotate(bondsArray.rbegin(),
+                        bondsArray.rbegin() + 1, bondsArray.rend() - bondsIndex[indexI+1] );
             bondsArray[bondsIndex[indexI+1]] = indexJ;
             std::for_each(bondsIndex.begin() + indexI+1, bondsIndex.end(), [](int& d) { d+=1;});
 
-            // std::rotate(bondsArray.rbegin() + bondsIndex[indexJ], bondsArray.rbegin() + bondsIndex[indexJ] + 1, bondsArray.rend());
+            std::rotate(bondsArray.rbegin(), bondsArray.rbegin(), bondsArray.rend()-bondsIndex[indexI+1] );
             bondsArray[bondsIndex[indexJ+1]] = indexI;
             std::for_each(bondsIndex.begin() + indexJ+1, bondsIndex.end(), [](int& d) { d+=1;});
             //bondsArray.insert(bondsArray.begin() + bondsIndex[indexI], indexJ);
