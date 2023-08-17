@@ -8,7 +8,7 @@ add_compile_options(-O3 -flto)
 include_directories(.)
 
 add_executable(swapMC
-        main.cpp
+               main.cpp
         MonteCarlo.cpp
         MonteCarlo.h
         random.cpp

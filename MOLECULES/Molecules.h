@@ -84,7 +84,7 @@ private:
         int row{};
         infile >> row;
 
-        int col { 5 };
+        int col { 8 };
 
         std::string line;
         getline(infile, line);
@@ -115,10 +115,14 @@ private:
                     infile >> m_particleTypeArray[r];
                 }
 
+                else if (c < 5)
+                {
+                    infile >> m_positionArray[m_nDims * r + c - (col - 6)];
+                    //Take INPUT from file and put into positionArray
+                }
                 else
                 {
-                    infile >> m_positionArray[m_nDims * r + c - (col - 3)];
-                    //Take INPUT from file and put into positionArray
+                    infile >> m_flagsArray[m_nDims * r + c - (col - 3)];
                 }
             }
         }
@@ -129,7 +133,7 @@ public:
     Molecules (param::Parameter param, PairPotentials  systemPairPotentials,
                BondPotentials  systemBondPotentials, const std::string& path)
 
-        : Molecules(std::move(param), std::move(systemPairPotentials), std::move(systemBondPotentials), path, initializeBondsArray(initializeNumber(path)))
+        : Molecules(param, std::move(systemPairPotentials), std::move(systemBondPotentials), path, initializeBondsArray(initializeNumber(path)))
     {
     }
 
@@ -201,8 +205,7 @@ public:
     template<typename InputIt>
     void updatePositionI(const int& i, InputIt newPosItBegin)
     {
-        const int realIndex {i * m_nDims};
-        std::copy(newPosItBegin, newPosItBegin + m_nDims, m_positionArray.begin() + realIndex);
+        updatePositionI(i, newPosItBegin, m_nDims);
     }
 
     template<typename InputIt>

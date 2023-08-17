@@ -138,7 +138,7 @@ int MonteCarlo::mcMove()
     else if ( molTranslation && m_molTranslation )
     {
         ++m_nMolTrans;
-        step+=3;
+        step += 3;
         mcMoleculeTranslation();
     }
     else
