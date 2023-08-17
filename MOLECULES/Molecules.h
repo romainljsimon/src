@@ -56,7 +56,7 @@ private:
             , m_saveHeaderString(initializeHeaderString(m_nParticles, m_lengthCube))
 
     {
-        m_flagsArray.resize(3 * m_nParticles, 0);
+        m_flagsArray.resize(m_nDims * m_nParticles, 0);
         initializeParticles(path);
 
     }
@@ -129,7 +129,7 @@ public:
     Molecules (param::Parameter param, PairPotentials  systemPairPotentials,
                BondPotentials  systemBondPotentials, const std::string& path)
 
-        : Molecules(param, std::move(systemPairPotentials), std::move(systemBondPotentials), path, initializeBondsArray(initializeNumber(path)))
+        : Molecules(std::move(param), std::move(systemPairPotentials), std::move(systemBondPotentials), path, initializeBondsArray(initializeNumber(path)))
     {
     }
 
@@ -203,6 +203,13 @@ public:
     {
         const int realIndex {i * m_nDims};
         std::copy(newPosItBegin, newPosItBegin + m_nDims, m_positionArray.begin() + realIndex);
+    }
+
+    template<typename InputIt>
+    void updatePositionI(const int& i, InputIt newPosItBegin, const int& lenPos)
+    {
+        const int realIndex {i * m_nDims};
+        std::copy(newPosItBegin, newPosItBegin + lenPos, m_positionArray.begin() + realIndex);
     }
 
 
@@ -322,10 +329,40 @@ public:
 
     void reinitializeFlags();
 
-    [[nodiscard]] double energyPairParticleExtraMolecule(const int& indexParticle, const std::vector<double>& positionParticle,
-                                                      const std::vector<int>& neighborIList, const int& typeMoleculeI) const;
+    template<typename InputPosIt, typename InputNeighIt>
+    double energyPairParticleExtraMolecule(const int& indexParticle, InputPosIt posItBegin,
+                                  InputNeighIt NeighItBegin, const int& lenNeigh, const int& typeMoleculeI) const
+    {
 
-    [[nodiscard]] double energyPairParticleExtraMolecule(const int& indexParticle, const std::vector<int>& neighborIList, const int& typeMoleculeI) const;
+        double energy { 0. };
+        const int& particleType {m_particleTypeArray[indexParticle]};
+
+        for (auto it = NeighItBegin; it < NeighItBegin + lenNeigh; ++it)
+        {
+            const int indexJ {*it};
+            const int& typeMoleculeJ {m_moleculeTypeArray[indexJ]};
+
+            if (typeMoleculeJ != typeMoleculeI)
+            {
+                const int& typeJ {m_particleTypeArray[indexJ]};
+                const double squareDistance { squareDistancePair(posItBegin, m_positionArray.begin() + m_nDims * indexJ)};
+                energy += m_systemPairPotentials.ljPairEnergy(squareDistance, particleType, typeJ);
+
+            }
+        }
+        return energy;
+
+    }
+
+    template<typename InputNeighIt>
+    double energyPairParticleExtraMolecule(const int& indexParticle,
+                                       InputNeighIt NeighItBegin, const int& lenNeigh, const int& typeMoleculeI) const
+    {
+        auto posItBegin {m_positionArray.begin() + m_nDims * indexParticle};
+        return energyPairParticleExtraMolecule(indexParticle, posItBegin, NeighItBegin, lenNeigh, typeMoleculeI);
+    }
+
+
 
     template<typename InputPosIt, typename InputNeighIt>
     double energyPairParticleSwap(const int& indexParticle, InputPosIt posItBegin,

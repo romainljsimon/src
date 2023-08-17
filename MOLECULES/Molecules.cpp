@@ -60,9 +60,7 @@ void Molecules::swapParticleTypesIJ(const int& i, const int& j)
 
     const int typeJ {getParticleTypeI(j)};
     m_particleTypeArray[j] = m_particleTypeArray[i];
-    //std::cout << m_particleTypeArray[i] << m_particleTypeArray[j] << "\n";
     m_particleTypeArray[i] = typeJ;
-    //std::cout << m_particleTypeArray[i] << m_particleTypeArray[j] << "\n";
 }
 
 
@@ -130,41 +128,6 @@ void Molecules::reinitializeFlags()
  *        lengthCube simulation box length.
  * @return Particle's total energy.
  ******************************************************************************/
-
-
-
-double Molecules::energyPairParticleExtraMolecule(const int& indexParticle, const std::vector<double>& positionParticle,
-                                     const std::vector<int>& neighborIList, const int& typeMoleculeI) const
-{
-    double energy { 0. };
-    const int& particleType {m_particleTypeArray[indexParticle]};
-
-    for (int const &indexJ: neighborIList)
-    {
-        const int& typeMoleculeJ {m_moleculeTypeArray[indexJ]};
-
-        if (typeMoleculeJ != typeMoleculeI)
-        {
-            //if (realIndex == indexParticle)
-            //{
-            //    continue;
-            //}
-            const int& typeJ {m_particleTypeArray[indexJ]};
-            const double squareDistance { squareDistancePair(positionParticle.begin(), m_positionArray.begin() + m_nDims * indexJ)  };
-            energy += m_systemPairPotentials.ljPairEnergy(squareDistance, particleType, typeJ);
-
-        }
-    }
-    return energy;
-}
-
-
-double Molecules::energyPairParticleExtraMolecule(const int& indexParticle, const std::vector<int>& neighborIList,
-                                     const int& typeMoleculeI) const
-{
-    const std::vector<double>& positionParticle {getPositionI(indexParticle)};
-    return energyPairParticleExtraMolecule(indexParticle, positionParticle, neighborIList, typeMoleculeI);
-}
 
 
 double Molecules::energySystemMolecule(const Neighbors& systemNeighbors) const
@@ -237,7 +200,6 @@ void Molecules::saveInXYZ(const std::string& path) const
 
         if ((it%m_nDims)==m_nDims-1)
         {
-            std::cout << it << "\n";
             fOut << m_flagsArray[it-2];
             fOut << space;
             fOut << m_flagsArray[it-1];

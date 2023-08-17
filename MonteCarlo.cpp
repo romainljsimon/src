@@ -41,13 +41,16 @@ void MonteCarlo::mcTotal()
 	const std::vector<int> saveTimeStepArray ( createSaveTime(m_timeSteps, m_saveUpdate, 1.1));
 
 	int save_index { 0 };
-
+    double swapRate {0.};
+    double transRate {0.};
+    double molTransRate {0.};
 
 	for (int i = 0; i < m_timeSteps; i++) //Iteration over m_timeSteps
 	{
-		for (int j = 0; j < m_nParticles; j++) // N Monte Carlo moves are tried in one time step.
+        int j { 0 };
+        while (j < m_nParticles) // N Monte Carlo moves are tried in one time step.
 		{
-            mcMove();
+            j += mcMove();
         }
 
         m_systemNeighbors.checkInterDisplacement(m_systemMolecules);
@@ -70,6 +73,13 @@ void MonteCarlo::mcTotal()
 		{
 			saveDoubleTXT(m_energy / m_nParticles, energyFilePath); //Energy is saved at each time step.
 		}
+        swapRate += static_cast<double>(m_nSwap) / m_nParticles;
+        transRate += static_cast<double>(m_nTrans) / m_nParticles;
+        molTransRate += static_cast<double>(m_nMolTrans) / m_nParticles;
+        m_nSwap = 0;
+        m_nTrans = 0;
+        m_nMolTrans = 0;
+
         /***
 		if (m_calculatePressure) // Saves pressure if m_calculatePressure is True
 		{
@@ -79,31 +89,26 @@ void MonteCarlo::mcTotal()
 
 	}
 
-    //radiusArray = divideVectorByScalar(m_typeArray, 2);
-	m_acceptanceRate /= m_timeSteps;
     m_systemMolecules.saveInXYZ( preName + std::to_string(m_timeSteps) + extname );
-    //saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(m_timeSteps) + extnameDisp);
-    // saveDoubleTXT( m_errors, m_folderPath + "/errors.txt");
+    const double totalRate { transRate + swapRate + molTransRate};
+    double totalAcceptanceRate = (totalRate != 0) ?
+            (m_acceptanceRateTrans + m_acceptanceRateSwap + m_acceptanceRateMolTrans) / totalRate : 0.;
+	m_acceptanceRateTrans = (transRate != 0.) ? m_acceptanceRateTrans / transRate : 0.;
+    m_acceptanceRateSwap = (swapRate != 0.) ? m_acceptanceRateSwap / swapRate : 0.;
+    m_acceptanceRateMolTrans = (molTransRate != 0.) ? m_acceptanceRateMolTrans / molTransRate : 0.;
+
 
     constexpr std::string_view translationString{"Translation MC move acceptance rate: "};
-    if ( m_swap )
-    {
-        m_acceptanceRateSwap /= m_timeSteps;
-        m_acceptanceRateSwap /= m_pSwap;
+    constexpr std::string_view swapString { "Swap MC move acceptance rate: " };
+    constexpr std::string_view molTranslationString { "Molecule translation MC move acceptance rate: " };
+    constexpr std::string_view totalString { "Total MC move acceptance rate: " };
 
-        const double translationRate { (m_acceptanceRate - m_pSwap * m_acceptanceRateSwap) / (1 - m_pSwap)};
+    std::cout << translationString << m_acceptanceRateTrans << "\n";
+    std::cout << swapString << m_acceptanceRateSwap << "\n";
+    std::cout << molTranslationString << m_acceptanceRateMolTrans << "\n";
+    std::cout << totalString << totalAcceptanceRate << "\n";
 
-        constexpr std::string_view swapString { "Swap MC move acceptance rate: " };
-        constexpr std::string_view totalString { "Total MC move acceptance rate: " };
 
-        std::cout << translationString << translationRate << "\n";
-        std::cout << swapString << m_acceptanceRateSwap << "\n";
-        std::cout << totalString  << m_acceptanceRate << "\n";
-    }
-    else
-    {
-        std::cout << translationString  << m_acceptanceRate << "\n";
-    }
     double updateRate { static_cast<double>(m_systemNeighbors.getUpdateRate()) / m_timeSteps};
     constexpr std::string_view neighborString { "Neighbor list update rate: "};
     constexpr std::string_view neighborErrorString  { "Number of neighbor list errors: "};
@@ -118,28 +123,31 @@ void MonteCarlo::mcTotal()
  * the move according to the Metropolis criterion. It is called N times in one
  * time step.
  ******************************************************************************/
-void MonteCarlo::mcMove()
+int MonteCarlo::mcMove()
 {
-    if ( m_swap )
+    const double randomDouble { randomDoubleGenerator(0., 1.) } ;
+    const bool swapped {randomDouble < m_pSwap};
+    const bool molTranslation {randomDouble > (1 - m_pMolTranslation)};
+    int step {0};
+    if ( swapped && m_swap)
     {
-        const double randomDouble { randomDoubleGenerator(0., 1.) } ;
-        const bool swapped {randomDouble < m_pSwap};
-
-        if ( swapped )
-        {
-            mcSwap();
-        }
-        else
-        {
-            //mcMoleculeTranslation();
-            mcTranslation ();
-
-        }
+        ++m_nSwap;
+        ++step;
+        mcSwap();
+    }
+    else if ( molTranslation && m_molTranslation )
+    {
+        ++m_nMolTrans;
+        step+=3;
+        mcMoleculeTranslation();
     }
     else
     {
+        ++m_nTrans;
+        ++step;
         mcTranslation();
-     }
+    }
+    return step;
 }
 
 /*******************************************************************************
@@ -148,31 +156,38 @@ void MonteCarlo::mcMove()
  * the move according to the Metropolis criterion. It is called ??? times in one
  * time step.
  ******************************************************************************/
-/***
+
 void MonteCarlo::mcMoleculeTranslation()
 {
-	const int typeMolecule { randomIntGenerator(0, (m_nParticles - 1) / 3) }; // randomly chosen Molecule
-    const int indexTranslation { 3 * typeMolecule};
-	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -m_rBox, m_rBox) );
+	constexpr int lenMolecule {3};
+    const int typeMolecule { randomIntGenerator(0, (m_nParticles - 1) / lenMolecule) }; // randomly chosen Molecule
+    const int indexTranslation { m_systemMolecules.getNDims() * typeMolecule};
+	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -m_rBoxMolTrans, m_rBoxMolTrans) );
 	double oldEnergyMolecule {0};
 	double newEnergyMolecule {0};
     std::vector<double> positionArrayTranslation;
 
-	for (int j = 0; j < 3; j++)
+	for (int j = 0; j < lenMolecule; j++)
 	{
 
         const int newIndexTranslation {indexTranslation + j };
-        auto posItBeginTranslation{vectorTranslation(newIndexTranslation,
-                                                                                randomVector.begin())};
-        positionArrayTranslation.insert( positionArrayTranslation.end(),
-                                         posItBeginTranslation,
-                                         posItBeginTranslation + m_systemMolecules.m_nDims);
-        const std::vector<int>& neighborIList { m_systemNeighbors.getNeighborIList(newIndexTranslation) };
+        std::vector<double> posTranslation{ vectorTranslation(newIndexTranslation,
+                                                            randomVector.begin())};
 
-		oldEnergyMolecule += m_systemMolecules.energyPairParticleExtraMolecule( newIndexTranslation, neighborIList, typeMolecule);
+        positionArrayTranslation.insert( positionArrayTranslation.end(),
+                                         posTranslation.begin(),
+                                         posTranslation.begin() + m_systemMolecules.getNDims());
+
+        const auto& neighItBegin { m_systemNeighbors.getNeighItBeginI(newIndexTranslation) };
+        const int& lenNeigh {m_systemNeighbors.getLenIndexBegin(newIndexTranslation)};
+
+        oldEnergyMolecule += m_systemMolecules.energyPairParticleExtraMolecule( newIndexTranslation,
+                                                                                neighItBegin, lenNeigh,
+                                                                                typeMolecule);
 		newEnergyMolecule += m_systemMolecules.energyPairParticleExtraMolecule( newIndexTranslation,
-                                                                           positionParticleTranslation,
-                                                                           neighborIList, typeMolecule);
+                                                                                posTranslation.begin(),
+                                                                                neighItBegin, lenNeigh,
+                                                                                typeMolecule);
 	}
 
     const double diffEnergy {newEnergyMolecule - oldEnergyMolecule};
@@ -184,6 +199,8 @@ void MonteCarlo::mcMoleculeTranslation()
     if (acceptMove)
     {
         generalUpdate(diffEnergy);
+        m_acceptanceRateMolTrans += 1. / m_nParticles; // increment of the acceptance rate.
+
 
         //if (m_calculatePressure)
         //{
@@ -193,18 +210,18 @@ void MonteCarlo::mcMoleculeTranslation()
         //}
 
         m_systemMolecules.updateFlags(indexTranslation);
-        m_systemMolecules.updatePositionI(indexTranslation, positionArrayTranslation);
-        for (int j = 0; j < 3; j++)
+        m_systemMolecules.updatePositionI(indexTranslation, positionArrayTranslation.begin(), lenMolecule*m_systemMolecules.getNDims());
+        for (int j = 0; j < lenMolecule; j++)
         {
             // TO DO INTER DISPLACEMENT
             const int newIndexTranslation {indexTranslation + j };
-            m_systemNeighbors.updateInterDisplacement(newIndexTranslation, randomVector);
+            m_systemNeighbors.updateInterDisplacement(newIndexTranslation,
+                                                      randomVector.begin());
 
         }
     }
     m_systemMolecules.reinitializeFlags();
 }
-***/
 /*******************************************************************************
  * This function returns a tentative new particle position.
  *
@@ -239,6 +256,8 @@ void MonteCarlo::mcTranslation()
     if (acceptMove)
     {
         generalUpdate(diff_energy);
+        m_acceptanceRateTrans += 1. / m_nParticles; // increment of the acceptance rate.
+
         /***
         if (m_calculatePressure)
         {
@@ -345,7 +364,6 @@ void MonteCarlo::mcSwap()
 void MonteCarlo::generalUpdate(double diffEnergy)
 {
     m_energy += diffEnergy;
-    m_acceptanceRate += 1. / m_nParticles; // increment of the acceptance rate.
 
 }
 

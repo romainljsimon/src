@@ -29,14 +29,20 @@ private:
 	double m_energy {};                                             // System's energy.
 	double m_pressure {};                                           // System's pressure.
 	const int m_nParticles {};                                            // System's number of particles.
-	double m_acceptanceRate { 0. };                                 // Monte Carlo acceptance rate.
-    double m_acceptanceRateSwap { 0. };                                 // Monte Carlo acceptance rate.
+    int m_nTrans {0};
+	double m_acceptanceRateTrans { 0. };                                 // Monte Carlo translation acceptance rate.
+    int m_nSwap {0};
+    double m_acceptanceRateSwap { 0. };                                 // Monte Carlo swap acceptance rate.
+    int m_nMolTrans {0};
+    double m_acceptanceRateMolTrans { 0. };                                 // Monte Carlo swap acceptance rate.
     const int m_saveRate {};
 	const bool m_calculatePressure {};                               // Boolean that decides if the pressure is calculated or not.
     const bool m_swap {};
     const double m_pSwap {};
 	const std::string m_simulationMol {};                       			// Type of system: can be either "polymer" or "atomic".
-
+    const bool m_molTranslation {};
+    const double m_pMolTranslation {};
+    const double m_rBoxMolTrans {};
 	const double m_temp {};                                     	// Temperature.
 	const double m_rBox{};                               			// Length of the translation box.
 	const int m_saveUpdate {};                           			// save xyz update frequency.
@@ -56,11 +62,14 @@ public:
             , m_calculatePressure(param.get_bool("calcPressure", false))
             , m_swap (param.get_bool("swap", false))
             , m_pSwap (param.get_double("pSwap", 0.2))
+            , m_molTranslation ( param.get_bool("molTranslation", false))
+            , m_pMolTranslation ( param.get_double("pMolTranslation", 0.1))
+            , m_rBoxMolTrans ( param.get_double("rBoxMolTranslation", 0.05))
             , m_temp { param.get_double( "temp") }
             , m_rBox { param.get_double( "rBox") }
             , m_saveUpdate { param.get_int( "waitingTime") }
             , m_timeSteps { param.get_int( "timeSteps") }
-            , m_saveRate { param.get_int("saveRate", 50)}
+            , m_saveRate { param.get_int("saveRate", 1000)}
             , m_folderPath (std::move( folderPath ))
 
     {
@@ -68,7 +77,7 @@ public:
     }
 
 	void mcTotal();
-	void mcMove();
+	int mcMove();
     void mcTranslation();
     void generalUpdate(double diff_energy);
     void mcSwap();
