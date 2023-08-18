@@ -10,6 +10,8 @@
 
 #include <vector>
 #include <numeric>
+#include <algorithm>
+#include <math.h>
 
 /***
 double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB,
@@ -21,7 +23,6 @@ std::vector<double> divideVectorByScalar(std::vector<double> vec, const double& 
 
 std::vector<double> multiplyVectorByScalar(std::vector<double> vec, const double& scalar);
 
-std::vector<double> vectorNormalization(const std::vector<double>& vec);
 
 std::vector<double> vectorSum(const std::vector<double>& vec1, const std::vector<double>& vec2);
 
@@ -47,6 +48,20 @@ double getSquareNormVector(const InputIt& vecItBegin, const InputIt& vecItEnd)
     return std::inner_product(vecItBegin, vecItEnd, vecItBegin, 0.);
 }
 
+template<typename MatInputIt, typename VecInputIt>
+std::vector<double> matrixMultiplication(MatInputIt matItBegin, int lenMat, VecInputIt vecItBegin, int lenVec)
+{
+    const int nRows {lenMat / lenVec};
+    std::vector<double> out;
+    for (int i=0; i < nRows; ++i)
+    {
+        std::vector<double> rowMultiplication(lenVec);
+        std::transform(vecItBegin, vecItBegin + lenVec,
+                       matItBegin + i * lenVec, rowMultiplication.begin(), std::multiplies<>());
+        out.push_back(std::accumulate(rowMultiplication.begin(), rowMultiplication.begin() + lenVec, 0.));
+    }
+    return out;
+}
 
 template<typename InputIt>
 std::vector<double> getSquareNormRowMatrix(InputIt vecItBegin, const int& lenColumn, const int& lenRow)
@@ -60,6 +75,13 @@ std::vector<double> getSquareNormRowMatrix(InputIt vecItBegin, const int& lenCol
         vecItEnd = vecItBegin + lenRow;
     }
     return squareNormVector;
+}
+template<typename InputIt>
+void vectorNormalization(InputIt vecItBegin, InputIt vecItEnd)
+{
+    double squareNorm {getSquareNormVector(vecItBegin, vecItEnd)};
+    double norm {pow(squareNorm, 1./2)};
+    std::for_each(vecItBegin, vecItEnd, [&norm](double &n) { n / norm; });
 }
 
 std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat);

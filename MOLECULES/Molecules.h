@@ -249,9 +249,6 @@ public:
 
     [[nodiscard]] const int& getNParticles() const;
 
-    [[nodiscard]]  std::vector<double> getPositionI(const int& i) const;
-
-
     [[nodiscard]] const int& getParticleTypeI(const int &i) const;
 
     [[nodiscard]] const int& getMoleculeTypeI(const int &i) const;
@@ -301,7 +298,6 @@ public:
         for (auto it = NeighItBegin; it < NeighItBegin + lenNeigh; ++it)
         {
             const int& indexJ {*it};
-
             const int& typeJ { m_particleTypeArray[indexJ] };
             const double squareDistance { squareDistancePair(posItBegin,
                                                              getPosItBeginI(indexJ)) };
@@ -490,6 +486,8 @@ public:
 
 
     [[nodiscard]] const int &getNDims() const;
+
+    std::vector<double> centerMassMolecule(const int &i) const;
 };
 
 #endif /* MOLECULES_H_ */

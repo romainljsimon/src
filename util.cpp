@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <valarray>
+#include <numeric>
 
 
 //Boundary conditions
@@ -63,12 +64,6 @@ std::vector<double> multiplyVectorByScalar(std::vector<double> vec, const double
 }
 
 
-std::vector<double> vectorNormalization(const std::vector<double>& vec)
-{
-	double mean { meanVector(vec) };
-	return divideVectorByScalar(vec, mean);
-}
-
 std::vector<double> vectorSum(const std::vector<double>& vec1, const std::vector<double>& vec2)
 {
     //std::transform (vec1.begin(), vec1.end(), vec2.begin(), vec1.begin(), std::plus<double>());
@@ -99,7 +94,6 @@ double getMaxVector(const std::vector<double>& vec)
 
 
 // matrix operations
-
 
 std::vector<std::vector<double>> matrixSum(std::vector<std::vector<double>> mat1, const std::vector<std::vector<double>>& mat2)
 {

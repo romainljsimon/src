@@ -27,14 +27,6 @@ const int& Molecules::getNDims() const
 }
 
 
-std::vector<double> Molecules::getPositionI(const int& i) const
-{
-    std::vector<double> positionI (getPosItBeginI(i),
-                                   getPosItEndI(i));
-    return positionI;
-}
-
-
 
 const int& Molecules::getParticleTypeI(const int& i) const
 {
@@ -46,6 +38,23 @@ const int& Molecules::getMoleculeTypeI(const int& i) const
     return m_moleculeTypeArray[i];
 }
 
+std::vector<double> Molecules::centerMassMolecule(const int& typeMolecule) const
+{
+    std::vector<double> centerMass(3, 0);
+    const int lenMolecule {3};
+
+    int j {0};
+    int startIndex {typeMolecule * lenMolecule * m_nDims};
+    auto itBegin {m_positionArray.begin() + startIndex};
+
+    for (auto it= itBegin; it < itBegin + lenMolecule * m_nDims; ++it)
+    {
+        centerMass[j] += *it / lenMolecule;
+        ++j;
+        j=j%lenMolecule;
+    }
+    return centerMass;
+}
 
 void Molecules::swapParticleTypesIJ(const int& i, const int& j, const int& typeI, const int& typeJ)
 {

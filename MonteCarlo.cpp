@@ -146,6 +146,7 @@ int MonteCarlo::mcMove()
         ++m_nTrans;
         ++step;
         mcTranslation();
+        mcMoleculeRotation();
     }
     return step;
 }
@@ -222,6 +223,86 @@ void MonteCarlo::mcMoleculeTranslation()
     }
     m_systemMolecules.reinitializeFlags();
 }
+
+
+
+/*******************************************************************************
+ * This function implements a Monte Carlo move: translation of a the whole
+ * polymer, calculation of the energy of the new system and then acceptation or not of
+ * the move according to the Metropolis criterion. It is called ??? times in one
+ * time step.
+ ******************************************************************************/
+
+void MonteCarlo::mcMoleculeRotation()
+{
+    constexpr int lenMolecule {3};
+    const int typeMolecule { randomIntGenerator(0, (m_nParticles - 1) / lenMolecule) }; // randomly chosen Molecule
+    const int indexTranslation { lenMolecule * typeMolecule};
+    const std::vector<double> centerMassMolecule {m_systemMolecules.centerMassMolecule(typeMolecule)};
+    const std::vector<double> randomRotationMatrix ( randomRotationMatrixGenerator(3));
+
+    double oldEnergyMolecule {0};
+    double newEnergyMolecule {0};
+    std::vector<double> positionArrayRotation;
+
+    for (int j = 0; j < lenMolecule; j++)
+    {
+
+        const int newIndexTranslation {indexTranslation + j };
+        std::vector<double> posRotation{ vectorRotation(newIndexTranslation, randomRotationMatrix.begin(),
+                                                        centerMassMolecule.begin())};
+
+        positionArrayRotation.insert( positionArrayRotation.end(),
+                                      posRotation.begin(),
+                                      posRotation.begin() + m_systemMolecules.getNDims());
+
+        const auto& neighItBegin { m_systemNeighbors.getNeighItBeginI(newIndexTranslation) };
+
+        const int& lenNeigh {m_systemNeighbors.getLenIndexBegin(newIndexTranslation)};
+
+        oldEnergyMolecule += m_systemMolecules.energyPairParticleExtraMolecule( newIndexTranslation,
+                                                                                neighItBegin, lenNeigh,
+                                                                                typeMolecule);
+
+        newEnergyMolecule += m_systemMolecules.energyPairParticleExtraMolecule( newIndexTranslation,
+                                                                                posRotation.begin(),
+                                                                                neighItBegin, lenNeigh,
+                                                                                typeMolecule);
+    }
+
+    const double diffEnergy {newEnergyMolecule - oldEnergyMolecule};
+    // Metropolis criterion
+    const bool acceptMove{ metropolis(diffEnergy) };
+
+    // If the move is accepted, then the energy, the position array and the displacement array can be updated.
+    // If the m_calculatePressure is set to True, then the pressure is calculated.
+    if (acceptMove)
+    {
+        generalUpdate(diffEnergy);
+        m_acceptanceRateMolTrans += 1. / m_nParticles; // increment of the acceptance rate.
+
+
+        //if (m_calculatePressure)
+        //{
+        //    const double newPressureParticle {pressureParticle(m_temp, indexTranslation, positionParticleTranslation, m_positionArray, neighborIList, m_typeArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
+        //    const double oldPressureParticle {pressureParticle(m_temp, indexTranslation, m_positionArray[indexTranslation], m_positionArray, neighborIList, m_typeArray, m_squareRc, m_lengthCube, m_halfLengthCube)};
+        //    m_pressure += newPressureParticle - oldPressureParticle;
+        //}
+
+        m_systemMolecules.updateFlags(indexTranslation);
+        m_systemMolecules.updatePositionI(indexTranslation, positionArrayRotation.begin(), lenMolecule*m_systemMolecules.getNDims());
+        for (int j = 0; j < lenMolecule; j++)
+        {
+            // TO DO INTER DISPLACEMENT
+            const int newIndexTranslation {indexTranslation + j };
+            //m_systemNeighbors.updateInterDisplacement(newIndexTranslation,
+            //                                          rotationVector.begin());
+
+        }
+    }
+    m_systemMolecules.reinitializeFlags();
+}
+
 /*******************************************************************************
  * This function returns a tentative new particle position.
  *

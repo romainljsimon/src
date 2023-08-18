@@ -95,8 +95,34 @@ public:
         return positionTranslation;
     }
 
+    template<typename MatInputIt, typename VecInputIt>
+    std::vector<double> vectorRotation(const int& indexTranslation, MatInputIt rotationMatrixIt, VecInputIt centerMassIt)
+    {
+        if (indexTranslation == 2915)
+        {
+            int a {8978};
+        }
+        auto posItBeginRotation = m_systemMolecules.getPosItBeginI(indexTranslation);
+        const int& nDims {m_systemMolecules.getNDims()};
+
+        std::vector<double> relativePosition (nDims);
+        std::transform(posItBeginRotation, posItBeginRotation + nDims,
+                       centerMassIt, relativePosition.begin(), std::minus<>());
+        // PROBLEME EST ICI AVEC LE CENTRE DE MASSE ET LES CONDITIONS AU BORD PERIODIQUES
+        std::vector<double> positionRotation { matrixMultiplication(rotationMatrixIt, nDims*nDims, relativePosition.begin(), nDims)};
+
+        std::transform(positionRotation.begin(), positionRotation.begin() + nDims,
+                       centerMassIt, positionRotation.begin(), std::plus<>());
+
+        m_systemMolecules.periodicBC(positionRotation.begin());
+
+        return positionRotation;
+    }
+
 
     void mcMoleculeTranslation();
+
+    void mcMoleculeRotation();
 };
 
 
