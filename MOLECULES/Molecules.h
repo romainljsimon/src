@@ -126,7 +126,13 @@ private:
                 }
             }
         }
+        for (auto it=m_positionArray.begin(); it < m_positionArray.end(); it+=m_nDims)
+        {
+            periodicBC(it);
+            reinitializeFlags();
+        }
         infile.close();
+
     }
 
 public:
