@@ -25,6 +25,7 @@ class Neighbors
 private:
 	std::vector<int> m_neighborList {};                // Neighbor list.
     std::vector<int> m_neighborIndex {};
+    int m_changeNum { 0 };
     const double m_rSkin {};
     const double m_squareRSkin {};                        			// Skin radius squared.
     const int m_nDims {3};
@@ -34,7 +35,7 @@ private:
 	int m_errors { 0 };                                             // Errors of the neighbor list.
 	std::vector<double> m_interDisplacementVector {};  // Inter neighbor list update displacement matrix.
     const std::vector<double> m_maxSquareRcArray{};
-    const std::vector<double> m_threshArray{};
+    const double m_thresh{};
     int m_numNeighMax{};
     using NeighIterator = std::vector<int>::const_iterator;
 
@@ -45,33 +46,17 @@ public:
             : m_rSkin { param.get_double( "rSkin") }
             , m_squareRSkin {std::pow (m_rSkin, 2 ) }
             , m_maxSquareRcArray (initializeMaxRc( systemMolecules))
-            , m_threshArray (initializeThreshArray(param, m_maxSquareRcArray))
+            , m_thresh (initializeThresh(param, m_maxSquareRcArray))
             , m_numCell { static_cast<int>(systemMolecules.m_lengthCube / m_rSkin) }
             , m_cellLength { systemMolecules.m_lengthCube / static_cast<double>(m_numCell)}
 
     {
         const double density {systemMolecules.m_nParticles / std::pow(systemMolecules.m_lengthCube, 3) };
         m_numNeighMax = static_cast<int>(std::pow(m_rSkin, 3) * 4./3. * 3.15 * density * 1.2);
+        //std::cout << m_numNeighMax << "\n";
         m_interDisplacementVector.resize(systemMolecules.m_nParticles * systemMolecules.m_nDims, 0);
         m_neighborList.resize(systemMolecules.m_nParticles);
         createNeighborList(systemMolecules);
-
-        /***
-        for(auto const& x : m_neighborList)
-        {
-            std::cout << x;
-            if (it < m_numNeighMax) {
-                it++;
-                std::cout << " ";
-            }
-            else if (it == m_numNeighMax) {
-                it=1;
-                std::cout << "\n";
-            }
-
-        }
-        ***/
-
     }
 
 
@@ -100,18 +85,16 @@ public:
         return maxSquareRcArray;
     };
 
-    static std::vector<double> initializeThreshArray(param::Parameter param, const std::vector<double>& maxSquareRcArray)
+    static double initializeThresh(param::Parameter param, const std::vector<double>& maxSquareRcArray)
     {
         double rSkin {param.get_double("rSkin")};
         std::vector<double> threshArray ;
-
-        for (auto const &elt: maxSquareRcArray)
-        {
-            double maxRc { pow(elt, 1./2.) };
-            const double rootThresh { (rSkin - maxRc)  / 2.};
-            threshArray.push_back(rootThresh * rootThresh);
-        }
-        return threshArray;
+        const double maxSquareRc { *max_element(maxSquareRcArray.begin(), maxSquareRcArray.end())};
+        const double maxRc { pow(maxSquareRc, 1./2.) };
+        const double rootThresh { (rSkin - maxRc)  / 2.};
+        const double thresh{rootThresh * rootThresh};
+        // std::cout << maxRc << "   " << rSkin << "   " << thresh << "\n";
+        return thresh;
     };
 
 	void checkInterDisplacement(const Molecules& systemMolecules);
@@ -140,7 +123,7 @@ public:
                             const double &squareDistance, const int &indexI, const int &indexJ);
 
 
-
+    void resizeNeighbors(const Molecules& systemMolecules);
 
     template<typename InputIt>
     void updateIJNeighbor(const Molecules& systemMolecules, const std::vector<int>& oldNeighborList,
@@ -157,11 +140,24 @@ public:
             const int lastIndexI {m_neighborIndex[indexI]};
 
             m_neighborList[lastIndexI] = indexJ; // j is on row i
+
+            if ((lastIndexI + 1) == (indexI+1) * m_numNeighMax)
+            {
+                resizeNeighbors(systemMolecules);
+            }
             m_neighborIndex[indexI]++;
 
+
             const int lastIndexJ {m_neighborIndex[indexJ]};
+
             m_neighborList[lastIndexJ] = indexI; // j is on row i
+
+            if ((lastIndexJ + 1) == (indexJ+1) * m_numNeighMax)
+            {
+                resizeNeighbors(systemMolecules);
+            }
             m_neighborIndex[indexJ]++;
+
             if (checkNeigh)
             {
                  checkNeighborError(systemMolecules, oldNeighborList, oldNeighborIndex,
@@ -219,6 +215,8 @@ public:
         const int& neighIndex {getNeighborIndexBegin(indexParticle + 1)};
         return m_neighborList.begin() + neighIndex;
     }
+
+    void eraseFalseNeighbors(const Molecules &molecules);
 };
 
 

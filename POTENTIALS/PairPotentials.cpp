@@ -24,7 +24,7 @@ int PairPotentials::getParticleTypes() const
 
 double PairPotentials::getSquareRcIJ(const int& i, const int& j) const
 {
-    const int rcIndex {getIndexIJ(i, j) + 2};
+    const int rcIndex {getIndexIJ(i, j)};
     return m_pairPotentials[rcIndex];
 }
 /***

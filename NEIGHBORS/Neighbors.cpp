@@ -123,6 +123,8 @@ void Neighbors::createNeighborList(const Molecules& systemMolecules)
             }
         }
     }
+    m_changeNum = 0;
+    // eraseFalseNeighbors(systemMolecules);
     // sortNeighborList(systemMolecules);
 }
 
@@ -149,6 +151,7 @@ std::vector<std::vector<std::vector<std::vector<int>>>> Neighbors::createCellLis
         posItBeginI++;
         const int zCell{static_cast<int>(floor(*posItBeginI / m_cellLength))};
         cellList[xCell][yCell][zCell].push_back(i);
+
     }
 
     return cellList;
@@ -270,7 +273,7 @@ void Neighbors::checkNeighborError(const Molecules& systemMolecules, const std::
     //if (static_cast<int>(oldNeighborList[indexI].size()) > 0) // If this size is 0, then it is the first time the neighbor list is calculated.
     //{
         // Compare the new neighbor list with the new neighbor list
-    const auto& oldItBegin { oldNeighborList.begin() + indexI * m_numNeighMax };
+    const auto& oldItBegin { oldNeighborList.begin() + indexI * (m_numNeighMax - m_changeNum)};
     const auto& oldItEnd { oldNeighborList.begin() + oldNeighborIndex[indexI]};
 
     //if (!std::binary_search(oldItBegin, oldItEnd, indexJ))
@@ -304,9 +307,7 @@ void Neighbors::checkInterDisplacement(const Molecules& systemMolecules)
 
     for (int i=0; i < systemMolecules.m_nParticles; i++)
     {
-        int particleTypeIndex { systemMolecules.getParticleTypeI(i) - 1};
-
-        if ( squareDispVector[i] > m_threshArray[particleTypeIndex])
+        if ( squareDispVector[i] > m_thresh)
         {
             createNeighborList(systemMolecules);
             std::fill(m_interDisplacementVector.begin(), m_interDisplacementVector.end(),0);
@@ -335,5 +336,39 @@ int Neighbors::getLenIndexBegin(const int& indexParticle) const
     const int lenNeigh {getNeighborIndexEnd(indexParticle) - getNeighborIndexBegin(indexParticle)};
     return lenNeigh;
 }
+
+void Neighbors::resizeNeighbors(const Molecules& systemMolecules)
+{
+    int pos {0};
+    for (int i=1; i<systemMolecules.m_nParticles+1; i++)
+    {
+        //std::cout << i << "\n";
+        pos += m_numNeighMax;
+        m_neighborList.insert(m_neighborList.begin() + pos, -1);
+        pos++;
+        std::for_each(m_neighborIndex.begin() + i, m_neighborIndex.end(), [](int &n)
+        { n++; });
+    }
+    m_numNeighMax++;
+    m_changeNum++;
+}
+
+/***
+void Neighbors::eraseFalseNeighbors(const Molecules &molecules)
+{
+    int startPlusOne {0};
+    for (int i=0; i<molecules.m_nParticles; i++)
+    {
+        startPlusOne += m_numNeighMax;
+        int end {getNeighborIndexEnd(i)};
+        int lenFalseNeigh {startPlusOne-end};
+        m_neighborList.erase(m_neighborList.begin()+end, m_neighborList.begin()+startPlusOne);
+        std::for_each(m_neighborIndex.begin() + i + 2, m_neighborIndex.end(), [&lenFalseNeigh](int &n)
+        { n-=lenFalseNeigh; });
+        startPlusOne -= lenFalseNeigh;
+
+    }
+}
+***/
 
 
