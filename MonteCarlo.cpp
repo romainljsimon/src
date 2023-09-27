@@ -10,7 +10,7 @@
 #include <cmath>
 #include <string>
 #include "MonteCarlo.h"
-#include "random.h"
+#include "Random_mt.h"
 #include "readSaveFile.h"
 #include "util.h"
 
@@ -44,7 +44,6 @@ void MonteCarlo::mcTotal()
     double swapRate {0.};
     double transRate {0.};
     double molTransRate {0.};
-
 	for (int i = 0; i < m_timeSteps; i++) //Iteration over m_timeSteps
 	{
         int j { 0 };
@@ -125,12 +124,14 @@ void MonteCarlo::mcTotal()
  ******************************************************************************/
 int MonteCarlo::mcMove()
 {
-    const double randomDouble { randomDoubleGenerator(0., 1.) } ;
+    const double randomDouble { Random::doubleGenerator(0., 1.) } ;
     const bool swapped {randomDouble < m_pSwap};
     const bool molTranslation {randomDouble > (1 - m_pMolTranslation)};
     int step {0};
+
     if ( swapped && m_swap)
     {
+
         ++m_nSwap;
         ++step;
         mcSwap();
@@ -143,6 +144,7 @@ int MonteCarlo::mcMove()
     }
     else
     {
+
         ++m_nTrans;
         ++step;
         mcTranslation();
@@ -160,9 +162,9 @@ int MonteCarlo::mcMove()
 void MonteCarlo::mcMoleculeTranslation()
 {
 	constexpr int lenMolecule {3};
-    const int typeMolecule { randomIntGenerator(0, (m_nParticles - 1) / lenMolecule) }; // randomly chosen Molecule
+    const int typeMolecule { Random::intGenerator(0, (m_nParticles - 1) / lenMolecule) }; // randomly chosen Molecule
     const int indexTranslation { m_systemMolecules.getNDims() * typeMolecule};
-	std::vector<double> randomVector ( randomVectorDoubleGenerator(3, -m_rBoxMolTrans, m_rBoxMolTrans) );
+	std::vector<double> randomVector ( Random::vectorDoubleGenerator(3, -m_rBoxMolTrans, m_rBoxMolTrans) );
 	double oldEnergyMolecule {0};
 	double newEnergyMolecule {0};
     std::vector<double> positionArrayTranslation;
@@ -233,8 +235,8 @@ void MonteCarlo::mcMoleculeTranslation()
 void MonteCarlo::mcTranslation()
 {
 
-    const int indexTranslation{randomIntGenerator(0, m_nParticles - 1)}; // randomly chosen particle
-    const std::vector<double>& randomVector(randomVectorDoubleGenerator(3, -m_rBox, m_rBox));
+    const int indexTranslation{Random::intGenerator(0, m_nParticles - 1)}; // randomly chosen particle
+    const std::vector<double>& randomVector(Random::vectorDoubleGenerator(3, -m_rBox, m_rBox));
     const std::vector<double>& positionTranslation { vectorTranslation(indexTranslation, randomVector.begin()) };
 
     const auto& neighItBegin { m_systemNeighbors.getNeighItBeginI(indexTranslation) };
@@ -284,13 +286,21 @@ void MonteCarlo::mcTranslation()
 
 void MonteCarlo::mcSwap()
 {
-    int indexSwap1 { randomIntGenerator(0, m_nParticles - 1) };
-    int indexSwap2;
+    int indexMolecule { Random::intGenerator(0, m_nParticles - 1) };
     // int indexSwap2 { randomIntGenerator(0, m_nParticles - 1) };
     // !!!! THIS NEXT PART IS ONLY BECAUSE WE STUDY TRI-MERS VERY SPECIFIC!!!
-    indexSwap1 -= indexSwap1 % 3;
-    indexSwap2 = indexSwap1 + 2;
+    indexMolecule -= indexMolecule % 3;
+    int indexSwap1 { Random::intGenerator(0, 2)};
+    int indexSwap2 { Random::intGenerator(0, 2)};
 
+    while (indexSwap1 == indexSwap2)
+    {
+        indexSwap2 = Random::intGenerator(0, 2);
+    }
+
+
+    indexSwap1 += indexMolecule;
+    indexSwap2 += indexMolecule;
 
     const auto& neighItBegin1 { m_systemNeighbors.getNeighItBeginI(indexSwap1) };
     const int& lenNeigh1 {m_systemNeighbors.getLenIndexBegin(indexSwap1)};
@@ -389,7 +399,7 @@ bool MonteCarlo::metropolis(double diff_energy) const
 
 	else
 	{
-		const double randomDouble { randomDoubleGenerator(0., 1.) } ;
+		const double randomDouble { Random::doubleGenerator(0., 1.) } ;
 		const double threshold { exp(( - diff_energy ) / m_temp) }; // we consider k=1
 		return threshold > randomDouble;
 	}

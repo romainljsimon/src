@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <vector>
-#include "random.h"
+#include "Random_mt.h"
 #include "util.h"
 
 /***
@@ -40,6 +40,7 @@ int squareDistancePairTest()
 	}
 	return 0;
 }
+***/
 
 void randomIntGeneratorTest()
 {
@@ -52,11 +53,11 @@ void randomIntGeneratorTest()
 
 	for (int i=0; i < nRolls; ++i)
 	{
-		int number = randomIntGenerator(0, 5);
+		int number = Random::intGenerator(0, 5);
 	    ++p[number];
 	}
 
-	std::cout << "uniform_discrete_distribution (0, 6):" << '\n';
+	std::cout << "uniform_discrete_distribution (0, 5):" << '\n';
 	std::cout << std::fixed; std::cout.precision(1);
 
 	for (int i=0; i < nIntervals; ++i)
@@ -76,7 +77,7 @@ void randomDoubleGeneratorTest()
   int p[nIntervals]={};
 
   for (int i=0; i<nRolls; ++i) {
-    double number = randomDoubleGenerator(0., 1.);
+    double number = Random::doubleGenerator(0., 1.);
     ++p[int(nIntervals*number)];
   }
 
@@ -96,5 +97,5 @@ void randomGeneratorTest()
 	randomIntGeneratorTest();
 }
 
-***/
+
 

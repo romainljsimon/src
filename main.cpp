@@ -25,7 +25,6 @@ int main()
 	//Opening INPUT variables file
     param::Parameter param(folderPath + "/inputVar.txt" );
 	//posRad initPosRad = readXYZ ( folderPath + "/initPosition.xyz");
-
     // double density =  param.get_double("density");
 	// std::filesystem::create_directory (folderPath + "/outXYZ" );
 	// std::filesystem::create_directory (folderPath + "/disp" );
