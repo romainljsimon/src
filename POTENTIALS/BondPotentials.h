@@ -93,5 +93,6 @@ public:
 
     [[nodiscard]] int getIndexIJ(const int &i, const int &j) const;
 
+    double getFeneK(const int &i, const int &j) const;
 };
 #endif /* BONDPOTENTIALS_H_ */

@@ -316,8 +316,6 @@ void MonteCarlo::mcSwap()
                                                                lenNeigh2, indexSwap1)};
 
 
-
-
     const double diffEnergy{ diffEnergySwap1 + diffEnergySwap2 };
     // Metropolis criterion
     const bool acceptMove { metropolis( diffEnergy) };

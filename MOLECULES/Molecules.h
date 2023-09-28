@@ -287,9 +287,10 @@ public:
         for (auto it = bondsItBegin; it < bondsItEnd; it++)
         {
             const int& indexJ {*it};
-            const double squareDistance { squareDistancePair(posItBegin,
-                                                             getPosItBeginI(indexJ)) };
             const int& particleTypeJ { m_particleTypeArray[indexJ] };
+
+            const double squareDistance { squareDistancePair(posItBegin,
+                                                                 getPosItBeginI(indexJ)) };
             energy += m_systemBondPotentials.feneBondEnergyIJ(squareDistance, particleTypeI, particleTypeJ);
 
         }
@@ -417,12 +418,16 @@ public:
 
             if (indexJ != indexSwap)
             {
+                const int& particleTypeJ { m_particleTypeArray[indexJ] };
+
                 const double squareDistance { squareDistancePair(posItBegin,
                                                                  m_positionArray.begin() + m_nDims*indexJ) };
-                const int& particleTypeJ { m_particleTypeArray[indexJ] };
+
                 energy += m_systemBondPotentials.feneBondEnergyIJ(squareDistance,
                                                                   swapParticleTypeI, particleTypeJ);
                 energy -= m_systemBondPotentials.feneBondEnergyIJ(squareDistance, particleTypeI, particleTypeJ);
+
+
             }
         }
         return energy;

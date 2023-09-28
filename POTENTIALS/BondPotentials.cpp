@@ -19,6 +19,15 @@ int BondPotentials::getIndexIJ(const int& i, const int& j) const
     return indexIJ;
 }
 
+double BondPotentials::getFeneK(const int& i, const int& j) const
+{
+
+    const int indexIJ { getIndexIJ(i , j) };
+    double feneK {m_bondPotentials[indexIJ + 1] };
+    return feneK;
+
+}
+
 /***
 std::vector<double> BondPotentials::getPotentialsIJ(const int& i, const int& j) const
 {
@@ -47,23 +56,23 @@ double BondPotentials::feneBondEnergyIJ(const double& squareDistance, const int&
 {
     const int indexIJ {getIndexIJ(particleTypeI, particleTypeJ)};
     auto it {m_bondPotentials.begin() + indexIJ};
-    const double& squareR0IJ {*it};
-    ++it;
     double energy {0.};
 
-
-
-    if (squareDistance >= squareR0IJ)
+    const double& squareR0IJ {*it};
+    ++it;
+    const double& feneKI {*it};
+    ++it;
+    if (feneKI != 0.)
     {
-        return std::numeric_limits<double>::infinity();
-    }
-    else
-    {
-        const double& feneKI {*it};
-        ++it;
+        if (squareDistance >= squareR0IJ)
+        {
+            return std::numeric_limits<double>::infinity();
+        }
+        else
+        {
+            energy += -0.5 * feneKI * squareR0IJ * std::log(1. - squareDistance / squareR0IJ);
+        }
 
-        // std::cout << feneKI << "  " << squareR0IJ << "\n";
-        energy += -0.5 * feneKI * squareR0IJ * std::log(1. - squareDistance / squareR0IJ);
     }
 
     double rcSquareIJ {*it};
