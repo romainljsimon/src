@@ -500,7 +500,11 @@ public:
     }
 
 
-    [[nodiscard]] const int &getNDims() const;
+    [[nodiscard]] const int& getNDims() const;
+
+    [[nodiscard]] double getCosAngleMolecule(const std::vector<int>& orderVector, const int& indexMolecule) const;
+
+    [[nodiscard]] std::vector<int> getOrderVector(const int &indexMolecule) const;
 };
 
 #endif /* MOLECULES_H_ */

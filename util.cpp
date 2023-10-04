@@ -7,32 +7,34 @@
 
 #include <utility>
 #include <vector>
-
+#include <numeric>
 #include <algorithm>
 #include <valarray>
 
 
-//Boundary conditions
+// Vector Operators
 
-std::vector<double> periodicBC(std::vector<double> positionParticle, const double& lengthCube)
-/*
- *This function is an implementation of the periodic Boundary conditions.
- *If a particle gets out of the simulation box from one of the sides, it gets back in the box from the opposite side.
- */
+double innerProduct(const std::vector<double>& vec1, const std::vector<double>& vec2)
 {
-	int positionParticleSize { static_cast<int>(positionParticle.size()) };
-	for (int i = 0; i < positionParticleSize; i++)
-	{
-		if (positionParticle[i]< 0)
-			positionParticle[i] += lengthCube;
-
-		else if (positionParticle[i] > lengthCube)
-			positionParticle[i] -= lengthCube;
-	}
-	return positionParticle;
+    return std::inner_product(vec1.begin(), vec1.end(), vec2.begin(), 0.);
 }
 
-// Vector Operators
+double cosAngleVectors(const std::vector<double>& vec1, const std::vector<double>& vec2)
+{
+    double innerProduct11 {innerProduct(vec1, vec1)};
+    double innerProduct22 {innerProduct(vec2, vec2)};
+    double innerProduct12 {innerProduct(vec1, vec2)};
+
+    if (innerProduct12 == 0.)
+    {
+        return 0.;
+    }
+
+    else
+    {
+        return innerProduct12 / (sqrt(innerProduct11) * sqrt(innerProduct22));
+    }
+}
 
 double meanVector(const std::vector<double>& vec)
 {
@@ -81,10 +83,13 @@ std::vector<double> vectorSum(const std::vector<double>& vec1, const std::vector
     return sumVec;
 }
 
-std::vector<double> vectorDiff(const std::vector<double>& vec1, std::vector<double> vec2)
+std::vector<double> vectorDiff(const std::vector<double>& vec1, const std::vector<double>& vec2, int nDims)
 {
-	std::vector<double> minus_vec2 = multiplyVectorByScalar(std::move(vec2), -1.);
-	return vectorSum(vec1, minus_vec2);
+    std::vector<double> vecDiff(nDims);
+
+    std::transform(vec1.begin(), vec1.begin() + nDims,
+                   vec2.begin(), vecDiff.begin(), std::minus<>());
+    return vecDiff;
 }
 
 double getMaxVector(const std::vector<double>& vec)
@@ -124,7 +129,7 @@ std::vector<std::vector<double>> matrixSumWithVector(std::vector<std::vector<dou
 	return mat1;
 
 }
-
+/***
 std::vector<std::vector<double>> matrixDiffWithVector(std::vector<std::vector<double>> mat1, const std::vector<double>& vec1)
 {
 	int matSize{ static_cast<int>(mat1.size()) };
@@ -135,6 +140,7 @@ std::vector<std::vector<double>> matrixDiffWithVector(std::vector<std::vector<do
 	}
 	return mat1;
 }
+***/
 
 std::vector<std::vector<double>> multiplyMatrixByScalar(std::vector<std::vector<double>> mat, const double& scalar)
 {

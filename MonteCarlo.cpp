@@ -35,7 +35,7 @@ void MonteCarlo::mcTotal()
     // std::vector<double> radiusArray (divideVectorByScalar(m_typeArray, 2));
 
 	m_systemMolecules.saveInXYZ(preName + std::to_string(0) + extname );
-	saveDoubleTXT(m_energy / m_nParticles, energyFilePath);
+    saveDoubleTXT(m_energy / m_nParticles, energyFilePath);
 	// saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(0) + extnameDisp);
 
 	const std::vector<int> saveTimeStepArray ( createSaveTime(m_timeSteps, m_saveUpdate, 1.1));
@@ -70,6 +70,7 @@ void MonteCarlo::mcTotal()
 
 		if (i % m_saveRate == 0)
 		{
+            double realEnergy {m_systemMolecules.energySystemMolecule(m_systemNeighbors)};
 			saveDoubleTXT(m_energy / m_nParticles, energyFilePath); //Energy is saved at each time step.
 		}
         swapRate += static_cast<double>(m_nSwap) / m_nParticles;
@@ -286,21 +287,35 @@ void MonteCarlo::mcTranslation()
 
 void MonteCarlo::mcSwap()
 {
+    int swapType { Random::intGenerator(0, 2) };
     int indexMolecule { Random::intGenerator(0, m_nParticles - 1) };
     // int indexSwap2 { randomIntGenerator(0, m_nParticles - 1) };
     // !!!! THIS NEXT PART IS ONLY BECAUSE WE STUDY TRI-MERS VERY SPECIFIC!!!
     indexMolecule -= indexMolecule % 3;
-    int indexSwap1 { Random::intGenerator(0, 2)};
-    int indexSwap2 { Random::intGenerator(0, 2)};
 
-    while (indexSwap1 == indexSwap2)
+    std::vector<int> orderVector { m_systemMolecules.getOrderVector(indexMolecule) };
+    double cosAngle { m_systemMolecules.getCosAngleMolecule(orderVector, indexMolecule ) };
+
+    int indexSwap1 {indexMolecule};
+    int indexSwap2 {indexMolecule};
+    if (cosAngle < - 0.3)
     {
-        indexSwap2 = Random::intGenerator(0, 2);
+
+        indexSwap1 += orderVector[0];
+        indexSwap2 += orderVector[2];
     }
 
+    else
+    {
+        indexSwap1 += Random::intGenerator(0, 2);
+        indexSwap2 += Random::intGenerator(0, 2);
 
-    indexSwap1 += indexMolecule;
-    indexSwap2 += indexMolecule;
+        while (indexSwap1 == indexSwap2)
+        {
+            indexSwap2 = indexMolecule;
+            indexSwap2 += Random::intGenerator(0, 2);
+        }
+    }
 
     const auto& neighItBegin1 { m_systemNeighbors.getNeighItBeginI(indexSwap1) };
     const int& lenNeigh1 {m_systemNeighbors.getLenIndexBegin(indexSwap1)};

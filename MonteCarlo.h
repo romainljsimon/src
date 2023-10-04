@@ -37,8 +37,14 @@ private:
     double m_acceptanceRateMolTrans { 0. };                                 // Monte Carlo swap acceptance rate.
     const int m_saveRate {};
 	const bool m_calculatePressure {};                               // Boolean that decides if the pressure is calculated or not.
-    const bool m_swap {};
-    const double m_pSwap {};
+    const bool m_swap{};
+    const bool m_swap12 {};
+    const bool m_swap13 {};
+    const bool m_swap23 {};
+    const double m_pSwap{};
+    const double m_pSwap12 {};
+    const double m_pSwap13 {};
+    const double m_pSwap23 {};
 	const std::string m_simulationMol {};                       			// Type of system: can be either "polymer" or "atomic".
     const bool m_molTranslation {};
     const double m_pMolTranslation {};
@@ -60,8 +66,14 @@ public:
             , m_systemNeighbors(std::move(systemNeighbors))
             , m_nParticles(systemMolecules.getNParticles())
             , m_calculatePressure(param.get_bool("calcPressure", false))
-            , m_swap (param.get_bool("swap", false))
+            , m_swap(param.get_bool("swap", false))
+            , m_swap12 (param.get_bool("swap12", false))
+            , m_swap13 (param.get_bool("swap13", true))
+            , m_swap23 (param.get_bool("swap23", false))
             , m_pSwap (param.get_double("pSwap", 0.2))
+            , m_pSwap12 (param.get_double("pSwap12", 0))
+            , m_pSwap13 (param.get_double("pSwap13", 1))
+            , m_pSwap23 (param.get_double("pSwap23", 0))
             , m_molTranslation ( param.get_bool("molTranslation", false))
             , m_pMolTranslation ( param.get_double("pMolTranslation", 0.1))
             , m_rBoxMolTrans ( param.get_double("rBoxMolTranslation", 0.05))

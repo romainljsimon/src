@@ -63,6 +63,63 @@ void Molecules::swapParticleTypesIJ(const int& i, const int& j)
     m_particleTypeArray[i] = typeJ;
 }
 
+std::vector<int> Molecules::getOrderVector(const int& indexMolecule) const
+{
+    const int type0 { getParticleTypeI(indexMolecule) };
+    const int type1 { getParticleTypeI(indexMolecule + 1) };
+    int start {0};
+    int middle {1};
+    int end {2};
+    if ((type0 == 1) && (type1 == 3))
+    {
+        middle = 2;
+        end = 1;
+    }
+    else if (type0 == 2)
+    {
+        middle = 0;
+
+        if (type1 == 1)
+        {
+            start = 1;
+            end = 2;
+        }
+
+        else
+        {
+            start = 2;
+            end = 1;
+        }
+    }
+    else if (type0 == 3)
+    {
+        end = 0;
+
+        if (type1 == 1)
+        {
+            start = 1;
+            middle = 2;
+        }
+
+        else
+        {
+            start = 2;
+            middle = 1;
+        }
+    }
+    return std::vector<int> { start, middle, end };
+}
+
+double Molecules::getCosAngleMolecule(const std::vector<int>& orderVector, const int& indexMolecule) const
+{
+    std::vector<double> vectorStart { getPositionI(indexMolecule + orderVector[0]) };
+    std::vector<double> vectorMiddle { getPositionI(indexMolecule + orderVector[1]) };
+    std::vector<double> vectorEnd { getPositionI(indexMolecule + orderVector[2]) };
+    std::vector<double> vector1 { vectorDiff( vectorStart, vectorMiddle, m_nDims)};
+    std::vector<double> vector2 { vectorDiff( vectorEnd, vectorMiddle, m_nDims)};
+    double cosAngleMolecule { cosAngleVectors(vector1, vector2)};
+    return cosAngleMolecule;
+}
 
 /*******************************************************************************
  * This function calculates the distance between two particles considering the
