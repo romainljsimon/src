@@ -16,6 +16,7 @@ void saveInXYZ(const std::vector<std::vector<double>>& positionArray, const std:
 void saveDoubleTXT(const double& number, const std::string& path);
 void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const std::string& path);
 std::vector<std::vector<int>> readBondsTXT(const std::string& path);
+void saveDoubleIntTXT(const double& number1, const int& number2, const std::string& path);
 
 
 #endif /* READSAVEFILE_H_ */

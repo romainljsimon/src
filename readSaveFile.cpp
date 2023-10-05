@@ -111,6 +111,21 @@ void saveDoubleTXT(const double& number, const std::string& path)
 
 }
 
+void saveDoubleIntTXT(const double& number1, const int& number2, const std::string& path)
+/*
+ * This function saves the system energy in a txt file
+ */
+{
+    std::ofstream fOut;
+    fOut.open(path, std::ios_base::app);
+    fOut << number1;
+    fOut << " ";
+    fOut << number2;
+    fOut << "\n";
+    fOut.close();
+
+}
+
 void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const std::string& path)
 {
     std::ofstream fOut(path);

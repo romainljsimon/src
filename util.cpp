@@ -14,6 +14,8 @@
 
 // Vector Operators
 
+
+
 double innerProduct(const std::vector<double>& vec1, const std::vector<double>& vec2)
 {
     return std::inner_product(vec1.begin(), vec1.end(), vec2.begin(), 0.);

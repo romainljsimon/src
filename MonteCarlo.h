@@ -33,14 +33,14 @@ private:
 	double m_acceptanceRateTrans { 0. };                                 // Monte Carlo translation acceptance rate.
     int m_nSwap {0};
     double m_acceptanceRateSwap { 0. };                                 // Monte Carlo swap acceptance rate.
+    double m_acceptanceRateSwap12 { 0. };
+    double m_acceptanceRateSwap13 { 0. };
+    double m_acceptanceRateSwap23 { 0. };
     int m_nMolTrans {0};
     double m_acceptanceRateMolTrans { 0. };                                 // Monte Carlo swap acceptance rate.
     const int m_saveRate {};
 	const bool m_calculatePressure {};                               // Boolean that decides if the pressure is calculated or not.
     const bool m_swap{};
-    const bool m_swap12 {};
-    const bool m_swap13 {};
-    const bool m_swap23 {};
     const double m_pSwap{};
     const double m_pSwap12 {};
     const double m_pSwap13 {};
@@ -67,9 +67,6 @@ public:
             , m_nParticles(systemMolecules.getNParticles())
             , m_calculatePressure(param.get_bool("calcPressure", false))
             , m_swap(param.get_bool("swap", false))
-            , m_swap12 (param.get_bool("swap12", false))
-            , m_swap13 (param.get_bool("swap13", true))
-            , m_swap23 (param.get_bool("swap23", false))
             , m_pSwap (param.get_double("pSwap", 0.2))
             , m_pSwap12 (param.get_double("pSwap12", 0))
             , m_pSwap13 (param.get_double("pSwap13", 1))

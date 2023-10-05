@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <numeric>
+#include <algorithm>
 
 /***
 double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB,
@@ -62,6 +63,12 @@ std::vector<double> getSquareNormRowMatrix(InputIt vecItBegin, const int& lenCol
         vecItEnd = vecItBegin + lenRow;
     }
     return squareNormVector;
+}
+template<typename InputIt>
+void periodicVector(InputIt vecItBegin, const int& lenVec, const double& lengthCube)
+{
+    std::for_each(vecItBegin, vecItBegin + lenVec, [&lengthCube](auto &n) { n = (n < -lengthCube/2) ? n + lengthCube: n;});
+    std::for_each(vecItBegin, vecItBegin + lenVec, [&lengthCube](auto &n) { n = (n > lengthCube/2) ? n - lengthCube: n;});
 }
 
 std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat);

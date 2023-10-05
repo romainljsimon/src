@@ -117,6 +117,8 @@ double Molecules::getCosAngleMolecule(const std::vector<int>& orderVector, const
     std::vector<double> vectorEnd { getPositionI(indexMolecule + orderVector[2]) };
     std::vector<double> vector1 { vectorDiff( vectorStart, vectorMiddle, m_nDims)};
     std::vector<double> vector2 { vectorDiff( vectorEnd, vectorMiddle, m_nDims)};
+    periodicVector(vector1.begin(), m_nDims, m_lengthCube);
+    periodicVector(vector2.begin(), m_nDims, m_lengthCube);
     double cosAngleMolecule { cosAngleVectors(vector1, vector2)};
     return cosAngleMolecule;
 }

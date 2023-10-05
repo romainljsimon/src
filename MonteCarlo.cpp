@@ -95,16 +95,25 @@ void MonteCarlo::mcTotal()
             (m_acceptanceRateTrans + m_acceptanceRateSwap + m_acceptanceRateMolTrans) / totalRate : 0.;
 	m_acceptanceRateTrans = (transRate != 0.) ? m_acceptanceRateTrans / transRate : 0.;
     m_acceptanceRateSwap = (swapRate != 0.) ? m_acceptanceRateSwap / swapRate : 0.;
+    m_acceptanceRateSwap12 = (m_pSwap12 != 0.) ? m_acceptanceRateSwap12 / (swapRate * m_pSwap12): 0.;
+    m_acceptanceRateSwap13 = (m_pSwap13 != 0.) ? m_acceptanceRateSwap13 / (swapRate * m_pSwap13): 0.;
+    m_acceptanceRateSwap23 = (m_pSwap23 != 0.) ? m_acceptanceRateSwap23 / (swapRate * m_pSwap23): 0.;
     m_acceptanceRateMolTrans = (molTransRate != 0.) ? m_acceptanceRateMolTrans / molTransRate : 0.;
 
 
     constexpr std::string_view translationString{"Translation MC move acceptance rate: "};
     constexpr std::string_view swapString { "Swap MC move acceptance rate: " };
+    constexpr std::string_view swapString12 { "Swap12 MC move acceptance rate: " };
+    constexpr std::string_view swapString13 { "Swap13 MC move acceptance rate: " };
+    constexpr std::string_view swapString23 { "Swap23 MC move acceptance rate: " };
     constexpr std::string_view molTranslationString { "Molecule translation MC move acceptance rate: " };
     constexpr std::string_view totalString { "Total MC move acceptance rate: " };
 
     std::cout << translationString << m_acceptanceRateTrans << "\n";
     std::cout << swapString << m_acceptanceRateSwap << "\n";
+    std::cout << swapString12 << m_acceptanceRateSwap12 << "\n";
+    std::cout << swapString13 << m_acceptanceRateSwap13 << "\n";
+    std::cout << swapString23 << m_acceptanceRateSwap23 << "\n";
     std::cout << molTranslationString << m_acceptanceRateMolTrans << "\n";
     std::cout << totalString << totalAcceptanceRate << "\n";
 
@@ -287,24 +296,44 @@ void MonteCarlo::mcTranslation()
 
 void MonteCarlo::mcSwap()
 {
-    int swapType { Random::intGenerator(0, 2) };
+    double pSwapType { Random::doubleGenerator(0, 1) };
+    int swapType {1};
     int indexMolecule { Random::intGenerator(0, m_nParticles - 1) };
     // int indexSwap2 { randomIntGenerator(0, m_nParticles - 1) };
     // !!!! THIS NEXT PART IS ONLY BECAUSE WE STUDY TRI-MERS VERY SPECIFIC!!!
     indexMolecule -= indexMolecule % 3;
 
     std::vector<int> orderVector { m_systemMolecules.getOrderVector(indexMolecule) };
-    double cosAngle { m_systemMolecules.getCosAngleMolecule(orderVector, indexMolecule ) };
+    // double cosAngle { m_systemMolecules.getCosAngleMolecule(orderVector, indexMolecule ) };
 
     int indexSwap1 {indexMolecule};
     int indexSwap2 {indexMolecule};
+
+    if (pSwapType < m_pSwap12)
+    {
+        indexSwap1 += orderVector[0];
+        indexSwap2 += orderVector[1];
+    }
+    else if (pSwapType < (m_pSwap12 + m_pSwap13))
+    {
+        swapType = 2;
+        indexSwap1 += orderVector[0];
+        indexSwap2 += orderVector[2];
+    }
+    else
+    {
+        swapType = 3;
+        indexSwap1 += orderVector[1];
+        indexSwap2 += orderVector[2];
+    }
+    /***
     if (cosAngle < - 0.3)
     {
 
         indexSwap1 += orderVector[0];
         indexSwap2 += orderVector[2];
     }
-
+a
     else
     {
         indexSwap1 += Random::intGenerator(0, 2);
@@ -314,9 +343,9 @@ void MonteCarlo::mcSwap()
         {
             indexSwap2 = indexMolecule;
             indexSwap2 += Random::intGenerator(0, 2);
-        }
+        }mv t
     }
-
+    ***/
     const auto& neighItBegin1 { m_systemNeighbors.getNeighItBeginI(indexSwap1) };
     const int& lenNeigh1 {m_systemNeighbors.getLenIndexBegin(indexSwap1)};
     const auto& neighItBegin2 { m_systemNeighbors.getNeighItBeginI(indexSwap2) };
@@ -340,6 +369,20 @@ void MonteCarlo::mcSwap()
     if ( acceptMove )
     {
         generalUpdate( diffEnergy );
+        switch (swapType)
+        {
+            case 1:
+                m_acceptanceRateSwap12 += 1. / m_nParticles;
+                break;
+            case 2:
+                m_acceptanceRateSwap13 += 1. / m_nParticles;
+                break;
+            case 3:
+                m_acceptanceRateSwap23 += 1. / m_nParticles;
+                break;
+            default:
+                break;
+        }
         m_acceptanceRateSwap += 1. / m_nParticles;
         m_systemMolecules.swapParticleTypesIJ(indexSwap1, indexSwap2);
 
@@ -381,6 +424,23 @@ void MonteCarlo::mcSwap()
         }
         ***/
     }
+    /***
+    switch (swapType)
+    {
+        case 1:
+            saveDoubleIntTXT(cosAngle, acceptMove, "./thetatau12.txt");
+            break;
+        case 2:
+            saveDoubleIntTXT(cosAngle, acceptMove, "./thetatau13.txt");
+            break;
+        case 3:
+            saveDoubleIntTXT(cosAngle, acceptMove, "./thetatau23.txt");
+            break;
+        default:
+            break;
+    }
+     ***/
+
 }
 
 
