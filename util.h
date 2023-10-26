@@ -71,6 +71,40 @@ void periodicVector(InputIt vecItBegin, const int& lenVec, const double& lengthC
     std::for_each(vecItBegin, vecItBegin + lenVec, [&lengthCube](auto &n) { n = (n > lengthCube/2) ? n - lengthCube: n;});
 }
 
+template<typename InputIt>
+void sumVector(InputIt vecItBegin1, InputIt vecItBegin2, const int& lenVec)
+{
+    std::transform (vecItBegin1, vecItBegin1+lenVec, vecItBegin2, vecItBegin1, std::plus<>());
+}
+template<typename InputIt>
+void divVector(InputIt vecItBegin, const int& lenVec, const double& fac)
+{
+    std::for_each(vecItBegin, vecItBegin + lenVec, [&fac](auto &n) { n /= fac;});
+}
+
+template<typename InputIt>
+std::vector<double> crossProduct(InputIt vecItBegin1, InputIt vecItBegin2, const int& lenVec)
+{
+    std::vector<double> cross (lenVec);
+    cross[0] = (*(vecItBegin1 + 1)) * (*(vecItBegin2 + 2)) - (*(vecItBegin1 + 2)) * (*(vecItBegin2 + 1));
+    cross[1] = (*(vecItBegin1 + 2)) * (*(vecItBegin2)) - (*(vecItBegin1)) * (*(vecItBegin2 + 2));
+    cross[2] = (*(vecItBegin1)) * (*(vecItBegin2 + 1)) - (*(vecItBegin1 + 1)) * (*(vecItBegin2));
+    return cross;
+}
+
+template<typename InputIt>
+double traceMatrix(InputIt vecItBegin, const int& lenRowCol)
+{
+    double trace {0.};
+    int lenMat { lenRowCol * lenRowCol};
+    for (auto it=vecItBegin; it < (vecItBegin + lenMat); it+=(lenRowCol+1))
+    {
+        trace += *it;
+    }
+    return trace;
+}
+
+
 std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat);
 
 std::vector<int> createSaveTime(const int& max, const int& linear_scalar, const float& log_scalar);
