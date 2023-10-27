@@ -502,7 +502,8 @@ public:
 
     [[nodiscard]] const int& getNDims() const;
 
-    [[nodiscard]] double getCosAngleMolecule(const std::vector<int>& orderVector, const int& indexMolecule) const;
+    [[nodiscard]] double getCosAngleMolecule123(const std::vector<int>& orderVector, const int& indexMolecule) const;
+    [[nodiscard]] double getCosAngleMolecule213(const std::vector<int>& orderVector, const int& indexMolecule) const;
 
     [[nodiscard]] std::vector<int> getOrderVector(const int &indexMolecule) const;
 };

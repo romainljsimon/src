@@ -304,17 +304,14 @@ void MonteCarlo::mcSwap()
     indexMolecule -= indexMolecule % 3;
 
     std::vector<int> orderVector { m_systemMolecules.getOrderVector(indexMolecule) };
-    // double cosAngle { m_systemMolecules.getCosAngleMolecule(orderVector, indexMolecule ) };
-
+    double angle123 { acos(m_systemMolecules.getCosAngleMolecule123(orderVector, indexMolecule )) };
+    double angle213 { acos(m_systemMolecules.getCosAngleMolecule213(orderVector, indexMolecule ) )};
+    double angle231 { M_PI - angle123 - angle213};
+    std::cout << angle123 << " " <<  angle213 << " " << angle231 << "\n";
     int indexSwap1 {indexMolecule};
     int indexSwap2 {indexMolecule};
 
-    if (pSwapType < m_pSwap12)
-    {
-        indexSwap1 += orderVector[0];
-        indexSwap2 += orderVector[1];
-    }
-    else if (pSwapType < (m_pSwap12 + m_pSwap13))
+    if ((angle123 > m_angleThresh) || (angle213 > m_angleThresh) || (angle231 > m_angleThresh))
     {
         swapType = 2;
         indexSwap1 += orderVector[0];
@@ -322,9 +319,23 @@ void MonteCarlo::mcSwap()
     }
     else
     {
-        swapType = 3;
-        indexSwap1 += orderVector[1];
-        indexSwap2 += orderVector[2];
+        if (pSwapType < m_pSwap12)
+        {
+            indexSwap1 += orderVector[0];
+            indexSwap2 += orderVector[1];
+        }
+        else if (pSwapType < (m_pSwap12 + m_pSwap13))
+        {
+            swapType = 2;
+            indexSwap1 += orderVector[0];
+            indexSwap2 += orderVector[2];
+        }
+        else
+        {
+            swapType = 3;
+            indexSwap1 += orderVector[1];
+            indexSwap2 += orderVector[2];
+        }
     }
     /***
     if (cosAngle < - 0.3)

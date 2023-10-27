@@ -55,6 +55,7 @@ private:
 	const std::string m_neighMethod {};                   			// Neighbor list method: "verlet" for verlet neighbor list. Any other value: no neighbor list.
 	const int m_timeSteps {};                             			// Number of time steps.
     const std::string m_folderPath {};                    			// Path to where the algorithm was launched.
+    const double m_angleThresh {};
 
 
 public:
@@ -77,8 +78,9 @@ public:
             , m_temp { param.get_double( "temp") }
             , m_rBox { param.get_double( "rBox") }
             , m_saveUpdate { param.get_int( "waitingTime") }
-            , m_timeSteps { param.get_int( "timeSteps") }
+            , m_timeSteps { param.get_int( "timeSteps")}
             , m_saveRate { param.get_int("saveRate", 1000)}
+            , m_angleThresh { param.get_double("angleThresh", 1.4)}
             , m_folderPath (std::move( folderPath ))
 
     {

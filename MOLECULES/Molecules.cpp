@@ -110,7 +110,7 @@ std::vector<int> Molecules::getOrderVector(const int& indexMolecule) const
     return std::vector<int> { start, middle, end };
 }
 
-double Molecules::getCosAngleMolecule(const std::vector<int>& orderVector, const int& indexMolecule) const
+double Molecules::getCosAngleMolecule123(const std::vector<int>& orderVector, const int& indexMolecule) const
 {
     std::vector<double> vectorStart { getPositionI(indexMolecule + orderVector[0]) };
     std::vector<double> vectorMiddle { getPositionI(indexMolecule + orderVector[1]) };
@@ -123,6 +123,18 @@ double Molecules::getCosAngleMolecule(const std::vector<int>& orderVector, const
     return cosAngleMolecule;
 }
 
+double Molecules::getCosAngleMolecule213(const std::vector<int>& orderVector, const int& indexMolecule) const
+{
+    std::vector<double> vectorStart { getPositionI(indexMolecule + orderVector[0]) };
+    std::vector<double> vectorMiddle { getPositionI(indexMolecule + orderVector[1]) };
+    std::vector<double> vectorEnd { getPositionI(indexMolecule + orderVector[2]) };
+    std::vector<double> vector1 { vectorDiff( vectorMiddle, vectorStart, m_nDims)};
+    std::vector<double> vector2 { vectorDiff( vectorEnd, vectorStart, m_nDims)};
+    periodicVector(vector1.begin(), m_nDims, m_lengthCube);
+    periodicVector(vector2.begin(), m_nDims, m_lengthCube);
+    double cosAngleMolecule { cosAngleVectors(vector1, vector2)};
+    return cosAngleMolecule;
+}
 /*******************************************************************************
  * This function calculates the distance between two particles considering the
  * periodic boundary conditions.
