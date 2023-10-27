@@ -10,6 +10,12 @@ const int& Molecules::getNParticles() const
     return m_nParticles;
 }
 
+int Molecules::getNMolecules() const
+{
+    return m_nParticles / 3;
+}
+
+
 
 const double& Molecules::getLengthCube() const
 {

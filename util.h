@@ -11,6 +11,7 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#include <math.h>
 
 /***
 double squareDistancePair(const std::vector<double>& positionA,  const std::vector<double>& positionB,
@@ -50,6 +51,13 @@ double getSquareNormVector(const InputIt& vecItBegin, const InputIt& vecItEnd)
     return std::inner_product(vecItBegin, vecItEnd, vecItBegin, 0.);
 }
 
+template<typename InputIt>
+double getNormVector(const InputIt& vecItBegin, const InputIt& vecItEnd)
+{
+    return sqrt(getSquareNormVector(vecItBegin, vecItEnd));
+}
+
+
 
 template<typename InputIt>
 std::vector<double> getSquareNormRowMatrix(InputIt vecItBegin, const int& lenColumn, const int& lenRow)
@@ -83,6 +91,12 @@ void divVector(InputIt vecItBegin, const int& lenVec, const double& fac)
 }
 
 template<typename InputIt>
+void multVector(InputIt vecItBegin, const int& lenVec, const double& fac)
+{
+    std::for_each(vecItBegin, vecItBegin + lenVec, [&fac](auto &n) { n *= fac;});
+}
+
+template<typename InputIt>
 std::vector<double> crossProduct(InputIt vecItBegin1, InputIt vecItBegin2, const int& lenVec)
 {
     std::vector<double> cross (lenVec);
@@ -104,6 +118,27 @@ double traceMatrix(InputIt vecItBegin, const int& lenRowCol)
     return trace;
 }
 
+template<typename InputIt>
+std::vector<double> matrixMultiplication(InputIt matItBegin1, InputIt matItBegin2, const int& lenRow1, const int&lenCol1, const int& lenRow2)
+{
+    std::vector<double> out;
+    out.reserve(lenCol1 * lenRow2);
+    int lenMat1 { lenRow1 * lenCol1 };
+    int lenMat2 { lenRow1 * lenRow2 };
+    for (auto it1=matItBegin1; it1 < matItBegin1 + lenMat1; it1+=lenRow1)
+    {
+        for (auto it2=matItBegin2; it2 < matItBegin2 + lenRow2; it2++)
+        {
+            double elt {0.};
+            for (int i=0; i<lenRow1; i++)
+            {
+                elt += (*(it1+i)) * (*(it2+i*lenRow2));
+            }
+            out.push_back(elt);
+        }
+    }
+    return out;
+}
 
 std::vector<double> meanColumnsMatrix(std::vector<std::vector<double>> mat);
 

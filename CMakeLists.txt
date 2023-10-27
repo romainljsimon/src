@@ -28,4 +28,6 @@ add_executable( swapMC
                 NEIGHBORS/Neighbors.cpp
                 NEIGHBORS/Neighbors.h
                 MOLECULES/Molecules.cpp
-                MOLECULES/Molecules.h Random_mt.h ROTATION/RotationMol.cpp ROTATION/RotationMol.h)
+                MOLECULES/Molecules.h
+                Random_mt.h
+                MOLECULES/BaseMol.h)

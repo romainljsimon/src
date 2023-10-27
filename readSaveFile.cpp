@@ -125,7 +125,7 @@ void saveDoubleIntTXT(const double& number1, const int& number2, const std::stri
     fOut.close();
 
 }
-
+/***
 void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const std::string& path)
 {
     std::ofstream fOut(path);
@@ -148,7 +148,7 @@ void saveDisplacement(const std::vector<std::vector<double>>& dispMatrix, const 
     }
     fOut.close();
 }
-
+***/
 void printing(const std::vector<std::vector<double>>& matrix)
 /*
  * This function prints a two-dimensional array (matrix).

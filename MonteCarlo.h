@@ -37,6 +37,7 @@ private:
     double m_acceptanceRateSwap13 { 0. };
     double m_acceptanceRateSwap23 { 0. };
     int m_nMolTrans {0};
+    std::vector<double> angularVector {};
     double m_acceptanceRateMolTrans { 0. };                                 // Monte Carlo swap acceptance rate.
     const int m_saveRate {};
 	const bool m_calculatePressure {};                               // Boolean that decides if the pressure is calculated or not.
@@ -55,6 +56,7 @@ private:
 	const std::string m_neighMethod {};                   			// Neighbor list method: "verlet" for verlet neighbor list. Any other value: no neighbor list.
 	const int m_timeSteps {};                             			// Number of time steps.
     const std::string m_folderPath {};                    			// Path to where the algorithm was launched.
+    const bool m_calculateAngularDisp{};
 
 
 public:
@@ -79,10 +81,15 @@ public:
             , m_saveUpdate { param.get_int( "waitingTime") }
             , m_timeSteps { param.get_int( "timeSteps") }
             , m_saveRate { param.get_int("saveRate", 1000)}
+            , m_calculateAngularDisp{ param.get_bool("angularDisp", false)}
             , m_folderPath (std::move( folderPath ))
 
     {
         m_energy = m_systemMolecules.energySystemMolecule( m_systemNeighbors );
+        if (m_calculateAngularDisp)
+        {
+            angularVector.resize(m_systemMolecules.getNMolecules() * m_systemMolecules.getNDims(), 0.) ;
+        }
     }
 
 	void mcTotal();

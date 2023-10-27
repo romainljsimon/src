@@ -505,6 +505,8 @@ public:
     [[nodiscard]] double getCosAngleMolecule(const std::vector<int>& orderVector, const int& indexMolecule) const;
 
     [[nodiscard]] std::vector<int> getOrderVector(const int &indexMolecule) const;
+
+    int getNMolecules() const;
 };
 
 #endif /* MOLECULES_H_ */

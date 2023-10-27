@@ -30,6 +30,7 @@ namespace Random
         std::cout << "The PNRG seed is: ";
         std::cout << std::to_string(rd()) << "\n";
 
+        //return std::mt19937{ rd() } ;
         return std::mt19937{ rd() } ;
     }
 

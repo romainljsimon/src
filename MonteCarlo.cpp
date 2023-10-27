@@ -13,6 +13,7 @@
 #include "Random_mt.h"
 #include "readSaveFile.h"
 #include "util.h"
+#include "MOLECULES/BaseMol.h"
 
 
 /*******************************************************************************
@@ -28,13 +29,19 @@ void MonteCarlo::mcTotal()
 
 	const std::string preName ("./outXYZ/position");
 	const std::string extname {".xyz"};
-	const std::string preNameDisp ("./disp/displacement");
-	const std::string extnameDisp {".txt"};
+	const std::string preNameDisp ("./angularDispMC/displacement");
+	const std::string extNameDisp {".txt"};
     const std::string energyFilePath{"./outE.txt"};
     //std::string pressureFilePath {"./outP.txt"};
     // std::vector<double> radiusArray (divideVectorByScalar(m_typeArray, 2));
 
 	m_systemMolecules.saveInXYZ(preName + std::to_string(0) + extname );
+    if (m_calculateAngularDisp)
+    {
+        saveDisplacement(angularVector.begin(), m_systemMolecules.getNMolecules() *
+                                                m_systemMolecules.getNDims(), 3,
+                         preNameDisp + std::to_string(0) + extNameDisp);
+    }
     saveDoubleTXT(m_energy / m_nParticles, energyFilePath);
 	// saveDisplacement(m_totalDisplacementMatrix, preNameDisp + std::to_string(0) + extnameDisp);
 
@@ -44,6 +51,11 @@ void MonteCarlo::mcTotal()
     double swapRate {0.};
     double transRate {0.};
     double molTransRate {0.};
+
+
+    auto molBaseT { BaseMol(m_systemMolecules)};
+
+
 	for (int i = 0; i < m_timeSteps; i++) //Iteration over m_timeSteps
 	{
         int j { 0 };
@@ -51,7 +63,14 @@ void MonteCarlo::mcTotal()
 		{
             j += mcMove();
         }
+        if (m_calculateAngularDisp)
+        {
+            auto molBaseDt { BaseMol(m_systemMolecules)};
+            std::vector<double> angularVectorDt {molBaseDt.createAngularVector(molBaseT.BaseMolBeginIt())};
+            sumVector(angularVector.begin(), angularVectorDt.begin(), m_systemMolecules.getNMolecules() * m_systemMolecules.getNDims());
+            molBaseT = molBaseDt;
 
+        }
         m_systemNeighbors.checkInterDisplacement(m_systemMolecules);
 
 		// Next, the results of the simulations are saved.
@@ -64,6 +83,16 @@ void MonteCarlo::mcTotal()
             //std::string nameDisp {preNameDisp};
             //nameDisp.append(std::to_string(i + 1)).append(extnameDisp);
             m_systemMolecules.saveInXYZ(nameXYZ );
+
+
+            std::string nameDisp {preNameDisp};
+            nameDisp.append(std::to_string(i + 1)).append(extNameDisp);
+            if (m_calculateAngularDisp)
+            {
+                saveDisplacement(angularVector.begin(),
+                                 m_systemMolecules.getNMolecules() * m_systemMolecules.getNDims(), 3, nameDisp);
+            }
+
 			//saveDisplacement (m_totalDisplacementMatrix, nameDisp);
 			++save_index;
 		}
